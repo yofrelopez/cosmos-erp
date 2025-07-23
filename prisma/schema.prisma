@@ -1,0 +1,121 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum QuoteStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum DeliveryStatus {
+  PENDING
+  PARTIAL
+  DELIVERED
+}
+
+
+model Client {
+  id              Int       @id @default(autoincrement())
+  documentType    String    // e.g., "DNI", "RUC", "CE"
+  documentNumber  String    @unique
+  fullName        String
+  businessName    String?
+  phone           String?
+  email           String?
+  address         String?
+  notes           String?
+  createdAt       DateTime  @default(now())
+
+  quotes          Quote[]
+}
+
+
+model Quote {
+  id          Int              @id @default(autoincrement())
+  clientId    Int
+  createdAt   DateTime         @default(now())
+  status      QuoteStatus
+  notes       String?
+  total       Float            @default(0)
+
+  client      Client           @relation(fields: [clientId], references: [id])
+  items       QuoteItem[]
+  contract    Contract?
+}
+
+
+
+model QuoteItem {
+  id            Int      @id @default(autoincrement())
+  quoteId       Int
+  description   String
+  unit          String
+  quantity      Float
+  unitPrice     Float
+  subtotal      Float
+
+  quote         Quote    @relation(fields: [quoteId], references: [id])
+}
+
+
+
+
+model Contract {
+  id               Int             @id @default(autoincrement())
+  quoteId          Int             @unique
+  date             DateTime        @default(now())
+  paymentStatus    PaymentStatus
+  amountPaid       Float           @default(0)
+  amountPending    Float           @default(0)
+  deliveryDate     DateTime?
+  deliveredAt      DateTime?
+  deliveryStatus   DeliveryStatus
+  notes            String?
+
+  quote            Quote           @relation(fields: [quoteId], references: [id])
+  payments         Payment[]
+  items            ContractItem[]
+}
+
+
+
+model ContractItem {
+  id             Int      @id @default(autoincrement())
+  contractId     Int
+  description    String
+  unit           String
+  quantity       Float
+  unitPrice      Float
+  subtotal       Float
+
+  contract       Contract  @relation(fields: [contractId], references: [id])
+}
+
+
+
+
+model Payment {
+  id            Int       @id @default(autoincrement())
+  contractId    Int
+  date          DateTime  @default(now())
+  amount        Float
+  method        String    // "cash", "transfer", etc.
+  reference     String?
+  notes         String?
+
+  contract      Contract  @relation(fields: [contractId], references: [id])
+}
