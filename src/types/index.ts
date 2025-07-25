@@ -23,6 +23,21 @@ export interface Client {
 }
 
 
+// src/types/index.ts
+export interface ClientLite {
+  id: number;
+  documentType: string;
+  documentNumber: string;
+  fullName: string;
+  businessName?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string; // ya como string para evitar problemas de serialización
+}
+
+
 export interface QuoteItem {
   id: number
   quoteId: number
@@ -32,3 +47,16 @@ export interface QuoteItem {
   unitPrice: number
   subtotal: number
 }
+
+export type QuoteItemInput = {
+  description: string;
+  unit: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+};
+
+export type QuoteFormValues = {
+  clientId: number;
+  items: QuoteItemInput[];
+};

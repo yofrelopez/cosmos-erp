@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
+import { quoteCreateSchema } from '@/lib/validators/quote';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -52,4 +53,52 @@ const where = search
   ]);
 
   return NextResponse.json({ data: quotes, totalItems });
+}
+
+
+
+// src/app/api/quotes/route.ts
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { clientId, items } = body;
+
+    if (!clientId || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: 'Faltan datos obligatorios' },
+        { status: 400 }
+      );
+    }
+
+    // Calcular total general
+    const total = items.reduce((sum: number, item: any) => sum + item.subtotal, 0);
+
+    const quote = await prisma.quote.create({
+      data: {
+        clientId: Number(clientId),
+        status: 'PENDING', // puedes ajustar esto si deseas usar otro valor
+        total,
+        items: {
+          create: items.map((item: any) => ({
+            description: item.description,
+            unit: item.unit,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            subtotal: item.subtotal,
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    return NextResponse.json({ ok: true, quote });
+  } catch (error: any) {
+    console.error('Error en API /api/quotes:', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
 }

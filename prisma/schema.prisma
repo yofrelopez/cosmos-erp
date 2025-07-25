@@ -28,6 +28,16 @@ enum DeliveryStatus {
 }
 
 
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  quotes    Quote[]
+}
+
+
 model Client {
   id              Int       @id @default(autoincrement())
   documentType    String    // e.g., "DNI", "RUC", "CE"
@@ -51,6 +61,10 @@ model Quote {
   status      QuoteStatus
   notes       String?
   total       Float            @default(0)
+
+  // Nuevo
+  createdById Int?
+  createdBy   User?            @relation(fields: [createdById], references: [id])
 
   client      Client           @relation(fields: [clientId], references: [id])
   items       QuoteItem[]

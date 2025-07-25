@@ -9,10 +9,10 @@ import {
 } from '@ariakit/react';
 import * as Popover from '@radix-ui/react-popover';
 import { usePaginatedList } from '@/hooks/usePaginatedList';
-import type { Client } from '@prisma/client';
+import type { ClientLite } from '@/types';
 
 interface Props {
-  onSelect: (client: Client) => void;
+  onSelect: (client: ClientLite) => void;
   onCreateNew: (query: string) => void;
 }
 
@@ -23,7 +23,7 @@ const search = rawSearch ?? '';
 
 
 
-const { data: clients = [] } = usePaginatedList<Client>({
+const { data: clients = [] } = usePaginatedList<ClientLite>({
   endpoint: '/api/clients',
   pageSize: 10,
   query: search.length >= 2 ? search : '',
@@ -61,7 +61,7 @@ const { data: clients = [] } = usePaginatedList<Client>({
             </ComboboxItem>
           )}
 
-          {clients.map((c: Client) => (
+          {clients.map((c: ClientLite) => (
             <ComboboxItem
               key={c.id}
               store={combobox}
