@@ -1,7 +1,7 @@
 'use client';
 
 import { QuoteItem } from '@prisma/client';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { Trash2 } from 'lucide-react';
 import { QuoteItemForm } from '@/types';
@@ -21,8 +21,23 @@ const unidadesSugeridas = [
 ];
 
 
-export default function QuoteItemsForm() {
-  const { register, control, watch } = useFormContext();
+
+interface QuoteItemsFormProps {
+  defaultValues?: {
+    id?: number;
+    clientId?: number;
+    status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+    notes: string;
+    items: QuoteItemForm[];
+  };
+  isEditMode?: boolean;
+}
+
+
+
+
+export default function QuoteItemsForm({ defaultValues, isEditMode = false }: QuoteItemsFormProps) {
+  const { register, control, watch, setValue, getValues } = useFormContext();
   const { fields, append, remove } = useFieldArray({
     control,
     name: 'items',
@@ -45,6 +60,24 @@ export default function QuoteItemsForm() {
     return sum + (isNaN(subtotal) ? 0 : subtotal);
   }, 0);
 
+  // Obtener el estado inicial desde props o el contexto
+
+ /* 👇 Solo copiar datos al formulario UNA vez */
+  const initialized = useRef(false);
+
+  useEffect(() => {
+    if (!initialized.current && isEditMode && defaultValues) {
+      setValue('items',  defaultValues.items  ?? []);
+      setValue('notes',  defaultValues.notes  ?? '');
+      setValue('status', defaultValues.status ?? 'PENDING');
+      initialized.current = true;             // evita nuevas ejecuciones
+    }
+  }, [defaultValues, isEditMode, setValue]);
+
+
+
+
+
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Ítems de la cotización</h2>
@@ -55,9 +88,11 @@ export default function QuoteItemsForm() {
             <label className="text-sm font-medium text-gray-700">Descripción</label>
             <input
               {...register(`items.${index}.description`)}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isEditMode}
+              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
               placeholder="Ej. Vidrio templado"
             />
+            {isEditMode && <p className="text-xs text-gray-500 mt-1">Este campo no se puede editar.</p>}
           </div>
 
           <div className="flex flex-col w-24">
@@ -65,16 +100,20 @@ export default function QuoteItemsForm() {
             <input
               type="number"
               {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isEditMode}
+              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
               min={1}
             />
+            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+
           </div>
 
           <div className="flex flex-col w-40">
-            <label className="text-sm font-medium text-gray-700">Unidad</label>
+            <label className="text-sm font-medium text-gray-700">U. de Medida</label>
             <select
               {...register(`items.${index}.unit`)}
-              className="border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isEditMode}
+              className="border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
             >
               <option value="">Seleccionar...</option>
               {unidadesSugeridas.map((unidad) => (
@@ -83,16 +122,22 @@ export default function QuoteItemsForm() {
                 </option>
               ))}
             </select>
+            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+
           </div>
 
           <div className="flex flex-col w-32">
             <label className="text-sm font-medium text-gray-700">Precio unitario</label>
             <input
               type="number"
+              step="any"
               {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={isEditMode}
+              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
               min={0}
             />
+            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+
           </div>
 
           <div className="flex flex-col w-28">
@@ -104,18 +149,24 @@ export default function QuoteItemsForm() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => remove(index)}
-            className="text-red-600 hover:text-red-800 cursor-pointer"
-            title="Eliminar ítem"
-          >
-            <Trash2 className="w-5 h-5" />
-          </button>
+          {!isEditMode && (
+            <button
+              type="button"
+              onClick={() => remove(index)}
+              className="text-red-600 hover:text-red-800 cursor-pointer"
+              title="Eliminar ítem"
+            >
+              <Trash2 className="w-5 h-5" />
+            </button>
+          )}
+
+
         </div>
       ))}
 
       <div className="flex justify-between items-center pt-4">
+
+      {!isEditMode && (
         <button
           type="button"
           onClick={handleAddItem}
@@ -123,10 +174,50 @@ export default function QuoteItemsForm() {
         >
           + Agregar ítem
         </button>
+      )}
+
+
+
         <div className="text-lg font-semibold text-gray-800">
           Total: S/. {total.toFixed(2)}
         </div>
       </div>
+
+      {isEditMode  && (
+        <div className="space-y-4 pt-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Observaciones
+            </label>
+            <textarea
+              {...register('notes')}
+              rows={3}
+              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Agrega alguna nota adicional..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Estado de la cotización
+            </label>
+
+            <select
+              {...register('status')}
+              className="w-full border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="PENDING">Pendiente</option>
+              <option value="ACCEPTED">Aprobada</option>
+              <option value="REJECTED">Rechazada</option>
+            </select>
+            
+            
+          </div>
+        </div>
+      )}
+
+
+
     </div>
   );
 }

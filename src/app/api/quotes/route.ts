@@ -1,104 +1,180 @@
-import { prisma } from '@/lib/prisma';
-import { quoteCreateSchema } from '@/lib/validators/quote';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server'
+import { prisma }       from '@/lib/prisma'
+import { z }            from 'zod'
+import { generateQuoteCode } from '@/lib/utils/generateQuoteCode'
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
+/* ------------------------------------------------------------------------ */
+/* 1)  ESQUEMAS DE VALIDACIÓN (Zod)                                         */
+/* ------------------------------------------------------------------------ */
+const ItemSchema = z.object({
+  description : z.string().min(1),
+  unit        : z.string().min(1),
+  quantity    : z.number().positive(),
+  unitPrice   : z.number().nonnegative(),
+})
 
-  const page = parseInt(searchParams.get('page') || '1');
-  const pageSize = parseInt(searchParams.get('pageSize') || '10');
-  const search = searchParams.get('search')?.trim() || '';
-
-  const skip = (page - 1) * pageSize;
-
-const where = search
-  ? {
-      client: {
-        // Use 'is' for single object relation filter
-        is: {
-          OR: [
-            { fullName: { contains: search, mode: 'insensitive' as const } },
-            { businessName: { contains: search, mode: 'insensitive' as const } },
-            { documentNumber: { contains: search, mode: 'insensitive' as const } },
-          ],
-        },
-      },
-    }
-  : {};
+const CreateQuoteSchema = z.object({
+  clientId  : z.number(),
+  companyId : z.number(),                               // empresa activa
+  notes     : z.string().optional(),
+  status    : z.enum(['PENDING', 'ACCEPTED', 'REJECTED'])
+               .default('PENDING'),
+  items     : z.array(ItemSchema).min(1),
+})
 
 
-  const [quotes, totalItems] = await Promise.all([
-    prisma.quote.findMany({
-      where,
-      include: {
-        client: {
-            select: {
-            id: true,
-            fullName: true,
-            businessName: true,
-            documentType: true,
-            documentNumber: true,
-            phone: true,
-            address: true,
-            email: true,
-            },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take: pageSize,
-    }),
-
-    prisma.quote.count({ where }),
-  ]);
-
-  return NextResponse.json({ data: quotes, totalItems });
-}
-
-
-
-// src/app/api/quotes/route.ts
-export async function POST(request: NextRequest) {
+/* ------------------------------------------------------------------------ */
+/* 2)  ENDPOINT  POST  /api/quotes                                          */
+/* ------------------------------------------------------------------------ */
+export async function POST(req: Request) {
   try {
-    const body = await request.json();
-    const { clientId, items } = body;
+    /* 1. Leer y validar payload */
+    const json   = await req.json();
+    const parsed = CreateQuoteSchema.parse(json);
 
-    if (!clientId || !Array.isArray(items) || items.length === 0) {
+    /* 2. Verificar que el cliente pertenece a la empresa */
+    const client = await prisma.client.findFirst({
+      where: { id: parsed.clientId, companyId: parsed.companyId },
+    });
+
+    if (!client) {
       return NextResponse.json(
-        { error: 'Faltan datos obligatorios' },
-        { status: 400 }
+        { error: 'El cliente no pertenece a la empresa indicada' },
+        { status: 400 },
       );
     }
 
-    // Calcular total general
-    const total = items.reduce((sum: number, item: any) => sum + item.subtotal, 0);
+    /* 3. Calcular subtotal + total */
+    const itemsWithSubtotal = parsed.items.map((i) => ({
+      ...i,
+      subtotal: i.quantity * i.unitPrice,
+    }));
+    const total = itemsWithSubtotal.reduce((s, i) => s + i.subtotal, 0);
 
+    /* 4. Insertar en la base */
     const quote = await prisma.quote.create({
       data: {
-        clientId: Number(clientId),
-        status: 'PENDING', // puedes ajustar esto si deseas usar otro valor
+        code: await generateQuoteCode(parsed.companyId),
+        clientId:  parsed.clientId,
+        companyId: parsed.companyId,
+        status:    parsed.status,
+        notes:     parsed.notes,
         total,
-        items: {
-          create: items.map((item: any) => ({
-            description: item.description,
-            unit: item.unit,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            subtotal: item.subtotal,
-          })),
-        },
+        items: { create: itemsWithSubtotal },
       },
-      include: {
-        items: true,
-      },
+      include: { items: true, client: true },
     });
 
-    return NextResponse.json({ ok: true, quote });
-  } catch (error: any) {
-    console.error('Error en API /api/quotes:', error);
+    return NextResponse.json(quote, { status: 201 });
+  } catch (err: any) {
+    /* 5. Manejo de errores */
+    console.error('[POST /api/quotes]', err);
+
+    if (err instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', issues: err.issues },
+        { status: 400 },
+      );
+    }
+
+    if (err.code?.startsWith?.('P20')) {
+      return NextResponse.json(
+        { error: 'Error de base de datos', detail: err.meta?.cause },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       { error: 'Error interno del servidor' },
-      { status: 500 }
+      { status: 500 },
+    );
+  }
+}
+
+
+/* ------------------------------------------------------------------------ */
+/*  MÉTODO  GET  /api/quotes                                                */
+/*  ──────────────────────────────────────────────────────────────────────── */
+/*  Parámetros de query                                                     */
+/*    • companyId  (obligatorio)  →  número                                 */
+/*    • status     (opcional)    →  'PENDING' | 'ACCEPTED' | 'REJECTED'     */
+/*    • page       (opcional)    →  1‑based,   default = 1                  */
+/*    • pageSize   (opcional)    →  1‑100,     default = 20                 */
+/*                                                                          */
+/*  Respuesta JSON                                                          */
+/*    { data: Quote[], pagination: { total, page, pageSize, pages } }       */
+/* ------------------------------------------------------------------------ */
+
+
+
+const StatusParam = z.enum(['PENDING', 'ACCEPTED', 'REJECTED'])
+
+const positiveInt = (v: unknown, def = 1) => {
+  const n = Number(v ?? def);
+  return Number.isFinite(n) && n > 0 ? n : def;
+};
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    /* -----------  companyId obligatorio y numérico  ---------------- */
+    const companyId = positiveInt(searchParams.get('companyId'), NaN);
+    if (Number.isNaN(companyId)) {
+      return NextResponse.json(
+        { error: 'companyId es obligatorio y debe ser numérico' },
+        { status: 400 },
+      );
+    }
+
+    /* -----------  filtros opcionales  ------------------------------ */
+    const status = searchParams.has('status')
+      ? StatusParam.parse(searchParams.get('status'))
+      : undefined;
+
+    const search   = (searchParams.get('search') ?? '').trim();
+    const page     = positiveInt(searchParams.get('page'), 1);
+    const pageSize = Math.min(100, positiveInt(searchParams.get('pageSize'), 20));
+    const skip     = (page - 1) * pageSize;
+
+    /* -----------  cláusula where para Prisma  ---------------------- */
+    const where: any = { companyId };
+    if (status) where.status = status;
+
+    if (search) {
+      where.OR = [
+        { code: { contains: search, mode: 'insensitive' } },
+        {
+          client: {
+            OR: [
+              { fullName:       { contains: search, mode: 'insensitive' } },
+              { businessName:   { contains: search, mode: 'insensitive' } },
+              { documentNumber: { contains: search, mode: 'insensitive' } },
+            ],
+          },
+        },
+      ];
+    }
+
+    /* -----------  transacción: count + datos paginados  ------------ */
+    const [total, quotes] = await prisma.$transaction([
+      prisma.quote.count({ where }),
+      prisma.quote.findMany({
+        where,
+        include: { client: true, items: true },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+    ]);
+
+    /* -----------  respuesta  -------------------------------------- */
+    return NextResponse.json({ data: quotes, total });
+  } catch (err) {
+    console.error('[GET /api/quotes]', err);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 },
     );
   }
 }

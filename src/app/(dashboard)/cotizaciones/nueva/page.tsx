@@ -11,16 +11,24 @@ import { Client } from '@/types'
 import QuoteItemsWrapper from '@/components/quotes/QuoteItemsWrapper'
 import { toast } from 'sonner';
 
-import { QuoteItem } from '@prisma/client';
+import { QuoteItem, QuoteStatus } from '@prisma/client';
+
 import { useSaveQuote } from '@/hooks/useSaveQuote';
+import { PlusCircle, XCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+import { useCompanyStore } from '@/lib/store/useCompanyStore';
 
 
 
-interface FormData {
-  clientId: string;
-  items: QuoteItem[];
+
+export interface FormData {
+  clientId: number;            
+  companyId?: number;          // lo añadimos manualmente desde Zustand
+  notes?: string;
+  status?: QuoteStatus; // 'PENDING' por defecto
+  items: QuoteItem[];          // puedes usar el tipo de Prisma aquí sin problema
 }
-
 
 
 export default function NuevaCotizacionPage() {
@@ -28,15 +36,23 @@ export default function NuevaCotizacionPage() {
     const [client, setClient] = useState<Client | null>(null)
     const [showAddClient, setShowAddClient] = useState(false)
 
+    const companyId = useCompanyStore((s) => s.company?.id);
+
+
     const { saveQuote } = useSaveQuote();
+
+    const router = useRouter();
+
 
 
 
     const methods = useForm<FormData>({
       defaultValues: {
-        clientId: '',
-        items: [],
-      },
+      clientId: 0,
+      items: [],
+      notes: '',
+      status: 'PENDING', // valor por defecto interno
+    }
     });
 
 
@@ -70,7 +86,7 @@ export default function NuevaCotizacionPage() {
 
     useEffect(() => {
       if (client?.id) {
-        methods.setValue('clientId', String(client.id)); // ⚠️ Este campo debe estar en el `defaultValues` también
+        methods.setValue('clientId', client.id); // ⚠️ Este campo debe estar en el `defaultValues` también
       }
     }, [client, methods]);
 
@@ -81,16 +97,25 @@ export default function NuevaCotizacionPage() {
         return;
       }
 
-      await saveQuote(data);
+        if (!companyId) {
+    toast.error("No se ha seleccionado una empresa.");
+    return;
+  }
+
+      await saveQuote({
+        ...data,
+        companyId, // ✅ ahora sí cumple con el backend
+      });
 
       // ✅ Limpiar localStorage
       localStorage.removeItem('quoteItems');
 
       // ✅ Resetear formulario
       methods.reset({
-        clientId: '',
-        items: [],
-      });
+      clientId: 0,  // ⚠️ esto es number
+      items: [],
+    });
+
 
       toast.success("Formulario limpio. Listo para nueva cotización.");
 
@@ -118,7 +143,7 @@ export default function NuevaCotizacionPage() {
         key={client ? client.id : 'empty'} // 👈 fuerza reinicio visual
           onSelect={(clientLite) => {
             setClient(clientLite as Client); // Conversión explícita
-            methods.setValue('clientId', String(clientLite.id));
+            methods.setValue('clientId', clientLite.id);
           }}
           onCreateNew={() => setShowAddClient(true)}
         />
@@ -148,6 +173,10 @@ export default function NuevaCotizacionPage() {
         )}
 
         <QuoteItemsWrapper />
+
+
+
+
 
         {/* Botón para limpiar los ítems guardados localStorage */}
 
@@ -180,16 +209,29 @@ export default function NuevaCotizacionPage() {
 
 
 
-        {/* Botón para guardar la cotización */}
+        {/* Botón para cancelar  guardar la cotización */}
+
+<div className="flex gap-4 pt-4">
+      <button
+        type="button"
+        onClick={() => router.push('/cotizaciones')}
+        className="cursor-pointer flex items-center gap-2 bg-gray-300 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-400 transition"
+      >
+        <XCircle className="w-5 h-5" />
+        Cancelar
+      </button>
+
         { client && (
-                  <button
+        <button
           type="submit"
-          className="cursor-pointer bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+          className="cursor-pointer flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:opacity-50"
         >
+          <PlusCircle className="w-5 h-5" />
           Guardar cotización
         </button>
         )}
-
+      
+    </div>
 
 
 

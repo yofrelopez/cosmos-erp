@@ -17,6 +17,9 @@ export default function PaginationControls({ page, total, pageSize, onPageChange
 
   if (totalPages <= 1) return null
 
+  console.log('total', total, 'pageSize', pageSize, 'totalPages', totalPages);
+
+
   return (
     <div className="flex items-center justify-center gap-2 mt-6 text-sm">
       <button

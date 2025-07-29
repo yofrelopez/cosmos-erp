@@ -1,149 +1,253 @@
-'use client'
+'use client';
 
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { clientSchema, ClientFormValues } from '@/lib/validators/clienteSchema'
-import { toast } from 'sonner'
-import { useEffect } from 'react'
-import { useClients } from '@/hooks/useClients'
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
+
+import { DocumentType } from '@prisma/client';
+import { clientSchema, ClientFormValues } from '@/lib/validators/clienteSchema';
+import { useClients } from '@/hooks/useClients';
+import { useCompanyStore } from '@/lib/store/useCompanyStore';
+
+import { mutate as globalMutate } from 'swr'
+
+
+
+
+/* 🗂 Enum dinámico → si cambias el schema de Prisma se refleja aquí */
+const documentTypes = Object.values(DocumentType) as DocumentType[];
 
 type Props = {
-  onSuccess?: (client: ClientFormValues & { id: number }) => void
-  initialData?: ClientFormValues & { id: number; createdAt?: Date }
-}
+  onSuccess?: (client: ClientFormValues & { id: number }) => void;
+  initialData?: ClientFormValues & { id: number; createdAt?: Date };
+};
 
 export function ClientForm({ onSuccess, initialData }: Props) {
-
-  const { mutate } = useClients({}) // Importar y usar el hook aquí
+  const { mutate } = useClients({});
+  const companyId = useCompanyStore((s) => s.company?.id);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
     reset,
+    setValue,
+    formState: { errors, isSubmitting },
   } = useForm<ClientFormValues>({
     resolver: zodResolver(clientSchema),
     defaultValues: initialData,
-  })
+  });
+
+  /* 🔄 Rellenar el formulario si llega initialData */
+  useEffect(() => {
+    if (initialData) reset(initialData);
+  }, [initialData, reset]);
 
   useEffect(() => {
-    if (initialData) reset(initialData)
-  }, [initialData, reset])
+  if (companyId) {
+    setValue('companyId', companyId, { shouldValidate: true });
+  }
+}, [companyId, setValue]);
+
+
+  /* onSubmit */
 
   const onSubmit = async (data: ClientFormValues) => {
-    try {
-      const res = await fetch(
-        initialData ? `/api/clients/${initialData.id}` : '/api/clients',
-        {
-          method: initialData ? 'PUT' : 'POST',
-          body: JSON.stringify(data),
-        }
-      )
-      
-      await new Promise((res) => setTimeout(res, 1000))
-      mutate() // 🔁 Refrescar lista de clientes
-
-      if (!res.ok) throw new Error('Error al guardar cliente')
-
-      const newClient = await res.json()
-      toast.success(initialData ? 'Cliente actualizado con éxito!' : 'Cliente registrado con éxito!')
-      reset()
-
-      if (onSuccess) onSuccess(newClient)
-    } catch (error) {
-      toast.error('No se pudo guardar el cliente')
-    }
+    console.log('enviado')
+  if (!companyId) {
+    toast.error('No se ha seleccionado una empresa');
+    return;
   }
 
+  const payload = { ...data, companyId };
+
+  try {
+    const res = await fetch(
+      initialData ? `/api/clients/${initialData.id}` : '/api/clients',
+      {
+        method: initialData ? 'PATCH' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      toast.error(err?.error || 'No se pudo guardar el cliente');
+      return;
+    }
+
+    const newClient = await res.json(); // ← ya sabemos que hay cuerpo válido
+                            // 🔁 refresca solo tras éxito
+
+    toast.success(
+      initialData ? 'Cliente actualizado con éxito' : 'Cliente registrado con éxito'
+    );
+    reset();
+    onSuccess?.(newClient);
+    mutate();   
+    
+  } catch (error) {
+    console.error(error);
+    toast.error('Ocurrió un error inesperado');
+  }
+};
+
+
+  /* 🎨 Estilo moderno con Tailwind */
   return (
-    <form
-      onSubmit={handleSubmit(onSubmit)}
-      className="space-y-4 bg-white p-6 rounded shadow-md max-w-md mx-auto"
-    >
-      <div>
-        <label className="block font-medium">Tipo de Documento</label>
+  <form
+    onSubmit={handleSubmit(onSubmit,
+      (formErrors) => console.log('❌ errores de validación', formErrors)  // 👈
+    )}
+    className="bg-white rounded-xl shadow-lg max-w-xl w-full mx-auto px-8 py-6 space-y-8"
+  >
+   {/*  <h2 className="text-xl font-semibold text-gray-800">
+      {initialData ? 'Editar cliente' : 'Nuevo cliente'}
+    </h2> */}
+
+    {/* Grid responsive */}
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+      {/* Tipo de documento */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-700 mb-1">
+          Tipo de documento
+        </label>
         <select
           {...register('documentType')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
           disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
         >
-          <option value="">Seleccionar...</option>
-          <option value="DNI">DNI</option>
-          <option value="RUC">RUC</option>
-          <option value="CE">CE</option>
+          <option value="">Seleccionar…</option>
+          {documentTypes.map((dt) => (
+            <option key={dt} value={dt}>
+              {dt}
+            </option>
+          ))}
         </select>
-        {errors.documentType && <p className="text-red-500 text-sm">{errors.documentType.message}</p>}
+        {errors.documentType && (
+          <p className="mt-1 text-xs text-red-700 bg-red-50 rounded px-2 py-1">
+            {errors.documentType.message}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label className="block font-medium">Número de Documento</label>
+      {/* Nº documento */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-700 mb-1">
+          Nº documento
+        </label>
         <input
           type="text"
-          disabled={isSubmitting}
           {...register('documentNumber')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+          disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
         />
-        {errors.documentNumber && <p className="text-red-500 text-sm">{errors.documentNumber.message}</p>}
+        {errors.documentNumber && (
+          <p className="mt-1 text-xs text-red-700 bg-red-50 rounded px-2 py-1">
+            {errors.documentNumber.message}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label className="block font-medium">Nombre Completo</label>
+      {/* Nombre completo (ocupa 2 columnas en sm+) */}
+      <div className="flex flex-col sm:col-span-2">
+        <label className="text-sm font-medium text-gray-700 mb-1">
+          Nombre completo
+        </label>
         <input
           type="text"
-          disabled={isSubmitting}
           {...register('fullName')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+          disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
         />
-        {errors.fullName && <p className="text-red-500 text-sm">{errors.fullName.message}</p>}
+        {errors.fullName && (
+          <p className="mt-1 text-xs text-red-700 bg-red-50 rounded px-2 py-1">
+            {errors.fullName.message}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label className="block font-medium">Correo Electrónico</label>
+      {/* Teléfono */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+        <input
+          type="text"
+          {...register('phone')}
+          disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
+        />
+      </div>
+
+      {/* Email */}
+      <div className="flex flex-col">
+        <label className="text-sm font-medium text-gray-700 mb-1">Email</label>
         <input
           type="email"
-          disabled={isSubmitting}
           {...register('email')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+          disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
         />
-        {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+        {errors.email && (
+          <p className="mt-1 text-xs text-red-700 bg-red-50 rounded px-2 py-1">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
-      <div>
-        <label className="block font-medium">Teléfono</label>
+      {/* Dirección */}
+      <div className="flex flex-col sm:col-span-2">
+        <label className="text-sm font-medium text-gray-700 mb-1">Dirección</label>
         <input
           type="text"
-          disabled={isSubmitting}
-          {...register('phone')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
-        />
-      </div>
-
-      <div>
-        <label className="block font-medium">Dirección</label>
-        <input
-          type="text"
-          disabled={isSubmitting}
           {...register('address')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
-        />
-      </div>
-
-      <div>
-        <label className="block font-medium">Observaciones</label>
-        <textarea
           disabled={isSubmitting}
-          {...register('notes')}
-          className={`w-full border p-2 rounded ${isSubmitting ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''}`}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
         />
       </div>
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-blue-700 disabled:opacity-60"
-      >
-        {isSubmitting ? 'Guardando...' : initialData ? 'Actualizar' : 'Guardar'}
-      </button>
-    </form>
-  )
+      {/* Observaciones */}
+      <div className="flex flex-col sm:col-span-2">
+        <label className="text-sm font-medium text-gray-700 mb-1">
+          Observaciones
+        </label>
+        <textarea
+          rows={3}
+          {...register('notes')}
+          disabled={isSubmitting}
+          className="rounded-lg border border-gray-300 px-3 py-2
+                     focus:border-blue-600 focus:ring-1 focus:ring-blue-600
+                     disabled:bg-gray-100"
+        />
+      </div>
+    </div>
+
+    {/* Botón */}
+    <button
+      type="submit"
+      disabled={isSubmitting}
+      className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700
+                 text-white w-full sm:w-auto px-6 py-2 rounded-lg disabled:opacity-60
+                 cursor-pointer transition-colors duration-200"
+    >
+      {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+      {initialData ? 'Actualizar' : 'Guardar'}
+    </button>
+  </form>
+);
+
 }

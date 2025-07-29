@@ -21,6 +21,9 @@ export default function PaginatedTable({
 }: PaginatedTableProps) {
   const totalPages = Math.ceil(totalItems / pageSize)
 
+  console.log({ totalItems, pageSize, totalPages });
+
+
   return (
     <div className="w-full overflow-x-auto bg-white rounded-xl shadow">
       <table className="min-w-full text-sm text-left border-separate border-spacing-0">

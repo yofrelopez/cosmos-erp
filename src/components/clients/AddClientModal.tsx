@@ -35,7 +35,7 @@ export default function AddClientModal({ onSuccess }: Props) {
           <Dialog.Title className="text-xl font-bold">Nuevo cliente</Dialog.Title>
 
           <Dialog.Close asChild>
-            <button className="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+            <button className="text-gray-500 hover:text-gray-700 text-xl cursor-pointer">&times;</button>
           </Dialog.Close>
         </div>
 

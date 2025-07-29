@@ -28,11 +28,104 @@ enum DeliveryStatus {
 }
 
 
+enum CompanyStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum BranchStatus {
+  ACTIVE
+  INACTIVE
+  CLOSED
+}
+
+enum WalletType {
+  YAPE
+  PLIN
+}
+
+enum DocumentType {
+  DNI
+  RUC
+  CE
+  PASSPORT
+}
+
+enum Currency {
+  PEN
+  USD
+  EUR
+}
+
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  YAPE
+  PLIN
+  OTHER
+}
+
+enum UserRole {
+  ADMIN     // Superusuario con acceso a todas las empresas
+  OWNER     // Administrador de una empresa específica
+  STAFF     // Usuario normal que trabaja dentro de una empresa
+}
+
+
+/* ------------- Modelo central ------------- */
+model Company {
+  id           Int          @id @default(autoincrement())
+  name         String
+  ruc          String       @unique
+  logoUrl      String?
+  address      String?
+  phone        String?
+  whatsapp     String?
+  facebookUrl  String?
+  instagramUrl String?
+  tiktokUrl    String?
+  email        String?
+  website      String?
+  slogan       String?      // Frase comercial
+  description  String?      // Breve descripción de la empresa
+  notes        String?      // Observaciones internas o adicionales
+  legalRepresentative String?
+  administrator        String?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  status      CompanyStatus @default(ACTIVE)
+
+  /* Relaciones principales */
+  quotes       Quote[]
+  clients      Client[]
+  bankAccounts BankAccount[]
+  wallets      Wallet[]
+  branches     Branch[]
+  contracts    Contract[]
+  users        User[]
+}
+
+
+
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   name      String?
+  username  String   @unique
+  lastLogin  DateTime?
+  password   String
+  phone      String?
+  isActive   Boolean   @default(true)
+  role       UserRole  @default(STAFF) // Enum que se sugiere agregar
   createdAt DateTime @default(now())
+  updatedAt  DateTime  @updatedAt
+  
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId  Int
 
   quotes    Quote[]
 }
@@ -40,22 +133,27 @@ model User {
 
 model Client {
   id              Int       @id @default(autoincrement())
-  documentType    String    // e.g., "DNI", "RUC", "CE"
+  documentType    DocumentType
   documentNumber  String    @unique
   fullName        String
+  contactPerson   String?
   businessName    String?
   phone           String?
   email           String?
   address         String?
   notes           String?
   createdAt       DateTime  @default(now())
+  companyId      Int
+  company        Company      @relation(fields: [companyId], references: [id])
 
   quotes          Quote[]
+  contracts       Contract[]
 }
 
 
 model Quote {
   id          Int              @id @default(autoincrement())
+  code       String               @unique   // ← opcional POR AHORA
   clientId    Int
   createdAt   DateTime         @default(now())
   status      QuoteStatus
@@ -63,12 +161,15 @@ model Quote {
   total       Float            @default(0)
 
   // Nuevo
-  createdById Int?
   createdBy   User?            @relation(fields: [createdById], references: [id])
+  createdById Int?
+  company     Company      @relation(fields: [companyId], references: [id])
+  companyId   Int          
 
   client      Client           @relation(fields: [clientId], references: [id])
   items       QuoteItem[]
   contract    Contract?
+  observations Observation[]
 }
 
 
@@ -85,6 +186,42 @@ model QuoteItem {
   quote         Quote    @relation(fields: [quoteId], references: [id])
 }
 
+/* ------------- Datos complementarios ------------- */
+model BankAccount {
+  id        Int      @id @default(autoincrement())
+  bank      String
+  accountType String   // Corriente, Detracciones…
+  alias     String?
+  number    String
+  cci       String?
+  currency  Currency     // PEN, USD…
+
+  
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int      
+}
+
+
+model Wallet {
+  id        Int      @id @default(autoincrement())
+  type      WalletType   // YAPE, PLIN
+  phone     String
+  qrUrl     String?
+
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int      
+}
+
+model Branch {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String
+  phone     String?
+  status    BranchStatus @default(ACTIVE)
+
+  company   Company  @relation(fields: [companyId], references: [id])
+  companyId Int     
+}
 
 
 
@@ -103,6 +240,14 @@ model Contract {
   quote            Quote           @relation(fields: [quoteId], references: [id])
   payments         Payment[]
   items            ContractItem[]
+
+  clientId         Int
+  client           Client          @relation(fields: [clientId], references: [id])
+
+  companyId        Int
+  company          Company         @relation(fields: [companyId], references: [id])
+  contractNote      String?         // Nota del contrato, opcional
+  
 }
 
 
@@ -127,9 +272,20 @@ model Payment {
   contractId    Int
   date          DateTime  @default(now())
   amount        Float
-  method        String    // "cash", "transfer", etc.
+  method        PaymentMethod    // "cash", "transfer", etc.
   reference     String?
   notes         String?
 
   contract      Contract  @relation(fields: [contractId], references: [id])
 }
+
+
+model Observation {
+  id         Int      @id @default(autoincrement())
+  quoteId    Int
+  date       DateTime @default(now())
+  type       String   // "estado", "nota", etc.
+  message    String
+  quote      Quote    @relation(fields: [quoteId], references: [id])
+}
+

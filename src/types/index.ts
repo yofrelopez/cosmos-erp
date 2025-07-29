@@ -1,11 +1,20 @@
+
+
+export type ViewQuote = Quote & {
+  client: Client
+  items: QuoteItem[]
+}
+
+
+
 export type QuoteItemForm = {
-  id: number;
-  quoteId: number;
+  id?: number; // en modo creación puede no tener id aún
+  quoteId?: number; // opcional también si es antes de guardar
   description: string;
   unit: string;
   quantity: number;
   unitPrice: number;
-  subtotal: number;
+  subtotal?: number;
 };
 
 
@@ -35,6 +44,22 @@ export interface ClientLite {
   address?: string;
   notes?: string;
   createdAt: string; // ya como string para evitar problemas de serialización
+}
+
+// types/quote.ts
+export interface Quote {
+  id: number
+  code: string         // nuevo campo
+  clientId: number
+  createdAt: string // puede ser Date si lo transformas
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED'
+  notes?: string | null
+  total: number
+  createdById?: number | null
+  client: {
+    id: number
+    fullName: string
+  }
 }
 
 

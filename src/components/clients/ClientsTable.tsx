@@ -163,6 +163,7 @@ const {
       {selectedClient && (
         <>
           <ViewClientModal
+          
             client={selectedClient}
             open={viewModalOpen}
             onClose={() => setViewModalOpen(false)}
