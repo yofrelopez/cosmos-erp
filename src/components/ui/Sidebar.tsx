@@ -3,12 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { User, FileText, LogOut } from 'lucide-react';
+import { User, FileText, LogOut, Building } from 'lucide-react';
 import CompanySwitcher from './CompanySwitcher';
 
 const nav = [
   { href: '/clientes', label: 'Clientes', icon: User },
   { href: '/cotizaciones', label: 'Cotizaciones', icon: FileText },
+  { href: '/empresas', label: 'Empresas', icon: Building },
+
 ];
 
 export default function Sidebar() {
@@ -50,12 +52,15 @@ export default function Sidebar() {
       </nav>
 
       {/* placeholder para logout o ajustes */}
-      <button
-        className="mt-auto m-4 flex items-center gap-3 text-gray-500 hover:text-gray-700"
-        disabled
-      >
-        <LogOut size={18} /> Cerrar sesión
-      </button>
+      <div className='mt-8 border-t pt-4 text-center'>
+        <button
+          className="mt-auto m-4 flex items-center gap-3 text-gray-500 hover:text-gray-700"
+          disabled
+        >
+          <LogOut size={18} /> Cerrar sesión
+        </button>
+
+      </div>
     </aside>
   );
 }
