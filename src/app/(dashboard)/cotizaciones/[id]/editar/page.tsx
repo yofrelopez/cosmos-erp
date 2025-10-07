@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 };
 
 interface EditQuotePageProps {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditQuotePage({ params }: EditQuotePageProps) {

@@ -1,0 +1,68 @@
+'use client';
+
+import Link from 'next/link';
+import Image from 'next/image';
+import { usePathname } from 'next/navigation';
+import { User, FileText, LogOut, Building, DollarSign, Calculator, Frame } from 'lucide-react';
+import CompanySwitcher from './CompanySwitcher';
+
+const nav = [
+  { href: '/clientes', label: 'Clientes', icon: User },
+  { href: '/cotizaciones', label: 'Cotizaciones', icon: FileText },
+  { href: '/cotizaciones/calculadora-vidrios', label: 'Calculadora Vidrios', icon: Calculator },
+  { href: '/cotizaciones/calculadora-cuadros', label: 'Calculadora Cuadros', icon: Frame },
+  { href: '/empresas', label: 'Empresas', icon: Building },
+  { href: '/precios', label: 'Precios', icon: DollarSign },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+
+  return (
+    <aside className="w-64 bg-white shadow-lg">
+      {/* encabezado con logo */}
+      <div className="flex items-center justify-center h-20 my-8 p-4">
+        <Link href="/">
+          <Image
+            src="/logo_1.png"        // ← usa logo_2.png si prefieres el isotipo
+            alt="ERP Cosmos"
+            width={160}
+            height={40}
+            priority
+          />
+        </Link>
+      </div>
+      {/* <div className="p-4 text-xl font-bold border-b">ERP Cosmos</div> */}
+      {/* ⬇️ switcher aquí */}
+      <CompanySwitcher />
+
+      <nav className="mt-4 space-y-1">
+        {nav.map(({ href, label, icon: Icon }) => {
+          const active = pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`flex items-center gap-3 px-4 py-2 mx-2 rounded-lg
+                          ${active ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'}`}
+            >
+              <Icon size={18} />
+              {label}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* placeholder para logout o ajustes */}
+      <div className='mt-8 border-t pt-4 text-center'>
+        <button
+          className="mt-auto m-4 flex items-center gap-3 text-gray-500 hover:text-gray-700"
+          disabled
+        >
+          <LogOut size={18} /> Cerrar sesión
+        </button>
+
+      </div>
+    </aside>
+  );
+}

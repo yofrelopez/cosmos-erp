@@ -27,7 +27,6 @@ enum DeliveryStatus {
   DELIVERED
 }
 
-
 enum CompanyStatus {
   ACTIVE
   INACTIVE
@@ -58,7 +57,6 @@ enum Currency {
   EUR
 }
 
-
 enum PaymentMethod {
   CASH
   TRANSFER
@@ -69,36 +67,39 @@ enum PaymentMethod {
 }
 
 enum UserRole {
-  ADMIN     // Superusuario con acceso a todas las empresas
-  OWNER     // Administrador de una empresa específica
-  STAFF     // Usuario normal que trabaja dentro de una empresa
+  SUPER_ADMIN // Superusuario con acceso a todas las empresas
+  ADMIN       // Administrador de una empresa específica  
+  OPERATOR    // Usuario normal que trabaja dentro de una empresa
 }
 
-
-/* ------------- Modelo central ------------- */
+/**
+ * ------------- Modelo central -------------
+ */
 model Company {
-  id           Int          @id @default(autoincrement())
-  name         String
-  ruc          String       @unique
-  logoUrl      String?
-  address      String?
-  phone        String?
-  whatsapp     String?
-  facebookUrl  String?
-  instagramUrl String?
-  tiktokUrl    String?
-  email        String?
-  website      String?
-  slogan       String?      // Frase comercial
-  description  String?      // Breve descripción de la empresa
-  notes        String?      // Observaciones internas o adicionales
+  id                  Int           @id @default(autoincrement())
+  name                String
+  ruc                 String        @unique
+  logoUrl             String?
+  address             String?
+  phone               String?
+  whatsapp            String?
+  facebookUrl         String?
+  instagramUrl        String?
+  tiktokUrl           String?
+  email               String?
+  website             String?
+  slogan              String? // Frase comercial
+  description         String? // Breve descripción de la empresa
+  notes               String? // Observaciones internas o adicionales
   legalRepresentative String?
-  administrator        String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  status      CompanyStatus @default(ACTIVE)
+  administrator       String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  status              CompanyStatus @default(ACTIVE)
 
-  /* Relaciones principales */
+  /**
+   * Relaciones principales
+   */
   quotes       Quote[]
   clients      Client[]
   bankAccounts BankAccount[]
@@ -107,341 +108,304 @@ model Company {
   contracts    Contract[]
   users        User[]
 
-
-    pricingGlassBases     PricingGlassBase[]
-  pricingGlassModifiers PricingGlassModifier[]
-  pricingGlassServices  PricingGlassService[]
-  pricingMoldings       PricingMolding[]
-  pricingMatboards      PricingMatboard[]
-  pricingAccessories    PricingAccessory[]
-  pricingBackings       PricingBacking[]
-  pricingFramePresets   PricingFramePreset[]
+  pricingGlass        PricingGlass[]
+  pricingMoldings     PricingMolding[]
+  pricingMatboards    PricingMatboard[]
+  pricingAccessories  PricingAccessory[]
+  pricingBackings     PricingBacking[]
+  pricingFramePresets PricingFramePreset[]
+  MoldingTexture      MoldingTexture[]
+  MoldingColor        MoldingColor[]
+  PricingThickness    PricingThickness[]
 }
-
-
-
 
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  username  String   @unique
-  lastLogin  DateTime?
-  password   String
-  phone      String?
-  isActive   Boolean   @default(true)
-  role       UserRole  @default(STAFF) // Enum que se sugiere agregar
-  createdAt DateTime @default(now())
-  updatedAt  DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  username      String?   @unique
+  lastLogin     DateTime?
+  password      String?
+  phone         String?
+  isActive      Boolean   @default(true)
+  role          UserRole  @default(OPERATOR)
+  emailVerified DateTime? @map("email_verified")
+  image         String?
   
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  quotes    Quote[]
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+  
+  // Current company relation (opcional, puede ser null si tiene múltiples empresas)
+  company   Company? @relation(fields: [companyId], references: [id])
+  companyId Int?
+
+  // Relaciones existentes
+  quotes Quote[]
+
+  @@map("users")
 }
 
-
 model Client {
-  id              Int       @id @default(autoincrement())
-  documentType    DocumentType
-  documentNumber  String    @unique
-  fullName        String
-  contactPerson   String?
-  businessName    String?
-  phone           String?
-  email           String?
-  address         String?
-  notes           String?
-  createdAt       DateTime  @default(now())
+  id             Int          @id @default(autoincrement())
+  documentType   DocumentType
+  documentNumber String       @unique
+  fullName       String
+  contactPerson  String?
+  businessName   String?
+  phone          String?
+  email          String?
+  address        String?
+  notes          String?
+  createdAt      DateTime     @default(now())
   companyId      Int
   company        Company      @relation(fields: [companyId], references: [id])
 
-  quotes          Quote[]
-  contracts       Contract[]
+  quotes    Quote[]
+  contracts Contract[]
 }
 
-
 model Quote {
-  id          Int              @id @default(autoincrement())
-  code       String               @unique   // ← opcional POR AHORA
-  clientId    Int
-  createdAt   DateTime         @default(now())
-  status      QuoteStatus
-  notes       String?
-  total       Float            @default(0)
+  id        Int         @id @default(autoincrement())
+  code      String      @unique // ← opcional POR AHORA
+  clientId  Int
+  createdAt DateTime    @default(now())
+  status    QuoteStatus
+  notes     String?
+  total     Float       @default(0)
 
   // Nuevo
-  createdBy   User?            @relation(fields: [createdById], references: [id])
-  createdById Int?
-  company     Company      @relation(fields: [companyId], references: [id])
-  companyId   Int          
+  createdBy   User?   @relation(fields: [createdById], references: [id])
+  createdById String?
+  company     Company @relation(fields: [companyId], references: [id])
+  companyId   Int
 
-  client      Client           @relation(fields: [clientId], references: [id])
-  items       QuoteItem[]
-  contract    Contract?
+  client       Client        @relation(fields: [clientId], references: [id])
+  items        QuoteItem[]
+  contract     Contract?
   observations Observation[]
 }
 
-
-
 model QuoteItem {
-  id            Int      @id @default(autoincrement())
-  quoteId       Int
-  description   String
-  unit          String
-  quantity      Float
-  unitPrice     Float
-  subtotal      Float
+  id          Int    @id @default(autoincrement())
+  quoteId     Int
+  description String
+  unit        String
+  quantity    Float
+  unitPrice   Float
+  subtotal    Float
 
-  quote         Quote    @relation(fields: [quoteId], references: [id])
+  quote Quote @relation(fields: [quoteId], references: [id])
 }
 
-/* ------------- Datos complementarios ------------- */
+/**
+ * ------------- Datos complementarios -------------
+ */
 model BankAccount {
-  id        Int      @id @default(autoincrement())
-  bank      String
-  accountType String   // Corriente, Detracciones…
-  alias     String?
-  number    String
-  cci       String?
-  currency  Currency     // PEN, USD…
+  id          Int      @id @default(autoincrement())
+  bank        String
+  accountType String // Corriente, Detracciones…
+  alias       String?
+  number      String
+  cci         String?
+  currency    Currency // PEN, USD…
 
-  
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId Int      
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
 }
-
 
 model Wallet {
-  id        Int      @id @default(autoincrement())
-  type      WalletType   // YAPE, PLIN
-  phone     String
-  qrUrl     String?
+  id    Int        @id @default(autoincrement())
+  type  WalletType // YAPE, PLIN
+  phone String
+  qrUrl String?
 
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId Int      
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
 }
 
 model Branch {
-  id        Int      @id @default(autoincrement())
-  name      String
-  address   String
-  phone     String?
-  status    BranchStatus @default(ACTIVE)
+  id      Int          @id @default(autoincrement())
+  name    String
+  address String
+  phone   String?
+  status  BranchStatus @default(ACTIVE)
 
-  company   Company  @relation(fields: [companyId], references: [id])
-  companyId Int     
+  company   Company @relation(fields: [companyId], references: [id])
+  companyId Int
 }
-
-
 
 model Contract {
-  id               Int             @id @default(autoincrement())
-  quoteId          Int             @unique
-  date             DateTime        @default(now())
-  paymentStatus    PaymentStatus
-  amountPaid       Float           @default(0)
-  amountPending    Float           @default(0)
-  deliveryDate     DateTime?
-  deliveredAt      DateTime?
-  deliveryStatus   DeliveryStatus
-  notes            String?
+  id             Int            @id @default(autoincrement())
+  quoteId        Int            @unique
+  date           DateTime       @default(now())
+  paymentStatus  PaymentStatus
+  amountPaid     Float          @default(0)
+  amountPending  Float          @default(0)
+  deliveryDate   DateTime?
+  deliveredAt    DateTime?
+  deliveryStatus DeliveryStatus
+  notes          String?
 
-  quote            Quote           @relation(fields: [quoteId], references: [id])
-  payments         Payment[]
-  items            ContractItem[]
+  quote    Quote          @relation(fields: [quoteId], references: [id])
+  payments Payment[]
+  items    ContractItem[]
 
-  clientId         Int
-  client           Client          @relation(fields: [clientId], references: [id])
+  clientId Int
+  client   Client @relation(fields: [clientId], references: [id])
 
-  companyId        Int
-  company          Company         @relation(fields: [companyId], references: [id])
-  contractNote      String?         // Nota del contrato, opcional
-  
+  companyId    Int
+  company      Company @relation(fields: [companyId], references: [id])
+  contractNote String? // Nota del contrato, opcional
 }
-
-
 
 model ContractItem {
-  id             Int      @id @default(autoincrement())
-  contractId     Int
-  description    String
-  unit           String
-  quantity       Float
-  unitPrice      Float
-  subtotal       Float
+  id          Int    @id @default(autoincrement())
+  contractId  Int
+  description String
+  unit        String
+  quantity    Float
+  unitPrice   Float
+  subtotal    Float
 
-  contract       Contract  @relation(fields: [contractId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
 }
-
-
-
 
 model Payment {
-  id            Int       @id @default(autoincrement())
-  contractId    Int
-  date          DateTime  @default(now())
-  amount        Float
-  method        PaymentMethod    // "cash", "transfer", etc.
-  reference     String?
-  notes         String?
+  id         Int           @id @default(autoincrement())
+  contractId Int
+  date       DateTime      @default(now())
+  amount     Float
+  method     PaymentMethod // "cash", "transfer", etc.
+  reference  String?
+  notes      String?
 
-  contract      Contract  @relation(fields: [contractId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
 }
-
 
 model Observation {
-  id         Int      @id @default(autoincrement())
-  quoteId    Int
-  date       DateTime @default(now())
-  type       String   // "estado", "nota", etc.
-  message    String
-  quote      Quote    @relation(fields: [quoteId], references: [id])
+  id      Int      @id @default(autoincrement())
+  quoteId Int
+  date    DateTime @default(now())
+  type    String // "estado", "nota", etc.
+  message String
+  quote   Quote    @relation(fields: [quoteId], references: [id])
 }
-
-
-
 
 // ============================================================================
 // VIDRIOS
 // ============================================================================
 
-enum PricingGlassFamily {
+enum GlassFamily {
   PLANO
   CATEDRAL
+  TEMPLADO
+  ESPEJO
 }
 
-enum PricingGlassFinish {
+enum GlassColorType {
   INCOLORO
-  MATE
+  COLOR
   POLARIZADO
   REFLEJANTE
 }
 
-enum PricingColor {
-  NONE
-  GRIS
-  AMBAR
-  AZUL
-}
-
-enum PricingCatedralPattern {
-  FLORA
+enum GlassTexture {
+  LISO
   CUADRICULADO
-  KARATACHI
-  MARI
   LLOVIZNA
-  OTRO
+  GARATACHI
+  FLORA
+  MARIHUANA
+  RAMAS
 }
 
-enum PricingUnit {
-  FT2
-  UNIDAD
-}
+// ── Tabla principal de precios de vidrio ─────────────────────────────────────
+model PricingGlass {
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
-enum PricingGlassProcessType {
-  CANTO_PULIDO
-  CANTO_BISEL
-  PERFORACION
-  ESQUINA_REDONDA
-  CORTE_ESPECIAL
-}
+  commercialName String // Nombre libre, obligatorio
+  family         GlassFamily // PLANO, CATEDRAL, TEMPLADO, ESPEJO
+  thicknessMM    Decimal        @db.Decimal(5, 2)
+  colorType      GlassColorType @default(INCOLORO) // Afecta precio
+  colorId        Int? // Solo informativo
+  colorRef       Color?         @relation(fields: [colorId], references: [id])
+  oldColor       String? // Temporal para migración
+  price          Decimal        @db.Decimal(12, 2)
 
-enum PricingModifierTarget {
-  FINISH_COLOR
-  CATEDRAL_COLOR
-  TEMPLADO
-}
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
 
-enum PricingModifierValueType {
-  FLAT
-  PERCENT
-}
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-// ── Precios base ─────────────────────────────────────────────────────────────
-model PricingGlassBase {
-  id            Int                @id @default(autoincrement())
-  companyId     Int
-  company       Company            @relation(fields: [companyId], references: [id])
-
-  family        PricingGlassFamily
-  thicknessMM   Decimal            @db.Decimal(5,2)
-  pricePerFt2   Decimal            @db.Decimal(12,2)
-  minBillableFt2 Decimal?          @db.Decimal(6,2)
-  minCharge     Decimal?           @db.Decimal(12,2)
-
-  validFrom     DateTime           @default(now())
-  validTo       DateTime?
-  isActive      Boolean            @default(true)
-
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-
-  @@map("pricing_glass_base")
-  @@index([companyId, family, thicknessMM])
+  @@unique([companyId, commercialName, family, thicknessMM, validFrom])
+  @@index([companyId, commercialName])
+  @@index([companyId, family])
+  @@index([colorType])
   @@index([isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, family, thicknessMM, validFrom])
+  @@map("pricing_glass")
 }
 
-// ── Modificadores ────────────────────────────────────────────────────────────
-model PricingGlassModifier {
-  id              Int                       @id @default(autoincrement())
-  companyId       Int
-  company         Company                   @relation(fields: [companyId], references: [id])
+// ── Catálogo simple de texturas ──────────────────────────────────────────
+model Texture {
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  target          PricingModifierTarget
-  family          PricingGlassFamily?
-  finish          PricingGlassFinish?
-  color           PricingColor?
-  minThicknessMM  Decimal?                  @db.Decimal(5,2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  valueType       PricingModifierValueType
-  value           Decimal                   @db.Decimal(12,4)
-
-  validFrom       DateTime                  @default(now())
-  validTo         DateTime?
-  isActive        Boolean                   @default(true)
-
-  createdAt       DateTime                  @default(now())
-  updatedAt       DateTime                  @updatedAt
-
-  @@map("pricing_glass_modifier")
-  @@index([companyId, target])
-  @@index([family, finish, color])
-  @@index([isActive])
-  @@index([validFrom])
-  @@index([validTo])
-  @@unique([companyId, target, family, finish, color, minThicknessMM, validFrom])
+  @@map("textures")
 }
 
-// ── Servicios ────────────────────────────────────────────────────────────────
-model PricingGlassService {
-  id          Int                     @id @default(autoincrement())
-  companyId   Int
-  company     Company                 @relation(fields: [companyId], references: [id])
+// ── Catálogo de colores de vidrio ──────────────────────────────────────────
+model Color {
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
-  process     PricingGlassProcessType
-  unit        PricingUnit
-  price       Decimal                 @db.Decimal(12,2)
-  minCharge   Decimal?                @db.Decimal(12,2)
+  glasses PricingGlass[]
 
-  validFrom   DateTime                @default(now())
-  validTo     DateTime?
-  isActive    Boolean                 @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  createdAt   DateTime                @default(now())
-  updatedAt   DateTime                @updatedAt
-
-  @@map("pricing_glass_service")
-  @@index([companyId, process, unit])
-  @@index([isActive])
-  @@index([validFrom])
-  @@index([validTo])
-  @@unique([companyId, process, unit, validFrom])
+  @@map("colors")
 }
 
+// ── Catálogo de texturas para molduras ──────────────────────────────────────
+model MoldingTexture {
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  name      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@map("molding_textures")
+}
+
+// ── Catálogo de colores para molduras ────────────────────────────────────────
+model MoldingColor {
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  name      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, name])
+  @@map("molding_colors")
+}
 
 // ============================================================================
 // CUADROS
@@ -450,16 +414,7 @@ model PricingGlassService {
 enum PricingMoldingQuality {
   SIMPLE
   FINA
-}
-
-enum PricingMoldingThickness {
-  MEDIA
-  TRES_CUARTOS
-  UNA_PULGADA
-  PULGADA_Y_MEDIA
-  PULGADA_TRES_CUARTOS
-  DOS_PULGADAS
-  OTRO
+  BASTIDOR
 }
 
 enum PricingFrameKind {
@@ -470,126 +425,180 @@ enum PricingFrameKind {
   ESPECIAL
 }
 
+// ---- Espesor de Molduras -----------------------------
+
+model PricingThickness {
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
+  name      String
+
+  moldings PricingMolding[]
+
+  @@unique([companyId, name])
+  @@map("pricing_thickness")
+}
+
 // ── Molduras ─────────────────────────────────────────────────────────────────
 model PricingMolding {
-  id          Int                    @id @default(autoincrement())
-  companyId   Int
-  company     Company                @relation(fields: [companyId], references: [id])
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
-  name        String
+  name String
+
   quality     PricingMoldingQuality
-  thickness   PricingMoldingThickness
-  pricePerM   Decimal                @db.Decimal(12,2)
+  thicknessId Int
+  thickness   PricingThickness      @relation(fields: [thicknessId], references: [id])
+  pricePerM   Decimal               @db.Decimal(12, 2)
 
-  validFrom   DateTime               @default(now())
-  validTo     DateTime?
-  isActive    Boolean                @default(true)
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
 
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("pricing_molding")
-  @@index([companyId, name, quality, thickness])
+  @@unique([companyId, name, thicknessId, validFrom])
+  @@index([companyId, name, quality, thicknessId])
   @@index([isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, name, thickness, validFrom])
+  @@map("pricing_molding")
 }
 
 // ── Paspartú ─────────────────────────────────────────────────────────────────
 model PricingMatboard {
-  id          Int        @id @default(autoincrement())
-  companyId   Int
-  company     Company    @relation(fields: [companyId], references: [id])
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
   name        String
-  pricePerFt2 Decimal     @db.Decimal(12,2)
+  pricePerFt2 Decimal @db.Decimal(12, 2)
 
-  validFrom   DateTime    @default(now())
-  validTo     DateTime?
-  isActive    Boolean     @default(true)
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("pricing_matboard")
+  @@unique([companyId, name, validFrom])
   @@index([companyId, name])
   @@index([isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, name, validFrom])
+  @@map("pricing_matboard")
 }
 
 // ── Accesorios ───────────────────────────────────────────────────────────────
 model PricingAccessory {
-  id          Int        @id @default(autoincrement())
-  companyId   Int
-  company     Company    @relation(fields: [companyId], references: [id])
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
-  name        String
-  price       Decimal     @db.Decimal(12,2)
+  name  String
+  price Decimal @db.Decimal(12, 2)
 
-  validFrom   DateTime    @default(now())
-  validTo     DateTime?
-  isActive    Boolean     @default(true)
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("pricing_accessory")
+  @@unique([companyId, name, validFrom])
   @@index([companyId, name])
   @@index([isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, name, validFrom])
+  @@map("pricing_accessory")
 }
 
 // ── Backing / Soporte ───────────────────────────────────────────────────────
 model PricingBacking {
-  id          Int        @id @default(autoincrement())
-  companyId   Int
-  company     Company    @relation(fields: [companyId], references: [id])
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
   name        String
-  pricePerFt2 Decimal     @db.Decimal(12,2)
+  pricePerFt2 Decimal @db.Decimal(12, 2)
 
-  validFrom   DateTime    @default(now())
-  validTo     DateTime?
-  isActive    Boolean     @default(true)
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
+  isActive  Boolean   @default(true)
 
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("pricing_backing")
+  @@unique([companyId, name, validFrom])
   @@index([companyId, name])
   @@index([isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, name, validFrom])
+  @@map("pricing_backing")
 }
 
 // ── Presets de cuadro ───────────────────────────────────────────────────────
 model PricingFramePreset {
-  id          Int             @id @default(autoincrement())
-  companyId   Int
-  company     Company         @relation(fields: [companyId], references: [id])
+  id        Int     @id @default(autoincrement())
+  companyId Int
+  company   Company @relation(fields: [companyId], references: [id])
 
-  name        String
-  kind        PricingFrameKind
-  recipe      Json
+  name   String
+  kind   PricingFrameKind
+  recipe Json
 
-  isActive    Boolean         @default(true)
-  validFrom   DateTime        @default(now())
-  validTo     DateTime?
+  isActive  Boolean   @default(true)
+  validFrom DateTime  @default(now())
+  validTo   DateTime?
 
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("pricing_frame_preset")
+  @@unique([companyId, name, validFrom])
   @@index([companyId, kind, isActive])
   @@index([validFrom])
   @@index([validTo])
-  @@unique([companyId, name, validFrom])
+  @@map("pricing_frame_preset")
 }
 
+// NextAuth.js Models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}

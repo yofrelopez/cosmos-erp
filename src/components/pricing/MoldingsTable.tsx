@@ -1,0 +1,277 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { PricingMolding, PricingThickness } from '@prisma/client'
+import { Button } from '@/components/ui/Button'
+import RowActions, { Action } from '@/components/common/RowActions'
+import { Eye, Pencil, Trash2, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import AddMoldingModal from './AddMoldingModal'
+import EditMoldingModal from './EditMoldingModal'
+import ViewMoldingModal from './ViewMoldingModal'
+
+// Tipos serializados
+type SerializedThickness = Omit<PricingThickness, 'pricePerM'> & {
+  pricePerM: number | null
+}
+
+type SerializedMolding = Omit<PricingMolding, 'pricePerM'> & {
+  pricePerM: number
+  thickness: SerializedThickness
+}
+
+interface Props {
+  companyId: number
+}
+
+const QUALITIES = [
+  { value: 'SIMPLE', label: 'Simple', color: 'bg-blue-100 text-blue-800' },
+  { value: 'FINA', label: 'Fina', color: 'bg-emerald-100 text-emerald-800' },
+  { value: 'BASTIDOR', label: 'Bastidor', color: 'bg-purple-100 text-purple-800' }
+]
+
+export default function MoldingsTable({ companyId }: Props) {
+  const [moldings, setMoldings] = useState<SerializedMolding[]>([])
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [editingMolding, setEditingMolding] = useState<SerializedMolding | null>(null)
+  const [viewingMolding, setViewingMolding] = useState<SerializedMolding | null>(null)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [selectedQuality, setSelectedQuality] = useState<string>('')
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    if (companyId) {
+      refreshMoldings()
+    }
+  }, [companyId, selectedQuality]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Refresh data
+  const refreshMoldings = async () => {
+    if (!companyId) return
+    
+    try {
+      setLoading(true)
+      let url = `/api/pricing/moldings?companyId=${companyId}`
+      if (selectedQuality) {
+        url += `&quality=${selectedQuality}`
+      }
+      
+      const res = await fetch(url)
+      if (res.ok) {
+        const data = await res.json()
+        setMoldings(data)
+      }
+    } catch (error) {
+      console.error('Error refreshing moldings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle delete with confirmation
+  const handleDelete = async (molding: SerializedMolding) => {
+    if (!companyId) return
+    
+    // Toast de confirmación
+    toast(`¿Eliminar "${molding.name}"?`, {
+      description: 'Esta acción no se puede deshacer',
+      action: {
+        label: 'Eliminar',
+        onClick: async () => {
+          setDeletingId(molding.id)
+          try {
+            const res = await fetch(`/api/pricing/moldings/${molding.id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ companyId })
+            })
+
+            if (res.ok) {
+              toast.success('Moldura eliminada correctamente')
+              refreshMoldings()
+            } else {
+              throw new Error('Error al eliminar')
+            }
+          } catch (error) {
+            toast.error('Error al eliminar la moldura')
+          } finally {
+            setDeletingId(null)
+          }
+        }
+      },
+      cancel: {
+        label: 'Cancelar',
+        onClick: () => {
+          // No hacer nada, solo cerrar el toast
+        }
+      }
+    })
+  }
+
+  const getRowActions = (molding: SerializedMolding): Action[] => [
+    {
+      label: 'Ver detalles',
+      icon: Eye,
+      onClick: () => setViewingMolding(molding),
+      variant: 'default'
+    },
+    {
+      label: 'Editar',
+      icon: Pencil,
+      onClick: () => setEditingMolding(molding),
+      variant: 'default'
+    },
+    {
+      label: 'Eliminar',
+      icon: Trash2,
+      onClick: () => handleDelete(molding),
+      variant: 'danger',
+      disabled: deletingId === molding.id
+    }
+  ]
+
+  const getQualityStyle = (quality: string) => {
+    const qualityConfig = QUALITIES.find(q => q.value === quality)
+    return qualityConfig?.color || 'bg-gray-100 text-gray-800'
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-4">
+          <select
+            value={selectedQuality}
+            onChange={(e) => setSelectedQuality(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Todas las calidades</option>
+            {QUALITIES.map((quality) => (
+              <option key={quality.value} value={quality.value}>
+                {quality.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        <Button onClick={() => setShowAddModal(true)} className="gap-2">
+          <Plus size={16} />
+          Nueva Moldura
+        </Button>
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border">
+        <table className="min-w-full divide-y divide-gray-200 bg-white">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nombre
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Calidad
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Espesor
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Precio por metro (S/)
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Vigente desde
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  Cargando molduras...
+                </td>
+              </tr>
+            ) : moldings.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
+                  No hay molduras registradas
+                </td>
+              </tr>
+            ) : (
+              moldings.map((molding) => (
+                <tr key={molding.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="font-medium text-gray-900">{molding.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getQualityStyle(molding.quality)}`}>
+                      {QUALITIES.find(q => q.value === molding.quality)?.label || molding.quality}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900">{molding.thickness.name}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-gray-900">S/ {molding.pricePerM.toFixed(2)}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(molding.validFrom).toLocaleDateString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                      molding.isActive 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {molding.isActive ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <RowActions actions={getRowActions(molding)} />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modals */}
+      {showAddModal && (
+        <AddMoldingModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            setShowAddModal(false)
+            refreshMoldings()
+          }}
+          companyId={companyId}
+        />
+      )}
+
+      {editingMolding && (
+        <EditMoldingModal
+          open={!!editingMolding}
+          molding={editingMolding}
+          onClose={() => setEditingMolding(null)}
+          onSuccess={() => {
+            setEditingMolding(null)
+            refreshMoldings()
+          }}
+          companyId={companyId}
+        />
+      )}
+
+      {viewingMolding && (
+        <ViewMoldingModal
+          open={!!viewingMolding}
+          molding={viewingMolding}
+          onClose={() => setViewingMolding(null)}
+        />
+      )}
+    </div>
+  )
+}

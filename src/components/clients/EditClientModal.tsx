@@ -18,6 +18,7 @@ export default function EditClientModal({ client, open, onClose, onSuccess }: Ed
     documentType: client.documentType as 'DNI' | 'RUC' | 'CE',
     documentNumber: client.documentNumber,
     fullName: client.fullName,
+    companyId: client.companyId,
     businessName: client.businessName ?? '',
     phone: client.phone ?? '',
     email: client.email ?? '',

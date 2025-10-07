@@ -1,0 +1,226 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { PricingThickness } from '@prisma/client'
+import { Button } from '@/components/ui/Button'
+import RowActions, { Action } from '@/components/common/RowActions'
+import { Eye, Pencil, Trash2, Plus, Layers } from 'lucide-react'
+import { toast } from 'sonner'
+import { useCompanyStore } from '@/lib/store/useCompanyStore'
+
+export default function EspesoresPage() {
+  const companyId = useCompanyStore((s) => s.company?.id)
+  const [thicknesses, setThicknesses] = useState<PricingThickness[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showModal, setShowModal] = useState(false)
+  const [editingThickness, setEditingThickness] = useState<PricingThickness | null>(null)
+
+  // Cargar datos iniciales
+  useEffect(() => {
+    if (companyId) {
+      refreshThicknesses()
+    }
+  }, [companyId])
+
+  // Refresh data
+  const refreshThicknesses = async () => {
+    if (!companyId) return
+    
+    try {
+      setLoading(true)
+      const res = await fetch(`/api/pricing/thicknesses?companyId=${companyId}`)
+      if (res.ok) {
+        const data = await res.json()
+        setThicknesses(data)
+      }
+    } catch (error) {
+      console.error('Error refreshing thicknesses:', error)
+      toast.error('Error al cargar los espesores')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle delete with confirmation
+  const handleDelete = async (thickness: PricingThickness) => {
+    if (!companyId) return
+    
+    toast(`¿Eliminar espesor "${thickness.name}"?`, {
+      description: 'Esta acción no se puede deshacer',
+      action: {
+        label: 'Eliminar',
+        onClick: async () => {
+          try {
+            const res = await fetch(`/api/pricing/thicknesses/${thickness.id}`, {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ companyId })
+            })
+
+            if (res.ok) {
+              toast.success('Espesor eliminado correctamente')
+              refreshThicknesses()
+            } else {
+              throw new Error('Error al eliminar')
+            }
+          } catch (error) {
+            toast.error('Error al eliminar el espesor')
+          }
+        }
+      },
+      cancel: {
+        label: 'Cancelar',
+        onClick: () => {}
+      }
+    })
+  }
+
+  // Handle edit thickness
+  const handleEdit = (thickness: PricingThickness) => {
+    setEditingThickness(thickness)
+    setShowModal(true)
+  }
+
+  const getRowActions = (thickness: PricingThickness): Action[] => [
+    {
+      label: 'Ver detalles',
+      icon: Eye,
+      onClick: () => console.log('Ver espesor:', thickness.id),
+      variant: 'default'
+    },
+    {
+      label: 'Editar',
+      icon: Pencil,
+      onClick: () => handleEdit(thickness),
+      variant: 'default'
+    },
+    {
+      label: 'Eliminar',
+      icon: Trash2,
+      onClick: () => handleDelete(thickness),
+      variant: 'danger'
+    }
+  ]
+
+  if (!companyId) {
+    return (
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3">
+              <Layers className="h-6 w-6 text-blue-600" />
+              <div>
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Espesores de Molduras</h2>
+                <p className="mt-1 text-sm text-gray-600">
+                  Gestiona el catálogo de espesores disponibles para molduras
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="text-center py-10">
+          <p className="text-gray-500">Selecciona una empresa para continuar</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-3">
+            <Layers className="h-6 w-6 text-blue-600" />
+            <div>
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Espesores de Molduras</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Gestiona el catálogo de espesores disponibles para molduras
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="flex-shrink-0">
+          <Button 
+            onClick={() => setShowModal(true)} 
+            className="gap-2 w-full sm:w-auto bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus size={16} />
+            Nuevo Espesor
+          </Button>
+        </div>
+      </div>
+      
+      <div className="overflow-x-auto rounded-lg border bg-white">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Nombre
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Creado
+              </th>
+              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Acciones
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  Cargando espesores...
+                </td>
+              </tr>
+            ) : thicknesses.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <Layers className="h-8 w-8 text-gray-400" />
+                    <p>No hay espesores registrados</p>
+                    <Button 
+                      onClick={() => setShowModal(true)}
+                      variant="outline"
+                      size="sm"
+                      className="gap-1"
+                    >
+                      <Plus size={14} />
+                      Crear primer espesor
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ) : (
+              thicknesses.map((thickness) => (
+                <tr key={thickness.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">#{thickness.id}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center">
+                        <Layers className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div className="font-medium text-gray-900">{thickness.name}</div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-500">
+                      {new Date(thickness.createdAt).toLocaleDateString()}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <RowActions actions={getRowActions(thickness)} />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}

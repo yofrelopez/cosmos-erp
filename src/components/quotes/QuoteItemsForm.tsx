@@ -5,6 +5,7 @@ import { useEffect, useRef } from 'react';
 import { useFormContext, useFieldArray } from 'react-hook-form';
 import { Trash2 } from 'lucide-react';
 import { QuoteItemForm } from '@/types';
+import { toast } from 'sonner';
 
 const unidadesSugeridas = [
   'unidad',
@@ -79,107 +80,143 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
 
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-800">Ítems de la cotización</h2>
+    <div className="space-y-4 sm:space-y-6">
 
       {fields.map((field, index) => (
-        <div key={field.id} className="flex flex-wrap items-end gap-4 border-b pb-4">
-          <div className="flex flex-col w-60">
-            <label className="text-sm font-medium text-gray-700">Descripción</label>
-            <input
-              {...register(`items.${index}.description`)}
-              disabled={isEditMode}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-              placeholder="Ej. Vidrio templado"
-            />
-            {isEditMode && <p className="text-xs text-gray-500 mt-1">Este campo no se puede editar.</p>}
-          </div>
+        <div key={field.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+          
+          {/* MOBILE: Layout vertical con pares - DESKTOP: Layout horizontal */}
+          <div className="space-y-4 lg:space-y-0 lg:flex lg:items-start lg:gap-4">
+            
+            {/* Descripción - Flex-grow en desktop para ocupar espacio disponible */}
+            <div className="lg:flex-1 lg:min-w-0">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Descripción</label>
+              <input
+                {...register(`items.${index}.description`)}
+                disabled={isEditMode}
+                className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
+                placeholder="Ej. Vidrio templado transparente 6mm con bordes pulidos y esquinas redondeadas"
+              />
+              {isEditMode && <p className="text-xs text-gray-500 mt-1">Este campo no se puede editar.</p>}
+            </div>
 
-          <div className="flex flex-col w-24">
-            <label className="text-sm font-medium text-gray-700">Cantidad</label>
-            <input
-              type="number"
-              {...register(`items.${index}.quantity`, { valueAsNumber: true })}
-              disabled={isEditMode}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-              min={1}
-            />
-            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+            {/* MOBILE: Cantidad y Unidad en 2 columnas - DESKTOP: Flex con gap */}
+            <div className="grid grid-cols-2 gap-3 lg:flex lg:gap-4">
+              
+              {/* Cantidad */}
+              <div className="lg:w-24">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cantidad</label>
+                <input
+                  type="number"
+                  {...register(`items.${index}.quantity`, { valueAsNumber: true })}
+                  disabled={isEditMode}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
+                  min={1}
+                />
+                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+              </div>
 
-          </div>
+              {/* Unidad de medida */}
+              <div className="lg:w-32">
+                <label className="block text-sm font-medium text-gray-700 mb-2">U. Medida</label>
+                <select
+                  {...register(`items.${index}.unit`)}
+                  disabled={isEditMode}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm bg-white focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
+                >
+                  <option value="">Seleccionar...</option>
+                  {unidadesSugeridas.map((unidad) => (
+                    <option key={unidad} value={unidad}>
+                      {unidad}
+                    </option>
+                  ))}
+                </select>
+                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+              </div>
+            </div>
 
-          <div className="flex flex-col w-40">
-            <label className="text-sm font-medium text-gray-700">U. de Medida</label>
-            <select
-              {...register(`items.${index}.unit`)}
-              disabled={isEditMode}
-              className="border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-            >
-              <option value="">Seleccionar...</option>
-              {unidadesSugeridas.map((unidad) => (
-                <option key={unidad} value={unidad}>
-                  {unidad}
-                </option>
-              ))}
-            </select>
-            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+            {/* MOBILE: Precio y Subtotal en 2 columnas - DESKTOP: Flex con gap */}
+            <div className="grid grid-cols-2 gap-3 lg:flex lg:gap-4">
+              
+              {/* Precio unitario */}
+              <div className="lg:w-28">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Precio</label>
+                <input
+                  type="number"
+                  step="any"
+                  {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
+                  disabled={isEditMode}
+                  className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
+                  min={0}
+                  placeholder="0.00"
+                />
+                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+              </div>
 
-          </div>
-
-          <div className="flex flex-col w-32">
-            <label className="text-sm font-medium text-gray-700">Precio unitario</label>
-            <input
-              type="number"
-              step="any"
-              {...register(`items.${index}.unitPrice`, { valueAsNumber: true })}
-              disabled={isEditMode}
-              className="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500"
-              min={0}
-            />
-            {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
-
-          </div>
-
-          <div className="flex flex-col w-28">
-            <label className="text-sm font-medium text-gray-700">Subtotal</label>
-            <div className="text-sm text-gray-800 pt-2">
-              S/. {(
-                (watchedItems[index]?.quantity || 0) * (watchedItems[index]?.unitPrice || 0)
-              ).toFixed(2)}
+              {/* Subtotal */}
+              <div className="lg:w-32">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Subtotal</label>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-3 sm:py-2 flex items-center min-h-[52px] sm:min-h-[42px]">
+                  <span className="text-sm lg:text-base font-bold text-blue-800 truncate">
+                    S/. {(
+                      (watchedItems[index]?.quantity || 0) * (watchedItems[index]?.unitPrice || 0)
+                    ).toFixed(2)}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
+          {/* Botón eliminar - Centrado en móvil, derecha en desktop */}
           {!isEditMode && (
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              className="text-red-600 hover:text-red-800 cursor-pointer"
-              title="Eliminar ítem"
-            >
-              <Trash2 className="w-5 h-5" />
-            </button>
+            <div className="flex justify-center lg:justify-end pt-3 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={() => {
+                  toast('¿Eliminar este ítem?', {
+                    description: 'Esta acción no se puede deshacer.',
+                    action: {
+                      label: 'Sí, eliminar',
+                      onClick: () => {
+                        remove(index);
+                        toast.success('Ítem eliminado correctamente');
+                      },
+                    },
+                  });
+                }}
+                className="bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 px-6 py-3 lg:px-4 lg:py-2 rounded-lg transition-all duration-200 font-medium min-h-[44px] sm:min-h-0 text-sm"
+                title="Eliminar ítem"
+              >
+                <Trash2 className="w-4 h-4 inline mr-2" />
+                <span className="lg:hidden">Eliminar item</span>
+                <span className="hidden lg:inline">Eliminar</span>
+              </button>
+            </div>
           )}
-
-
         </div>
       ))}
 
-      <div className="flex justify-between items-center pt-4">
+      {/* Sección de botón agregar y total - Responsive */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-gray-100">
+        
+        {!isEditMode && (
+          <button
+            type="button"
+            onClick={handleAddItem}
+            className="bg-blue-800 text-white px-6 py-3 rounded-lg hover:bg-blue-900 text-sm font-medium cursor-pointer transition-all duration-200 border-l-4 border-orange-500 min-h-[48px] sm:min-h-0 w-full sm:w-auto"
+          >
+            + Agregar ítem
+          </button>
+        )}
 
-      {!isEditMode && (
-        <button
-          type="button"
-          onClick={handleAddItem}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm cursor-pointer"
-        >
-          + Agregar ítem
-        </button>
-      )}
-
-
-
-        <div className="text-lg font-semibold text-gray-800">
-          Total: S/. {total.toFixed(2)}
+        {/* Total destacado */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-6 py-4 w-full sm:w-auto">
+          <div className="text-center sm:text-right">
+            <p className="text-sm text-green-700 font-medium mb-1">Total de la cotización</p>
+            <p className="text-2xl font-bold text-green-800">
+              S/. {total.toFixed(2)}
+            </p>
+          </div>
         </div>
       </div>
 

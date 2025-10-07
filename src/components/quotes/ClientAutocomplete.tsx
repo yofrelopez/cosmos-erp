@@ -37,8 +37,9 @@ const { data: clients = [] } = usePaginatedList<ClientLite>({
         <Combobox
           store={combobox}
           placeholder="Buscar cliente por nombre o documento..."
-          className="w-full max-w-md border px-3 py-2 rounded-md
-                     focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full border-2 border-gray-200 px-4 py-4 sm:py-3 rounded-lg text-base sm:text-sm
+                     focus:outline-none focus:border-blue-800 focus:ring-4 focus:ring-blue-100 
+                     transition-all duration-200 hover:border-blue-600 min-h-[48px] sm:min-h-0"
         />
       </Popover.Anchor>
 
