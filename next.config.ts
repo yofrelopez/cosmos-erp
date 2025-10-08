@@ -15,16 +15,22 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // SOLUCIÓN DEFINITIVA para ENOENT client-reference-manifest en Vercel
+  // SOLUCIÓN DEFINITIVA: Configuración mínima para Vercel + Next.js 15
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
-  // Optimización crítica para barrel exports (index.ts files)
-  optimizePackageImports: ['@/lib', '@/components', '@/types', '@/schemas'],
-  
-  // Configuración específica para Vercel build
   outputFileTracing: {
     ignores: ['**/@prisma/engines/**'],
+  },
+  // Fix específico para el error ENOENT en Vercel
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
   },
 };
 
