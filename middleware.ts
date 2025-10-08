@@ -11,7 +11,14 @@ export default withAuth(
       return NextResponse.redirect(new URL("/select-company", req.url))
     }
     
-    // Permitir acceso a otras rutas admin solo para Super Admin
+    // Permitir acceso a rutas admin solo para Super Admin
+    if (pathname.startsWith("/admin")) {
+      if (token?.role !== "SUPER_ADMIN") {
+        return NextResponse.redirect(new URL("/select-company", req.url))
+      }
+    }
+    
+    // Rutas legacy admin también protegidas
     if (pathname.startsWith("/empresas") || 
         pathname.startsWith("/usuarios") || 
         pathname.startsWith("/precios")) {
