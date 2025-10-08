@@ -6,9 +6,16 @@ export default withAuth(
     const token = req.nextauth.token
     const { pathname } = req.nextUrl
     
-    // Redirigir página raíz (admin pages) si no es Super Admin
-    if (pathname === "/" && token?.role !== "SUPER_ADMIN") {
-      return NextResponse.redirect(new URL("/select-company", req.url))
+    // Redirigir página raíz según rol
+    if (pathname === "/") {
+      if (!token) {
+        // No autenticado: ir a login
+        return NextResponse.redirect(new URL("/auth/signin", req.url))
+      } else if (token.role !== "SUPER_ADMIN") {
+        // Autenticado pero no Super Admin: ir a selección de empresa
+        return NextResponse.redirect(new URL("/select-company", req.url))
+      }
+      // Si es Super Admin, continúa a la página admin
     }
     
     // Permitir acceso a rutas admin solo para Super Admin
@@ -29,8 +36,15 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => {
-        // El usuario debe estar autenticado para acceder a rutas protegidas
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl
+        
+        // Permitir acceso sin autenticación a páginas públicas
+        if (pathname.startsWith('/auth') || pathname === '/select-company') {
+          return true
+        }
+        
+        // El resto requiere autenticación
         return !!token
       },
     },
@@ -50,8 +64,7 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      * - auth pages
-     * - root page (/) - handled by client-side redirect
      */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico|logo_|auth|^/$).*)',
+    '/((?!api/auth|_next/static|_next/image|favicon.ico|logo_|auth).*)',
   ],
 }
