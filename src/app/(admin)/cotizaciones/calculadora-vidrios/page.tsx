@@ -1,11 +1,11 @@
-// app/(dashboard)/cotizaciones/calculadora-cuadros/page.tsx
+// app/(admin)/cotizaciones/calculadora-vidrios/page.tsx
 
-import FriendlyFrameCalculatorShell from "@/components/frameCalculator/FriendlyFrameCalculatorShell";
+import FriendlyGlassCalculatorShell from "@/components/glassCalculator/FriendlyGlassCalculatorShell";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Calculadora de Cuadros | ERP V&D Cosmos',
-  description: 'Calcula precios de cuadros y marcos, genera cotizaciones automáticamente',
+  title: 'Calculadora de Vidrios | ERP V&D Cosmos',
+  description: 'Calcula precios de vidrios y genera cotizaciones automáticamente',
 };
 
 // Force dynamic rendering for this page
@@ -23,9 +23,9 @@ export default async function Page({
       ? Number(params.quoteId) 
       : undefined;
 
-    return <FriendlyFrameCalculatorShell quoteId={quoteId} />;
+    return <FriendlyGlassCalculatorShell quoteId={quoteId} />;
   } catch (error) {
-    console.error('Error in calculadora-cuadros page:', error);
-    return <FriendlyFrameCalculatorShell />;
+    console.error('Error in calculadora-vidrios page:', error);
+    return <FriendlyGlassCalculatorShell />;
   }
 }

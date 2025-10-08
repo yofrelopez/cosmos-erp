@@ -1,4 +1,4 @@
-// app/(dashboard)/pricing/pricing-glass-base/page.tsx
+// app/(admin)/pricing/pricing-glass-base/page.tsx
 import PricingGlassBaseTable from '@/components/pricing/PricingGlassBaseTable'
 
 export const metadata = { title: 'Precios base de vidrio' }

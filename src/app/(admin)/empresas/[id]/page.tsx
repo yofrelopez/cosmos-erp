@@ -1,4 +1,4 @@
-// src/app/(dashboard)/empresas/[id]/page.tsx
+// src/app/(admin)/empresas/[id]/page.tsx
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';

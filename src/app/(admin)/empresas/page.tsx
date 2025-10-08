@@ -1,4 +1,4 @@
-// src/app/(dashboard)/empresas/page.tsx
+// src/app/(admin)/empresas/page.tsx
 import { prisma } from '@/lib/prisma';
 import { unstable_noStore as noStore } from 'next/cache';
 import { Metadata } from 'next';

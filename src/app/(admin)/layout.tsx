@@ -1,4 +1,4 @@
-// src/app/(dashboard)/layout.tsx
+// src/app/(admin)/layout.tsx
 'use client';
 
 import { ReactNode } from 'react';

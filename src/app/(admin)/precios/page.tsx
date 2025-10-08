@@ -1,4 +1,4 @@
-// app/(dashboard)/precios/page.tsx
+// app/(admin)/precios/page.tsx
 import { redirect } from 'next/navigation'
 
 // Redirigir a la primera sección por defecto

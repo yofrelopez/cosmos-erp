@@ -1,4 +1,4 @@
-// src/app/(dashboard)/empresas/[id]/editar/page.tsx
+// src/app/(admin)/empresas/[id]/editar/page.tsx
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import TabsWrapper from '@/components/companies/TabsWrapper';

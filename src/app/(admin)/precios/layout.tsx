@@ -1,4 +1,4 @@
-// app/(dashboard)/precios/layout.tsx
+// app/(admin)/precios/layout.tsx
 import { ReactNode } from 'react'
 
 export default function PricingLayout({ children }: { children: ReactNode }) {
