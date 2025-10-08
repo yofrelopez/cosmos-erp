@@ -62,7 +62,7 @@ export default function VidriosPage() {
           subtitle={tabs.find(tab => tab.id === activeTab)?.description || "Administra precios, colores y texturas de vidrios"}
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Vidrios', href: '/precios/vidrios' },
           ]}

@@ -14,7 +14,7 @@ export default function MoldurasPage() {
           <PageHeader
             title="Gestión de Precios - Molduras"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Molduras', href: '/precios/molduras' }
             ]}
@@ -33,7 +33,7 @@ export default function MoldurasPage() {
         <PageHeader
           title="Gestión de Precios - Molduras"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Molduras', href: '/precios/molduras' }
           ]}

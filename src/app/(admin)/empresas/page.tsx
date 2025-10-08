@@ -39,7 +39,7 @@ export default async function EmpresasPage() {
           subtitle="Administra las empresas registradas en el sistema"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Empresas', href: '/empresas' },
           ]}
         />

@@ -20,7 +20,7 @@ export default function EspesoresPage() {
           <PageHeader
             title="Gestión de Precios - Espesores"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Espesores', href: '/precios/espesores' }
             ]}
@@ -40,7 +40,7 @@ export default function EspesoresPage() {
           title="Gestión de Precios - Espesores"
           subtitle="Gestiona precios de espesores por metro lineal para molduras y bastidores"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Espesores', href: '/precios/espesores' }
           ]}

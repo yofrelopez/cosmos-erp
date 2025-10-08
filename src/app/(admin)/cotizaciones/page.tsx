@@ -45,7 +45,7 @@ export default function QuotesPage() {
           subtitle="Administra y crea nuevas cotizaciones para tus clientes"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Cotizaciones', href: '/cotizaciones' },
           ]}
         />

@@ -125,7 +125,7 @@ export default function TexturasPage() {
             title="Gestión de Precios - Texturas"
             subtitle="Gestiona el catálogo de texturas disponibles para molduras"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Texturas', href: '/precios/texturas' }
             ]}
@@ -145,7 +145,7 @@ export default function TexturasPage() {
           title="Gestión de Precios - Texturas"
           subtitle="Gestiona el catálogo de texturas disponibles para molduras"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Texturas', href: '/precios/texturas' }
           ]}

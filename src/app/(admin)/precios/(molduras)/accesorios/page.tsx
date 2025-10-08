@@ -15,7 +15,7 @@ export default function AccesoriosPage() {
             title="Gestión de Precios - Accesorios"
             subtitle="Gestiona precios de accesorios y complementos"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Accesorios', href: '/precios/accesorios' }
             ]}
@@ -35,7 +35,7 @@ export default function AccesoriosPage() {
           title="Gestión de Precios - Accesorios"
           subtitle="Gestiona precios de accesorios y complementos"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Accesorios', href: '/precios/accesorios' }
           ]}

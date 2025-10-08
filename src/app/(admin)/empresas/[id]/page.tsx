@@ -66,7 +66,7 @@ export default async function CompanyDetailsPage({ params }: Props) {
           subtitle="Detalles de la empresa"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Empresas', href: '/empresas' },
             { label: company.name, href: `/empresas/${company.id}` },
           ]}

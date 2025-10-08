@@ -48,7 +48,7 @@ export default async function EditCompanyPage({ params }: Props) {
           subtitle="Actualiza la información de la empresa"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Empresas', href: '/empresas' },
             { label: company.name, href: `/empresas/${company.id}` },
             { label: 'Editar', href: `/empresas/${company.id}/editar` },

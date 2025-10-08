@@ -15,7 +15,7 @@ export default function SoportesPage() {
             title="Gestión de Precios - Soportes"
             subtitle="Gestiona precios de soportes y sistemas de montaje"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Soportes', href: '/precios/soportes' }
             ]}
@@ -35,7 +35,7 @@ export default function SoportesPage() {
           title="Gestión de Precios - Soportes"
           subtitle="Gestiona precios de soportes y sistemas de montaje"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Soportes', href: '/precios/soportes' }
           ]}

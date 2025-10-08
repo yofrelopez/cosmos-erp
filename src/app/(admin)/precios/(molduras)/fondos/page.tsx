@@ -17,7 +17,7 @@ export default function FondosPage() {
             title="Gestión de Precios - Fondos"
             subtitle="Gestiona precios de fondos para marcos y cuadros"
             breadcrumbs={[
-              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Admin', href: '/' },
               { label: 'Precios', href: '/precios' },
               { label: 'Fondos', href: '/precios/fondos' }
             ]}
@@ -37,7 +37,7 @@ export default function FondosPage() {
           title="Gestión de Precios - Fondos"
           subtitle="Gestiona precios de fondos para marcos y cuadros"
           breadcrumbs={[
-            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Admin', href: '/' },
             { label: 'Precios', href: '/precios' },
             { label: 'Fondos', href: '/precios/fondos' }
           ]}
