@@ -10,17 +10,19 @@ const nextConfig: NextConfig = {
     ],
   },
   eslint: {
-    // Para producción - ignora algunos warnings de ESLint durante build
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Temporal para Next.js 15 - hay un bug conocido con tipos de rutas API
     ignoreBuildErrors: true,
   },
-  // Fix para Vercel build con Next.js 15
+  // SOLUCIÓN DEFINITIVA para ENOENT client-reference-manifest en Vercel
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client'],
   },
+  // Optimización crítica para barrel exports (index.ts files)
+  optimizePackageImports: ['@/lib', '@/components', '@/types', '@/schemas'],
+  
+  // Configuración específica para Vercel build
   outputFileTracing: {
     ignores: ['**/@prisma/engines/**'],
   },
