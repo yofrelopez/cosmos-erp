@@ -58,6 +58,23 @@ const getNavigationGroups = (userRole?: string) => [
     ]
   },
   {
+    label: 'Precios',
+    items: [
+      { 
+        href: '/precios/vidrios', 
+        label: 'Vidrios', 
+        icon: DollarSign,
+        shortcut: 'Ctrl+P+V'
+      },
+      { 
+        href: '/precios/molduras', 
+        label: 'Molduras', 
+        icon: Frame,
+        shortcut: 'Ctrl+P+M'
+      },
+    ]
+  },
+  {
     label: 'Sistema',
     items: [
       { 
@@ -65,12 +82,6 @@ const getNavigationGroups = (userRole?: string) => [
         label: 'Empresas', 
         icon: Building,
         shortcut: 'Ctrl+E'
-      },
-      { 
-        href: '/precios', 
-        label: 'Precios', 
-        icon: DollarSign,
-        shortcut: 'Ctrl+P'
       },
       ...(userRole === 'SUPER_ADMIN' ? [{
         href: '/usuarios', 
@@ -113,7 +124,7 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside 
-        className={`fixed top-0 left-0 h-full bg-white border-r border-gray-200 z-50 transition-all duration-300 ease-in-out overflow-hidden ${
+        className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 z-50 transition-all duration-300 ease-in-out flex flex-col ${
           isCollapsed 
             ? isMobile 
               ? '-translate-x-full' 
@@ -122,7 +133,7 @@ export default function Sidebar() {
         } ${isMobile && !isCollapsed ? 'shadow-2xl' : ''}`}
       >
         {/* Header con logo y toggle */}
-        <div className={`flex items-center justify-between p-4 border-b border-gray-100 ${
+        <div className={`flex-shrink-0 flex items-center justify-between p-4 border-b border-gray-100 ${
           isCollapsed && !isMobile ? 'flex-col gap-4' : ''
         }`}>
           {(!isCollapsed || isMobile) && (
@@ -175,8 +186,12 @@ export default function Sidebar() {
 
 
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-6">
+        {/* Navigation - Área con scroll adaptativo */}
+        <div className={`flex-1 overflow-y-auto min-h-0 relative ${
+          isCollapsed && !isMobile 
+            ? 'py-4 px-1 space-y-4 scrollbar-invisible' 
+            : 'py-6 px-2 space-y-6 scrollbar-thin'
+        }`}>
           {getNavigationGroups(session?.user?.role).map((group, index) => (
             <NavGroup 
               key={index} 
@@ -184,10 +199,20 @@ export default function Sidebar() {
               isCollapsed={isCollapsed && !isMobile} 
             />
           ))}
+          
+          {/* Indicadores sutiles de scroll para modo colapsado */}
+          {isCollapsed && !isMobile && (
+            <>
+              {/* Indicador superior - muy sutil */}
+              <div className="absolute top-0 left-1 right-1 h-3 bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none z-10" />
+              {/* Indicador inferior - muy sutil */}
+              <div className="absolute bottom-0 left-1 right-1 h-3 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
+            </>
+          )}
         </div>
 
         {/* Footer - User Info & Logout */}
-        <div className="border-t border-gray-100 p-2">
+        <div className="flex-shrink-0 border-t border-gray-100 p-2">
           {isCollapsed && !isMobile ? (
             /* Modo colapsado - Solo avatar */
             <div className="group relative flex justify-center" ref={dropdownRef}>

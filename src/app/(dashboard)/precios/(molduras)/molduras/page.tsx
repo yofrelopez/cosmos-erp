@@ -2,36 +2,49 @@
 
 import MoldingsTable from '@/components/pricing/MoldingsTable'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
+import PageHeader from '@/components/common/PageHeader'
 
 export default function MoldurasPage() {
   const companyId = useCompanyStore((s) => s.company?.id)
 
   if (!companyId) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold">Molduras</h2>
-            <p className="text-gray-600 text-sm">Gestiona precios de molduras por metro lineal</p>
+      <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Gestión de Precios - Molduras"
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Precios', href: '/precios' },
+              { label: 'Molduras', href: '/precios/molduras' }
+            ]}
+          />
+          <div className="text-center py-10">
+            <p className="text-gray-500">Selecciona una empresa para continuar</p>
           </div>
         </div>
-        <div className="text-center py-10">
-          <p className="text-gray-500">Selecciona una empresa para continuar</p>
-        </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold">Molduras</h2>
-          <p className="text-gray-600 text-sm">Gestiona precios de molduras por metro lineal con relación a espesores</p>
+    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Gestión de Precios - Molduras"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Precios', href: '/precios' },
+            { label: 'Molduras', href: '/precios/molduras' }
+          ]}
+        />
+        
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-0">
+            <MoldingsTable companyId={companyId} />
+          </div>
         </div>
       </div>
-      
-      <MoldingsTable companyId={companyId} />
-    </div>
+    </main>
   )
 }

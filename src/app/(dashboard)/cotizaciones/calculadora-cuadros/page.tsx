@@ -1,6 +1,12 @@
 // app/(dashboard)/cotizaciones/calculadora-cuadros/page.tsx
 
 import FriendlyFrameCalculatorShell from "@/components/frameCalculator/FriendlyFrameCalculatorShell";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Calculadora de Cuadros | ERP V&D Cosmos',
+  description: 'Calcula precios de cuadros y marcos, genera cotizaciones automáticamente',
+};
 
 export default async function Page({
   searchParams,

@@ -1,8 +1,8 @@
-// app/api/quotes/[id]/pdf/route.tsx
+// app/api/quotes/[id]/pdf/route.tsx - VERSIÓN PROFESIONAL MEJORADA
 import { NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-import { prisma }       from '@/lib/prisma';
+import { prisma } from '@/lib/prisma';
 import {
   Document,
   Page,
@@ -18,9 +18,6 @@ import { QuoteItem } from '@prisma/client';
 /* -------------------------------------------------------------------
    1) FUENTE CORPORATIVA
 ------------------------------------------------------------------- */
-
-// Make sure you have these .ttf files in your public/fonts directory or another accessible location
-
 Font.register({
   family: 'Inter',
   fonts: [
@@ -45,275 +42,698 @@ Font.register({
   ],
 });
 
-
-// LOGO
-
 const logoBuf = fs.readFileSync(
   path.resolve(process.cwd(), 'public/logo_2.png')
 );
 
 /* -------------------------------------------------------------------
-   2) PALETA DE COLORES (azul Cosmos + grises neutros)
+   1.5) HELPER PARA LOGO DINÁMICO
+------------------------------------------------------------------- */
+async function getCompanyLogo(company: any) {
+  // Si la empresa tiene logoUrl y es una URL de Cloudinary/web, usarla
+  if (company?.logoUrl && company.logoUrl.startsWith('http')) {
+    try {
+      // Para usar URLs remotas en react-pdf necesitamos fetch y convertir a buffer
+      const response = await fetch(company.logoUrl);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+      }
+    } catch (error) {
+      console.warn('Error fetching company logo:', error);
+    }
+  }
+  
+  // Fallback al logo por defecto
+  return logoBuf;
+}
+
+/* -------------------------------------------------------------------
+   2) PALETA DE COLORES PROFESIONAL
 ------------------------------------------------------------------- */
 const COLORS = {
-  primary: '#1d4ed8', // azul Cosmos
+  primary: '#1e40af',
+  primaryLight: '#3b82f6',
+  accent: '#0ea5e9',
+  gray50: '#f9fafb',
   gray100: '#f3f4f6',
+  gray200: '#e5e7eb',
   gray300: '#d1d5db',
+  gray500: '#6b7280',
   gray600: '#4b5563',
+  gray700: '#374151',
+  gray900: '#111827',
+  success: '#10b981',
+  warning: '#f59e0b',
 };
 
 /* -------------------------------------------------------------------
-   3) ESTILOS GENERALES
+   3) ESTILOS PROFESIONALES MEJORADOS
 ------------------------------------------------------------------- */
 const styles = StyleSheet.create({
   page: {
-    padding: 40,
+    padding: 32,
+    paddingBottom: 80, // Espacio reservado para el footer
     fontFamily: 'Inter',
-    fontSize: 9,
-    color: '#111',
+    fontSize: 10,
+    color: COLORS.gray900,
+    backgroundColor: '#ffffff',
   },
+  
+  // TIPOGRAFÍA
   heading: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 12,
+    color: COLORS.primary,
   },
-  subtitle: {
-    fontSize: 12,
-    fontStyle: 'italic',
-  },
-  boldItalicText: {
-    fontSize: 10,
+  subheading: {
+    fontSize: 14,
     fontWeight: 'bold',
-    fontStyle: 'italic',
+    marginBottom: 8,
+    color: COLORS.gray700,
   },
-  normalText: {
-    fontSize: 10,
+  
+  /* CABECERA PROFESIONAL MEJORADA */
+  headerContainer: {
+    backgroundColor: '#ffffff',
+    borderBottomWidth: 3,
+    borderBottomColor: COLORS.primary,
+    paddingVertical: 20,
+    paddingHorizontal: 0,
+    marginBottom: 16,
   },
-
-  /* CABECERA ----------------------------------------------------- */
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  brandLeft: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  brandName: { fontSize: 16, fontWeight: 600, color: COLORS.primary },
-  companyInfo: { marginTop: 4, color: COLORS.gray600 },
-
-  quoteBadgeBox: { textAlign: 'right' },
-  badge: {
-    backgroundColor: COLORS.primary,
-    color: '#fff',
-    paddingVertical: 2,
-    paddingHorizontal: 6,
-    borderRadius: 4,
-    fontSize: 8,
-    fontWeight: 600,
+  headerRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    alignItems: 'flex-start' 
   },
-
-  /* BLOQUES INFO ------------------------------------------------- */
-  section: { marginTop: 24 },
-  twoCol: { flexDirection: 'row', gap: 40 },
-  col: { flex: 1, gap: 4 },
-
-  label: { fontWeight: 600, marginBottom: 2, fontSize: 9 },
-  muted: { color: COLORS.gray600 },
-
-  /* TABLA ÍTEMS -------------------------------------------------- */
-  table: { marginTop: 16 },
-  tableHead: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.gray100,
-    borderTop: `1 solid ${COLORS.gray300}`,
-    borderBottom: `1 solid ${COLORS.gray300}`,
-    paddingVertical: 6,
-  },
-  tableRow: { flexDirection: 'row', borderBottom: `1 solid ${COLORS.gray100}`, paddingVertical: 4 },
-
-  colDesc:  { width: '40%' },
-  colUnit:  { width: '12%', textAlign: 'center' },
-  colQty:   { width: '12%', textAlign: 'right' },
-  colPrice: { width: '18%', textAlign: 'right' },
-  colSub:   { width: '18%', textAlign: 'right' },
-
-  th: { fontWeight: 600 },
-
-  /* TOTALES ------------------------------------------------------ */
-  totalsBox: { flexDirection: 'row', justifyContent: 'flex-end', marginTop: 12 },
-  totalsCol: { width: '40%', gap: 4 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  totalLabel: { fontWeight: 600 },
-
-  /* PAYMENT / NOTES --------------------------------------------- */
-  card: {
-    marginTop: 16,
-    padding: 10,
-    border: `1 solid ${COLORS.gray300}`,
-    backgroundColor: COLORS.gray100,
+  
+  /* Sección de Marca/Logo - Lado Izquierdo - Diseño Vertical */
+  brandSection: { 
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    flex: 2,
     gap: 4,
+    marginTop: -10,
+  },
+  logoContainer: {
+    width: 220,
+    height: 70,
+    backgroundColor: '#ffffff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-start',
+    marginBottom: 2,
+  },
+  brandInfo: {
+    width: '100%',
+    marginTop: -2,
+  },
+  companyTagline: {
+    fontSize: 11,
+    color: COLORS.gray700,
+    fontWeight: 'normal',
+    marginBottom: 6,
+    marginTop: 0,
+    textAlign: 'left',
+    fontStyle: 'italic',
+  },
+  companyDetails: {
+    fontSize: 9,
+    color: COLORS.gray600,
+    lineHeight: 1.5,
+  },
+  companyDetailRow: {
+    marginBottom: 3,
   },
 
-  /* PIE ---------------------------------------------------------- */
+  /* Sección de Cotización - Lado Derecho */
+  quoteBadgeContainer: { 
+    alignItems: 'flex-end',
+    minWidth: 200,
+    paddingLeft: 20,
+  },
+  quoteTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 6,
+    letterSpacing: 1,
+  },
+  quoteNumber: {
+    fontSize: 16,
+    color: COLORS.gray700,
+    marginBottom: 12,
+    fontWeight: 'bold',
+  },
+  statusBadge: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+    color: '#ffffff',
+    fontSize: 11,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+
+  /* SECCIONES DE INFORMACIÓN */
+  section: { 
+    marginTop: 12, 
+    marginBottom: 8,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray200,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginLeft: 6,
+  },
+  
+  twoCol: { 
+    flexDirection: 'row', 
+    gap: 32,
+  },
+  col: { 
+    flex: 1, 
+    gap: 6,
+  },
+  infoCard: {
+    backgroundColor: COLORS.gray50,
+    padding: 12,
+    borderRadius: 6,
+    border: `1px solid ${COLORS.gray200}`,
+  },
+
+  label: { 
+    fontWeight: 'bold', 
+    marginBottom: 3, 
+    fontSize: 9,
+    color: COLORS.gray700,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  value: {
+    fontSize: 10,
+    color: COLORS.gray900,
+    marginBottom: 4,
+  },
+  muted: { 
+    color: COLORS.gray500,
+    fontSize: 9,
+  },
+
+  /* TABLA PROFESIONAL */
+  tableContainer: {
+    border: `1px solid ${COLORS.gray300}`,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginTop: 8,
+  },
+  tableHeader: {
+    flexDirection: 'row',
+    backgroundColor: COLORS.primary,
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  tableRow: { 
+    flexDirection: 'row', 
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray200,
+  },
+  tableRowEven: {
+    backgroundColor: COLORS.gray50,
+  },
+
+  // Columnas de la tabla
+  colDesc:  { width: '40%', paddingRight: 8 },
+  colUnit:  { width: '12%', textAlign: 'center', paddingHorizontal: 4 },
+  colQty:   { width: '12%', textAlign: 'right', paddingHorizontal: 4 },
+  colPrice: { width: '18%', textAlign: 'right', paddingHorizontal: 4 },
+  colSub:   { width: '18%', textAlign: 'right', paddingLeft: 8 },
+
+  // Estilos de texto para tabla
+  th: { 
+    fontWeight: 'bold',
+    color: '#ffffff',
+    fontSize: 9,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  td: {
+    fontSize: 9,
+    color: COLORS.gray900,
+  },
+
+  /* TOTALES PROFESIONALES */
+  totalsContainer: {
+    marginTop: 16,
+    backgroundColor: COLORS.gray50,
+    padding: 12,
+    borderRadius: 6,
+    border: `1px solid ${COLORS.gray200}`,
+  },
+  totalsBox: { 
+    flexDirection: 'row', 
+    justifyContent: 'flex-end',
+  },
+  totalsCol: { 
+    width: '50%', 
+    gap: 6,
+  },
+  totalRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+  },
+  totalFinalRow: {
+    borderTopWidth: 2,
+    borderTopColor: COLORS.primary,
+    paddingTop: 6,
+    marginTop: 6,
+  },
+  totalLabel: { 
+    fontWeight: 'bold',
+    fontSize: 12,
+    color: COLORS.primary,
+  },
+  totalAmount: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: COLORS.primary,
+  },
+
+  /* MODALIDADES DE PAGO PROFESIONALES */
+  paymentSection: {
+    marginTop: 12,
+  },
+  paymentCard: {
+    backgroundColor: COLORS.gray50,
+    padding: 16,
+    borderRadius: 8,
+    border: `1px solid ${COLORS.gray200}`,
+    marginTop: 8,
+  },
+  paymentTitle: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 8,
+    paddingBottom: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: COLORS.gray300,
+  },
+  paymentGrid: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 8,
+  },
+  paymentCol: {
+    flex: 1,
+  },
+  bankAccount: {
+    backgroundColor: '#ffffff',
+    padding: 10,
+    borderRadius: 4,
+    border: `1px solid ${COLORS.gray300}`,
+    marginBottom: 6,
+  },
+  bankName: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: COLORS.primary,
+    marginBottom: 2,
+  },
+  accountInfo: {
+    fontSize: 9,
+    color: COLORS.gray700,
+    marginBottom: 1,
+  },
+  
+  /* NOTAS PROFESIONALES */
+  notesCard: {
+    marginTop: 10,
+    padding: 12,
+    backgroundColor: '#fef3c7',
+    border: `1px solid #fbbf24`,
+    borderRadius: 6,
+  },
+  notesTitle: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    color: '#92400e',
+    marginBottom: 6,
+  },
+  notesText: {
+    fontSize: 9,
+    color: '#92400e',
+    lineHeight: 1.4,
+  },
+
+  /* PIE DE PÁGINA */
   footerFixed: {
-  position: 'absolute',
-  bottom: 20,
-  left: 40,
-  right: 40,
-  textAlign: 'center',
-  fontSize: 8,
-  color: COLORS.gray600,
-},
-
-footerDivider: {
-  borderTopWidth: 1,
-  borderTopColor: COLORS.gray300,
-  marginBottom: 4,
-},
-
-footerText: {
-  textAlign: 'center',
-  marginBottom: 2,
-},
-
-
-
+    position: 'absolute',
+    bottom: 20,
+    left: 40,
+    right: 40,
+    textAlign: 'center',
+    fontSize: 8,
+    color: COLORS.gray600,
+  },
+  footerDivider: {
+    borderTopWidth: 1,
+    borderTopColor: COLORS.gray300,
+    marginBottom: 4,
+  },
+  footerText: {
+    textAlign: 'center',
+    marginBottom: 2,
+  },
 });
 
 /* -------------------------------------------------------------------
-   4) CONSULTA A BD
+   4) CONSULTA A BD CON INFORMACIÓN COMPLETA
 ------------------------------------------------------------------- */
 async function getQuote(id: number) {
   return prisma.quote.findUniqueOrThrow({
     where: { id },
-    include: { client: true, items: true },
+    include: { 
+      client: true, 
+      items: true,
+      company: {
+        include: {
+          bankAccounts: true,
+          wallets: true,
+        }
+      }
+    },
   });
 }
 
 /* -------------------------------------------------------------------
-   5) COMPONENTE PRINCIPAL PDF
+   5) COMPONENTE PRINCIPAL PDF MEJORADO
 ------------------------------------------------------------------- */
-function QuotePdf({ quote }: { quote: Awaited<ReturnType<typeof getQuote>> }) {
+function QuotePdf({ quote, logoBuffer }: { 
+  quote: Awaited<ReturnType<typeof getQuote>>, 
+  logoBuffer: Buffer 
+}) {
   const date = new Date(quote.createdAt).toLocaleDateString('es-PE');
   const validUntil = new Date(quote.createdAt);
-  validUntil.setDate(validUntil.getDate() + 15); // ejemplo: 15 días de validez
+  validUntil.setDate(validUntil.getDate() + 15);
 
-  /* Sub‑componentes auxiliares ---------------------------------- */
+  const company = quote.company;
+
+  /* Componente Header Profesional Mejorado */
   const Header = () => (
-    <View style={styles.headerRow}>
-      {/* — izquierda — */}
-      <View style={styles.brandLeft}>
-        <PdfImage src={logoBuf} style={{ width: 42, height: 42 }} />
-        <View>
-          <Text style={styles.brandName}>Vidriería Cosmos</Text>
-          <Text style={styles.companyInfo}>RUC 20401234567</Text>{/* 🏷️ cambia RUC */}
-          <Text style={styles.companyInfo}>Av. Lima 123, Barranca</Text>{/* 🏷️ dirección */}
-          <Text style={styles.companyInfo}>ventas@cosmos.pe | 01 345‑6789</Text>{/* 🏷️ contacto */}
+    <View style={styles.headerContainer}>
+      <View style={styles.headerRow}>
+        {/* Sección de Marca - Lado Izquierdo - Diseño Vertical */}
+        <View style={styles.brandSection}>
+          {/* Logo de la empresa (rectangular, arriba) */}
+          <View style={styles.logoContainer}>
+            <PdfImage 
+              src={logoBuffer} 
+              style={{ width: 210, height: 60 }} 
+            />
+          </View>
+          
+          {/* Información de la empresa */}
+          <View style={styles.brandInfo}>
+            {/* Detalles de contacto dinámicos */}
+            <View style={styles.companyDetailRow}>
+              <Text style={styles.companyDetails}>
+                RUC: {company?.ruc || '20609799090'}    {company?.address || 'Jr. Arequipa Nro. 230 - Barranca'}
+              </Text>
+            </View>
+            
+            <View style={styles.companyDetailRow}>
+              <Text style={styles.companyDetails}>
+                {company?.email || 'vidrieriacosmos@gmail.com'} | {company?.phone || '994 260 216'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Sección de Cotización - Lado Derecho */}
+        <View style={styles.quoteBadgeContainer}>
+          <Text style={styles.quoteTitle}>COTIZACIÓN</Text>
+          <Text style={styles.quoteNumber}>
+            N.º {quote.code || `COT-${new Date().getFullYear()}-${String(quote.id).padStart(3, '0')}`}
+          </Text>
+          
+          {/* Badge de estado */}
+          <Text style={[styles.statusBadge, { 
+            backgroundColor: quote.status === 'ACCEPTED' ? COLORS.success : 
+                           quote.status === 'REJECTED' ? '#ef4444' : COLORS.warning 
+          }]}>
+            {quote.status === 'PENDING' ? 'PENDIENTE' : 
+             quote.status === 'ACCEPTED' ? 'ACEPTADA' :
+             quote.status === 'REJECTED' ? 'RECHAZADA' : quote.status}
+          </Text>
         </View>
       </View>
+    </View>
+  );
 
-      {/* — derecha — */}
-      <View style={styles.quoteBadgeBox}>
-        <Text style={{ fontSize: 20, fontWeight: 600 }}>COTIZACIÓN</Text>
-        <Text style={{ marginTop: 2 }}>N.º {quote.code}</Text>
-        {/* Estado destacado */}
-        <Text style={[styles.badge, { marginTop: 6 }]}>{quote.status}</Text>
+  /* Información del Cliente y Cotización */
+  const InfoSection = () => (
+    <View style={styles.section}>
+      <View style={styles.twoCol}>
+        {/* Cliente */}
+        <View style={styles.col}>
+          <View style={styles.infoCard}>
+            <Text style={styles.label}>Información del Cliente</Text>
+            <Text style={styles.value}>
+              {quote.client.fullName || quote.client.businessName}
+            </Text>
+            {quote.client.documentNumber && (
+              <Text style={styles.muted}>
+                {quote.client.documentType}: {quote.client.documentNumber}
+              </Text>
+            )}
+            {quote.client.phone && (
+              <Text style={styles.muted}>Teléfono: {quote.client.phone}</Text>
+            )}
+            {quote.client.address && (
+              <Text style={styles.muted}>Dirección: {quote.client.address}</Text>
+            )}
+          </View>
+        </View>
+
+        {/* Detalles de Cotización */}
+        <View style={styles.col}>
+          <View style={styles.infoCard}>
+            <Text style={styles.label}>Detalles de la Cotización</Text>
+            <Text style={styles.value}>Fecha de Emisión: {date}</Text>
+            <Text style={styles.value}>
+              Válida hasta: {validUntil.toLocaleDateString('es-PE')}
+            </Text>
+            <Text style={styles.muted}>Moneda: Soles Peruanos (PEN)</Text>
+          </View>
+        </View>
       </View>
     </View>
   );
 
-  const InfoBlocks = () => (
-    <View style={[styles.section, styles.twoCol]}>
-      {/* Cliente */}
-      <View style={styles.col}>
-        <Text style={styles.label}>Cliente</Text>
-        <Text>{quote.client.fullName}</Text>
-        {quote.client.documentNumber && <Text style={styles.muted}>Doc: {quote.client.documentNumber}</Text>}
-      </View>
-      {/* Cotización */}
-      <View style={styles.col}>
-        <Text style={styles.label}>Detalles</Text>
-        <Text>Fecha: {date}</Text>
-        <Text>Válido hasta: {validUntil.toLocaleDateString('es-PE')}</Text>
-      </View>
-    </View>
-  );
-
+  /* Tabla de Items Profesional */
   const ItemsTable = () => (
-    <View style={[styles.section, styles.table]}>
-      <View style={styles.tableHead}>
-        <Text style={[styles.colDesc, styles.th]}>Descripción</Text>
-        <Text style={[styles.colUnit, styles.th]}>Unidad</Text>
-        <Text style={[styles.colQty,  styles.th]}>Cant.</Text>
-        <Text style={[styles.colPrice,styles.th]}>Unitario</Text>
-        <Text style={[styles.colSub,  styles.th]}>Subtotal</Text>
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <View style={{ width: 4, height: 4, backgroundColor: COLORS.primary, borderRadius: 2 }} />
+        <Text style={styles.sectionTitle}>Detalle de Items</Text>
       </View>
-      {quote.items.map((i: QuoteItem) => (
-        <View key={i.id} style={styles.tableRow}>
-          <Text style={styles.colDesc}>{i.description}</Text>
-          <Text style={styles.colUnit}>{i.unit}</Text>
-          <Text style={styles.colQty}>{i.quantity}</Text>
-          <Text style={styles.colPrice}>S/ {i.unitPrice.toFixed(2)}</Text>
-          <Text style={styles.colSub}>S/ {i.subtotal.toFixed(2)}</Text>
+      
+      <View style={styles.tableContainer}>
+        <View style={styles.tableHeader}>
+          <Text style={[styles.colDesc, styles.th]}>Descripción</Text>
+          <Text style={[styles.colUnit, styles.th]}>Unidad</Text>
+          <Text style={[styles.colQty, styles.th]}>Cant.</Text>
+          <Text style={[styles.colPrice, styles.th]}>P. Unitario</Text>
+          <Text style={[styles.colSub, styles.th]}>Subtotal</Text>
         </View>
-      ))}
+        
+        {quote.items.map((item: QuoteItem, index: number) => (
+          <View 
+            key={item.id} 
+            style={[
+              styles.tableRow, 
+              index % 2 === 0 ? styles.tableRowEven : {}
+            ]}
+          >
+            <Text style={[styles.colDesc, styles.td]}>{item.description}</Text>
+            <Text style={[styles.colUnit, styles.td]}>{item.unit}</Text>
+            <Text style={[styles.colQty, styles.td]}>{item.quantity}</Text>
+            <Text style={[styles.colPrice, styles.td]}>S/ {item.unitPrice.toFixed(2)}</Text>
+            <Text style={[styles.colSub, styles.td]}>S/ {item.subtotal.toFixed(2)}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 
+  /* Totales Profesionales */
   const Totals = () => (
-    <View style={styles.totalsBox}>
-      <View style={styles.totalsCol}>
-        {/* Subtotal e IGV si aplica */}
-        {/* <View style={styles.totalRow}>
-          <Text>Subtotal</Text>
-          <Text>S/ {quote.subtotal.toFixed(2)}</Text>
-        </View>
-        <View style={styles.totalRow}>
-          <Text>IGV (18 %)</Text>
-          <Text>S/ {quote.tax.toFixed(2)}</Text>
-        </View> */}
-        <View style={styles.totalRow}>
-          <Text style={styles.totalLabel}>TOTAL</Text>
-          <Text style={styles.totalLabel}>S/ {quote.total.toFixed(2)}</Text>
+    <View style={styles.totalsContainer}>
+      <View style={styles.totalsBox}>
+        <View style={styles.totalsCol}>
+          <View style={[styles.totalRow, styles.totalFinalRow]}>
+            <Text style={styles.totalLabel}>TOTAL GENERAL</Text>
+            <Text style={styles.totalAmount}>S/ {quote.total.toFixed(2)}</Text>
+          </View>
         </View>
       </View>
     </View>
   );
 
-  const Payment = () => (
-    <View style={styles.card}>
-      <Text style={styles.label}>Forma de pago</Text>
-      <Text>Depósito bancario – 50 % al aceptar, 50 % contra entrega.</Text>
-      <Text style={styles.label}>Cuentas bancarias</Text>
-      <Text>BCP (Soles): 191‑0000000‑0‑00</Text>
-      <Text>Interbank (Soles): 003‑0000000000</Text>
+  /* Modalidades de Pago Profesionales */
+  const PaymentMethods = () => (
+    <View style={styles.paymentSection}>
+      <View style={styles.sectionHeader}>
+        <View style={{ width: 4, height: 4, backgroundColor: COLORS.primary, borderRadius: 2 }} />
+        <Text style={styles.sectionTitle}>Modalidades de Pago</Text>
+      </View>
+      
+      <View style={styles.paymentCard}>
+        {company?.bankAccounts && company.bankAccounts.length > 0 && (
+          <>
+            <Text style={styles.paymentTitle}>
+              Cuentas Bancarias Autorizadas
+            </Text>
+            <View style={styles.paymentGrid}>
+              {company.bankAccounts.slice(0, 2).map((account, index) => (
+                <View key={account.id} style={styles.paymentCol}>
+                  <View style={styles.bankAccount}>
+                    <Text style={styles.bankName}>{account.bank}</Text>
+                    <Text style={styles.accountInfo}>
+                      {account.accountType}: {account.number}
+                    </Text>
+                    {account.cci && (
+                      <Text style={styles.accountInfo}>CCI: {account.cci}</Text>
+                    )}
+                    <Text style={styles.accountInfo}>
+                      Moneda: {account.currency}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {company?.wallets && company.wallets.length > 0 && (
+          <>
+            <Text style={[styles.paymentTitle, { marginTop: 12 }]}>
+              Billeteras Digitales
+            </Text>
+            <View style={styles.paymentGrid}>
+              {company.wallets.map((wallet) => (
+                <View key={wallet.id} style={styles.paymentCol}>
+                  <View style={styles.bankAccount}>
+                    <Text style={styles.bankName}>{wallet.type}</Text>
+                    <Text style={styles.accountInfo}>{wallet.phone}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </>
+        )}
+
+        {(!company?.bankAccounts?.length && !company?.wallets?.length) && (
+          <>
+            <Text style={[styles.paymentTitle, { marginTop: 12 }]}>
+              Cuentas Bancarias
+            </Text>
+            <View style={styles.paymentGrid}>
+              <View style={styles.paymentCol}>
+                <View style={styles.bankAccount}>
+                  <Text style={styles.bankName}>Banco de Crédito del Perú</Text>
+                  <Text style={styles.accountInfo}>Cuenta Corriente: 191-2345678-0-12</Text>
+                  <Text style={styles.accountInfo}>CCI: 00219100234567801234</Text>
+                  <Text style={styles.accountInfo}>Moneda: PEN</Text>
+                </View>
+              </View>
+              <View style={styles.paymentCol}>
+                <View style={styles.bankAccount}>
+                  <Text style={styles.bankName}>Interbank</Text>
+                  <Text style={styles.accountInfo}>Cuenta Corriente: 003-3012345678</Text>
+                  <Text style={styles.accountInfo}>CCI: 00300000301234567890</Text>
+                  <Text style={styles.accountInfo}>Moneda: PEN</Text>
+                </View>
+              </View>
+            </View>
+          </>
+        )}
+      </View>
     </View>
   );
 
+  /* Observaciones */
   const Notes = () => quote.notes ? (
-    <View style={styles.card}>
-      <Text style={styles.label}>Observaciones</Text>
-      <Text>{quote.notes}</Text>
+    <View style={styles.notesCard}>
+      <Text style={styles.notesTitle}>OBSERVACIONES IMPORTANTES</Text>
+      <Text style={styles.notesText}>{quote.notes}</Text>
     </View>
   ) : null;
 
-const Footer = () => (
-  <View style={styles.footerFixed} fixed>
-    <View style={styles.footerDivider} />
-    <Text style={styles.footerText}>
-      Gracias por confiar en Vidriería Cosmos. Ante cualquier consulta, contáctanos.
-    </Text>
-    <Text
-      style={styles.footerText}
-      render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
-    />
-  </View>
-);
+  /* Footer Profesional */
+  const Footer = () => {
+    // Preparar descripción con límite de 100 caracteres
+    const description = company?.description || 'Gracias por confiar en nosotros. Su satisfacción es nuestro compromiso.';
+    const truncatedDescription = description.length > 100 
+      ? description.substring(0, 97) + '...' 
+      : description;
 
-  /* --- Render --------------------------------------------------- */
+    return (
+      <View style={styles.footerFixed} fixed>
+        <View style={styles.footerDivider} />
+        
+        {/* Primera línea: Empresa + Eslogan */}
+        <Text style={styles.footerText}>
+          {company?.name || 'V&D COSMOS S.R.L'}
+          {company?.slogan && ` - ${company.slogan}`}
+        </Text>
+        
+        {/* Segunda línea: Contacto (sin símbolos duplicados) */}
+        <Text style={styles.footerText}>
+          Email: {company?.email || 'vidrieriacosmos@gmail.com'} | Tel: {company?.phone || '994 260 216'}
+        </Text>
+        
+        {/* Tercera línea: Descripción de la empresa */}
+        <Text style={styles.footerText}>
+          {truncatedDescription}
+        </Text>
+        
+        {/* Numeración de página */}
+        <Text
+          style={styles.footerText}
+          render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
+        />
+      </View>
+    );
+  };
+
+  /* Render Principal */
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <Header />
-        <InfoBlocks />
+        <InfoSection />
         <ItemsTable />
         <Totals />
-        <Payment />
+        <Footer />
+      </Page>
+      <Page size="A4" style={styles.page}>
+        <PaymentMethods />
         <Notes />
         <Footer />
       </Page>
@@ -324,27 +744,23 @@ const Footer = () => (
 /* -------------------------------------------------------------------
    6) ENDPOINT GET
 ------------------------------------------------------------------- */
-
-
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-
     const id = Number(new URL(req.url).pathname.split('/').at(-2));
     if (!id) return new NextResponse('Bad Request', { status: 400 });
 
     const quote = await getQuote(id);
-    const stream = await renderToStream(<QuotePdf quote={quote} />);
+    const logoBuffer = await getCompanyLogo(quote.company);
+    const stream = await renderToStream(<QuotePdf quote={quote} logoBuffer={logoBuffer} />);
 
     return new NextResponse(stream as unknown as ReadableStream, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="cotizacion-${quote.code}.pdf"`,
+        'Content-Disposition': `inline; filename="cotizacion-${quote.code || quote.id}.pdf"`,
       },
     });
   } catch (err) {
-    console.error('[PDF]', err);
-    return new NextResponse('Not Found', { status: 404 });
+    console.error('[PDF Generator Error]', err);
+    return new NextResponse('Internal Server Error', { status: 500 });
   }
 }
-

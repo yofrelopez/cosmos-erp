@@ -158,55 +158,75 @@ export default function GlassesTable({ companyId }: Props) {
   }
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedFamily}
-            onChange={(e) => setSelectedFamily(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Todas las familias</option>
-            {GLASS_FAMILIES.map((family) => (
-              <option key={family.value} value={family.value}>
-                {family.label}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-4 sm:space-y-6 p-2.5 sm:p-6">
+      {/* Header con filtros y acciones */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Filtro por familia */}
+          <div>
+            <label htmlFor="family-filter" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Filtrar por familia
+            </label>
+            <select
+              id="family-filter"
+              value={selectedFamily}
+              onChange={(e) => setSelectedFamily(e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+            >
+              <option value="">Todas las familias</option>
+              {GLASS_FAMILIES.map((family) => (
+                <option key={family.value} value={family.value}>
+                  {family.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Contador de resultados */}
+          <div className="text-xs sm:text-sm text-gray-500 flex items-center">
+            <span className="bg-gray-100 px-2 py-1 rounded-full text-xs sm:text-sm">
+              {glasses.length} {glasses.length === 1 ? 'vidrio' : 'vidrios'}
+            </span>
+          </div>
         </div>
         
-        <Button onClick={() => setShowAddModal(true)} className="gap-2">
+        <Button 
+          onClick={() => setShowAddModal(true)} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
+        >
           <Plus size={16} />
-          Nuevo Vidrio
+          <span className="hidden sm:inline">Nuevo Vidrio</span>
+          <span className="sm:hidden">Nuevo</span>
         </Button>
       </div>
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200 bg-white">
-          <thead className="bg-gray-50">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Nombre Comercial
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Familia
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Espesor (mm)
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Espesor
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Color
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio (S/)
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Precio m²
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">
                 Vigente desde
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
                 Estado
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -214,39 +234,71 @@ export default function GlassesTable({ companyId }: Props) {
           <tbody className="divide-y divide-gray-200">
             {loading ? (
               <tr>
-                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                  Cargando vidrios...
+                <td colSpan={8} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500">
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    <span className="ml-2">Cargando vidrios...</span>
+                  </div>
                 </td>
               </tr>
             ) : glasses.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
-                  No hay vidrios registrados
+                <td colSpan={8} className="px-3 sm:px-6 py-8 sm:py-12">
+                  <div className="flex flex-col items-center justify-center text-center">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                      <Plus size={24} className="text-gray-400" />
+                    </div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No hay vidrios registrados</h3>
+                    <p className="text-gray-500 mb-4 max-w-md">
+                      {selectedFamily 
+                        ? `No se encontraron vidrios de la familia "${getFamilyLabel(selectedFamily)}".`
+                        : 'Comienza agregando tu primer vidrio al catálogo de precios.'
+                      }
+                    </p>
+                    <Button 
+                      onClick={() => setShowAddModal(true)}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      <Plus size={16} className="mr-2" />
+                      {selectedFamily ? 'Agregar Vidrio' : 'Agregar Primer Vidrio'}
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ) : (
               glasses.map((glass) => (
-                <tr key={glass.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900 font-medium">{glass.commercialName}</div>
+                <tr key={glass.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <div className="text-gray-900 font-semibold text-sm">{glass.commercialName}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">{getFamilyLabel(glass.family)}</div>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {getFamilyLabel(glass.family)}
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900 font-medium">{glass.thicknessMM} mm</div>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <span className="inline-flex items-center px-2 py-1 bg-gray-100 text-gray-800 text-sm font-medium rounded">
+                      {glass.thicknessMM} mm
+                    </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">{getColorDisplay(glass)}</div>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <div className="text-gray-900 text-sm">{getColorDisplay(glass)}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-semibold text-green-600">S/ {glass.price.toFixed(2)}</div>
+                  <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <div className="font-semibold text-green-600 text-sm">
+                      S/ {glass.price.toLocaleString('es-PE', { 
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(glass.validFrom).toLocaleDateString()}
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 hidden md:table-cell">
+                    <div className="text-sm text-gray-500">
+                      {new Date(glass.validFrom).toLocaleDateString('es-PE')}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
+                    <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
                       glass.isActive 
                         ? 'bg-green-100 text-green-800' 
                         : 'bg-red-100 text-red-800'
@@ -254,7 +306,7 @@ export default function GlassesTable({ companyId }: Props) {
                       {glass.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
                     <RowActions actions={getRowActions(glass)} />
                   </td>
                 </tr>
@@ -262,6 +314,7 @@ export default function GlassesTable({ companyId }: Props) {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Modales */}

@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import MobileMenuButton from '@/components/ui/MobileMenuButton'
 
 interface Breadcrumb {
   label: string
@@ -56,15 +57,18 @@ export default function PageHeader({
       )}
       
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
-            {title}
-          </h1>
-          {subtitle && (
-            <p className="mt-1 text-sm text-gray-500">
-              {subtitle}
-            </p>
-          )}
+        <div className="min-w-0 flex-1 flex items-center gap-3">
+          <MobileMenuButton />
+          <div>
+            <h1 className="text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="mt-1 text-sm text-gray-500">
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
         
         {action && (

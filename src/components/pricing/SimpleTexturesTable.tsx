@@ -18,6 +18,7 @@ export default function SimpleTexturesTable({ companyId }: Props) {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingTexture, setEditingTexture] = useState<SimpleTexture | null>(null)
   const [newTextureName, setNewTextureName] = useState('')
+  const [editTextureName, setEditTextureName] = useState('')
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -66,6 +67,43 @@ export default function SimpleTexturesTable({ companyId }: Props) {
     }
   }
 
+  // Handle edit
+  const handleEdit = (texture: SimpleTexture) => {
+    setEditingTexture(texture)
+    setEditTextureName(texture.name)
+    setShowAddForm(false) // Cerrar formulario de agregar si está abierto
+  }
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editTextureName.trim() || !editingTexture) return
+
+    try {
+      const res = await fetch(`/api/pricing/textures/${editingTexture.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editTextureName.trim() })
+      })
+
+      if (res.ok) {
+        toast.success('Textura actualizada correctamente')
+        setEditingTexture(null)
+        setEditTextureName('')
+        refreshTextures()
+      } else {
+        const error = await res.json()
+        toast.error(error.error || 'Error al actualizar textura')
+      }
+    } catch (error) {
+      toast.error('Error de conexión')
+    }
+  }
+
+  const cancelEdit = () => {
+    setEditingTexture(null)
+    setEditTextureName('')
+  }
+
   // Handle delete
   const handleDelete = async (texture: SimpleTexture) => {
     toast(`¿Eliminar textura "${texture.name}"?`, {
@@ -101,120 +139,234 @@ export default function SimpleTexturesTable({ companyId }: Props) {
 
   const getRowActions = (texture: SimpleTexture): Action[] => [
     {
+      label: 'Editar',
+      icon: Pencil,
+      onClick: () => handleEdit(texture),
+      variant: 'default',
+      disabled: deletingId === texture.id || editingTexture !== null
+    },
+    {
       label: 'Eliminar',
       icon: Trash2,
       onClick: () => handleDelete(texture),
       variant: 'danger',
-      disabled: deletingId === texture.id
+      disabled: deletingId === texture.id || editingTexture !== null
     }
   ]
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 sm:space-y-6 p-2.5 sm:p-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h3 className="text-lg font-medium">Catálogo de Texturas</h3>
-          <p className="text-gray-600 text-sm">
-            Gestiona los nombres de texturas disponibles (solo informativos)
-          </p>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <span className="text-white text-sm font-semibold">🌊</span>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">Catálogo de Texturas</h3>
+              <p className="text-gray-600 text-sm">
+                Gestiona los tipos de textura disponibles para vidrios
+              </p>
+            </div>
+          </div>
         </div>
         
-        <Button onClick={() => setShowAddForm(true)} className="gap-2">
+        <Button 
+          onClick={() => {
+            setShowAddForm(true)
+            setEditingTexture(null) // Cancelar edición si está activa
+            setEditTextureName('')
+          }} 
+          disabled={editingTexture !== null}
+          className="bg-teal-600 hover:bg-teal-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Plus size={16} />
-          Nueva Textura
+          <span className="hidden sm:inline">Nueva Textura</span>
+          <span className="sm:hidden">Nueva</span>
         </Button>
       </div>
 
       {/* Formulario de agregar */}
       {showAddForm && (
-        <form onSubmit={handleCreate} className="bg-gray-50 p-4 rounded-lg">
-          <div className="flex gap-2 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nombre de la textura
               </label>
               <input
                 type="text"
                 value={newTextureName}
                 onChange={(e) => setNewTextureName(e.target.value)}
-                placeholder="ej. Cuadriculado, Liso, Catedral..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ej: Catedral, Cuadriculado, Martillado, Liso..."
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 required
+                autoFocus
               />
             </div>
-            <Button type="submit" disabled={!newTextureName.trim()}>
-              Agregar
-            </Button>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => {
-                setShowAddForm(false)
-                setNewTextureName('')
-              }}
-            >
-              Cancelar
-            </Button>
-          </div>
-        </form>
+            <div className="flex gap-3 justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setShowAddForm(false)
+                  setNewTextureName('')
+                }}
+                className="px-4 py-2"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={!newTextureName.trim()}
+                className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2"
+              >
+                <Plus size={16} className="mr-2" />
+                Agregar Textura
+              </Button>
+            </div>
+          </form>
+        </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full divide-y divide-gray-200 bg-white">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre de la Textura
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Fecha de Creación
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                  Cargando texturas...
-                </td>
-              </tr>
-            ) : textures.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-6 py-4 text-center text-gray-500">
-                  No hay texturas registradas. Agrega la primera textura.
-                </td>
-              </tr>
-            ) : (
-              textures.map((texture) => (
-                <tr key={texture.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    #{texture.id}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{texture.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(texture.createdAt).toLocaleDateString('es-PE')}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <RowActions actions={getRowActions(texture)} />
-                  </td>
+      {/* Formulario de edición */}
+      {editingTexture && (
+        <div className="bg-teal-50 border border-teal-200 rounded-lg p-6 shadow-sm">
+          <form onSubmit={handleUpdate} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-teal-800 mb-2">
+                Editar textura: #{editingTexture.id}
+              </label>
+              <input
+                type="text"
+                value={editTextureName}
+                onChange={(e) => setEditTextureName(e.target.value)}
+                placeholder="Nombre de la textura"
+                className="w-full px-4 py-3 border border-teal-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white"
+                required
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={cancelEdit}
+                className="px-4 py-2 border-teal-300 text-teal-700 hover:bg-teal-100"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={!editTextureName.trim() || editTextureName === editingTexture.name}
+                className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-2"
+              >
+                <Pencil size={16} className="mr-2" />
+                Actualizar Textura
+              </Button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Tabla de texturas */}
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+        {textures.length === 0 && !loading ? (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-teal-100 to-cyan-100 rounded-full flex items-center justify-center mb-4">
+                <span className="text-2xl">🌊</span>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No hay texturas registradas</h3>
+              <p className="text-gray-500 mb-4">Comienza agregando tu primera textura al catálogo</p>
+              <Button 
+                onClick={() => setShowAddForm(true)}
+                className="bg-teal-600 hover:bg-teal-700 text-white"
+              >
+                <Plus size={16} className="mr-2" />
+                Agregar Primera Textura
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Textura
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
+                    Creado
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-gray-500">
+                      <div className="flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+                        <span className="ml-2">Cargando texturas...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  textures.map((texture) => (
+                    <tr key={texture.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <span className="text-sm font-mono text-gray-500">#{texture.id}</span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 rounded-lg bg-gradient-to-r from-teal-400 via-cyan-400 to-blue-400 border-2 border-white shadow-sm flex items-center justify-center">
+                            <div className="w-3 h-3 bg-white/30 rounded-sm"></div>
+                          </div>
+                          <div className="font-semibold text-gray-900">{texture.name}</div>
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 hidden sm:table-cell">
+                        <div className="text-sm text-gray-500">
+                          {new Date(texture.createdAt).toLocaleDateString('es-PE', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                          })}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                        <RowActions actions={getRowActions(texture)} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
-        <strong>ℹ️ Información:</strong> Las texturas son solo nombres informativos que no afectan los precios. 
-        Se usan únicamente para referencia y documentación.
+      {/* Información */}
+      <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <span className="text-teal-600 text-lg">ℹ️</span>
+          </div>
+          <div className="ml-3">
+            <h4 className="text-sm font-semibold text-teal-800">Información sobre texturas</h4>
+            <p className="text-sm text-teal-700 mt-1">
+              Las texturas son nombres informativos que no afectan los precios. 
+              Se usan únicamente para referencia y documentación en las cotizaciones.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )

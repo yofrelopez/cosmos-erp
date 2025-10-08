@@ -6,12 +6,20 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import BaseModal, { ModalContent, ModalFooter } from '@/components/ui/BaseModal'
+import FormField, { FormInput } from '@/components/ui/FormField'
+import { getModalColors } from '@/components/ui/modal-tokens'
+import { Ruler } from 'lucide-react'
 
 const thicknessSchema = z.object({
-  name: z.string().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
+  name: z.string()
+    .min(1, 'El nombre es requerido')
+    .max(50, 'Máximo 50 caracteres')
+    .trim()
+    .refine(
+      (val) => /^\d+(\.\d+)?\s*(mm|cm|m)?$/i.test(val.replace(/\s+/g, '')),
+      'Formato inválido. Ej: 2mm, 3.5mm, 10mm'
+    )
 })
 
 type ThicknessFormData = z.infer<typeof thicknessSchema>
@@ -25,14 +33,16 @@ interface Props {
 
 export default function AddThicknessModal({ open, onClose, onSuccess, companyId }: Props) {
   const [loading, setLoading] = useState(false)
+  const colors = getModalColors('default')
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors, isValid }
   } = useForm<ThicknessFormData>({
-    resolver: zodResolver(thicknessSchema)
+    resolver: zodResolver(thicknessSchema),
+    mode: 'onChange'
   })
 
   const onSubmit = async (data: ThicknessFormData) => {
@@ -73,57 +83,54 @@ export default function AddThicknessModal({ open, onClose, onSuccess, companyId 
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={handleClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-between p-6 border-b">
-            <Dialog.Title className="text-lg font-semibold">
-              Nuevo Espesor
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
-          </div>
+    <BaseModal
+      isOpen={open}
+      onClose={handleClose}
+      title="Agregar Espesor"
+      description="Crear un nuevo espesor para molduras"
+      icon={<Ruler size={20} className={colors.primary} />}
+      size="sm"
+      showCloseButton
+    >
+      {/* Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+        <FormField
+          label="Nombre del Espesor"
+          required
+          description="Especifica el grosor con unidad (ej: 3mm, 6mm, 10mm)"
+          error={errors.name?.message}
+        >
+          <FormInput
+            {...register('name')}
+            type="text"
+            placeholder="Ej: 3mm, 6mm, 10mm"
+            disabled={loading}
+            error={!!errors.name}
+          />
+        </FormField>
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Nombre del Espesor *
-                </label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="Ingrese el nombre del espesor (ej: 2mm, 3mm, 4mm)"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name.message}</p>
-                )}
-                <p className="text-xs text-gray-500">
-                  Ejemplos: 2mm, 3mm, 4mm, 6mm, 10mm, 15mm
-                </p>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" loading={loading}>
-                  Crear Espesor
-                </Button>
-              </div>
-            </form>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={loading}
+            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !isValid}
+            className={`px-4 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all ${colors.bg} ${colors.ring}`}
+          >
+            {loading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            )}
+            <span>Crear Espesor</span>
+          </button>
+        </div>
+      </form>
+    </BaseModal>
   )
 }

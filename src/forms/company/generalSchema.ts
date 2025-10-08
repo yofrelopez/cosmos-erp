@@ -30,9 +30,24 @@ export const generalSchema = z.object({
     .max(100, 'Máximo 100 caracteres')
     .optional(),
 
-  status: z.enum(['ACTIVE', 'INACTIVE'], {
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], {
     error: 'Debes seleccionar un estado',
   }),
+
+  slogan: z
+    .string()
+    .max(100, 'Eslogan demasiado largo')
+    .optional(),
+
+  description: z
+    .string()
+    .max(300, 'Descripción demasiado larga')
+    .optional(),
+
+  notes: z
+    .string()
+    .max(300, 'Notas demasiado largas')
+    .optional(),
 });
 
 export type GeneralSchema = z.infer<typeof generalSchema>;

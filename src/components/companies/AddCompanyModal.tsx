@@ -1,32 +1,39 @@
 'use client';
 
 import { useState } from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
+import BaseModal from '@/components/ui/BaseModal';
 import CompanyForm from './CompanyForm';
-import { Button } from '../ui/Button';
+import { Building2, Plus } from 'lucide-react';
 
 export default function AddCompanyModal() {
   const [open, setOpen] = useState(false);
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <Button action="add" size="lg">Nueva empresa</Button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-lg bg-white p-6">
-          <Dialog.Title className="text-xl font-semibold mb-4">
-            Registrar empresa
-          </Dialog.Title>
-          
-          <CompanyForm
-            onSuccess={() => setOpen(false)}
-            onCancel={() => setOpen(false)} // ✅ esta línea permite cerrar con el botón Cancelar
-          />
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md text-sm font-medium"
+      >
+        <Plus size={18} />
+        <span className="hidden sm:inline">Nueva Empresa</span>
+        <span className="sm:hidden">Nueva</span>
+      </button>
+
+      <BaseModal
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        title="Registrar Nueva Empresa"
+        description="Agrega una nueva empresa al sistema"
+        icon={<Building2 size={20} className="text-blue-600" />}
+        size="lg"
+        showCloseButton
+      >
+        <CompanyForm
+          onSuccess={() => setOpen(false)}
+          onCancel={() => setOpen(false)}
+        />
+      </BaseModal>
+    </>
   );
 }
 

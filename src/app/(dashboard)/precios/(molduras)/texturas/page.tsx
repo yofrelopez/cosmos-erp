@@ -8,6 +8,7 @@ import { Eye, Pencil, Trash2, Plus, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
 import TextureModal from '@/components/pricing/TextureModal'
+import PageHeader from '@/components/common/PageHeader'
 
 export default function TexturasPage() {
   const companyId = useCompanyStore((s) => s.company?.id)
@@ -15,6 +16,7 @@ export default function TexturasPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingTexture, setEditingTexture] = useState<MoldingTexture | null>(null)
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create')
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function TexturasPage() {
   // Handle edit texture
   const handleEdit = (texture: MoldingTexture) => {
     setEditingTexture(texture)
+    setModalMode('edit')
     setShowModal(true)
   }
 
@@ -93,7 +96,11 @@ export default function TexturasPage() {
     {
       label: 'Ver detalles',
       icon: Eye,
-      onClick: () => console.log('Ver textura:', texture.id),
+      onClick: () => {
+        setEditingTexture(texture)
+        setModalMode('view')
+        setShowModal(true)
+      },
       variant: 'default'
     },
     {
@@ -112,51 +119,53 @@ export default function TexturasPage() {
 
   if (!companyId) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <Palette className="h-6 w-6 text-purple-600" />
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Texturas de Molduras</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Gestiona el catálogo de texturas disponibles para molduras
-                </p>
-              </div>
-            </div>
+      <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Gestión de Precios - Texturas"
+            subtitle="Gestiona el catálogo de texturas disponibles para molduras"
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Precios', href: '/precios' },
+              { label: 'Texturas', href: '/precios/texturas' }
+            ]}
+          />
+          <div className="text-center py-10">
+            <p className="text-gray-500">Selecciona una empresa para continuar</p>
           </div>
         </div>
-        <div className="text-center py-10">
-          <p className="text-gray-500">Selecciona una empresa para continuar</p>
-        </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <Palette className="h-6 w-6 text-purple-600" />
-            <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Texturas de Molduras</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Gestiona el catálogo de texturas disponibles para molduras
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex-shrink-0">
-          <Button 
-            onClick={() => setShowModal(true)} 
-            className="gap-2 w-full sm:w-auto bg-purple-600 hover:bg-purple-700"
-          >
-            <Plus size={16} />
-            Nueva Textura
-          </Button>
-        </div>
-      </div>
+    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Gestión de Precios - Texturas"
+          subtitle="Gestiona el catálogo de texturas disponibles para molduras"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Precios', href: '/precios' },
+            { label: 'Texturas', href: '/precios/texturas' }
+          ]}
+          action={
+            <Button 
+              onClick={() => {
+                setModalMode('create')
+                setShowModal(true)
+              }} 
+              className="bg-purple-600 hover:bg-purple-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
+            >
+              <Plus size={16} />
+              <span className="hidden sm:inline">Nueva Textura</span>
+              <span className="sm:hidden">Nueva</span>
+            </Button>
+          }
+        />
+        
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-2.5 sm:p-6">
       
       <div className="overflow-x-auto rounded-lg border bg-white">
         <table className="min-w-full divide-y divide-gray-200">
@@ -190,7 +199,10 @@ export default function TexturasPage() {
                     <Palette className="h-8 w-8 text-gray-400" />
                     <p>No hay texturas registradas</p>
                     <Button 
-                      onClick={() => setShowModal(true)}
+                      onClick={() => {
+                        setModalMode('create')
+                        setShowModal(true)
+                      }}
                       variant="outline"
                       size="sm"
                       className="gap-1"
@@ -230,17 +242,22 @@ export default function TexturasPage() {
         </table>
       </div>
 
-      {/* Modal */}
-      <TextureModal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false)
-          setEditingTexture(null)
-        }}
-        onSave={handleSave}
-        texture={editingTexture}
-        companyId={companyId!}
-      />
-    </div>
+          </div>
+        </div>
+
+        {/* Modal */}
+        <TextureModal
+          isOpen={showModal}
+          onClose={() => {
+            setShowModal(false)
+            setEditingTexture(null)
+          }}
+          onSave={handleSave}
+          texture={editingTexture}
+          mode={modalMode}
+          companyId={companyId!}
+        />
+      </div>
+    </main>
   )
 }

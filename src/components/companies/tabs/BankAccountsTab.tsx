@@ -5,8 +5,8 @@ import { BankAccount } from '@prisma/client';
 import { Button } from '@/components/ui/Button';
 import AddBankAccountModal from '../modals/AddBankAccountModal';
 import EditBankAccountModal from '../modals/EditBankAccountModal';
-
-import { toast } from 'sonner';                 // 👈 NUEVO
+import { CreditCard, Plus } from 'lucide-react';
+import { toast } from 'sonner';
 
 
 
@@ -83,21 +83,48 @@ const handleDelete = async (account: BankAccount) => {
   }, [companyId]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Cuentas registradas</h2>
+    <div className="space-y-6">
+      {/* Header de sección */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <CreditCard size={18} className="text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Cuentas Bancarias</h3>
+            <p className="text-sm text-gray-500">
+              {accounts.length} {accounts.length === 1 ? 'cuenta registrada' : 'cuentas registradas'}
+            </p>
+          </div>
+        </div>
+        
         <Button action="add" onClick={() => setShowModal(true)}>
-          Agregar cuenta
+          Agregar Cuenta
         </Button>
       </div>
 
+      {/* Contenido */}
       {loading ? (
-        <p className="text-gray-500">Cargando cuentas bancarias...</p>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-500">Cargando cuentas bancarias...</span>
+        </div>
       ) : accounts.length === 0 ? (
-        <p className="text-gray-500">No hay cuentas registradas.</p>
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CreditCard size={24} className="text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No hay cuentas registradas</h3>
+          <p className="text-gray-500 mb-6">Agrega la primera cuenta bancaria de la empresa.</p>
+          <Button action="add" onClick={() => setShowModal(true)}>
+            <Plus size={16} className="mr-2" />
+            Agregar Primera Cuenta
+          </Button>
+        </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm border border-gray-200">
+        <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm divide-y divide-gray-200">
             <thead className="bg-gray-100">
               <tr>
                 <th className="px-4 py-2 text-left">Banco</th>
@@ -141,10 +168,12 @@ const handleDelete = async (account: BankAccount) => {
                 </tr>
               ))}
             </tbody>
-          </table>
+            </table>
+          </div>
         </div>
       )}
 
+      {/* Modales */}
       {showModal && (
         <AddBankAccountModal
           companyId={companyId}

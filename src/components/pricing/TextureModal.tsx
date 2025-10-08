@@ -1,14 +1,30 @@
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { MoldingTexture } from '@prisma/client'
 import { Button } from '@/components/ui/Button'
-import { Palette, X } from 'lucide-react'
+import BaseModal, { ModalContent, ModalFooter } from '@/components/ui/BaseModal'
+import FormField, { FormInput } from '@/components/ui/FormField'
+import { Waves } from 'lucide-react'
 import { toast } from 'sonner'
+import { getModalColors } from '@/components/ui/modal-tokens'
+
+const textureSchema = z.object({
+  name: z.string()
+    .min(1, 'El nombre es requerido')
+    .max(100, 'Máximo 100 caracteres')
+    .trim()
+})
+
+type TextureFormData = z.infer<typeof textureSchema>
 
 interface TextureModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (texture: MoldingTexture) => void
   texture?: MoldingTexture | null
+  mode?: 'create' | 'edit' | 'view'
   companyId: number
 }
 
@@ -17,20 +33,28 @@ export default function TextureModal({
   onClose, 
   onSave, 
   texture, 
+  mode = 'create',
   companyId 
 }: TextureModalProps) {
-  const [name, setName] = useState(texture?.name || '')
   const [loading, setLoading] = useState(false)
-  const isEditing = Boolean(texture)
+  const colors = getModalColors('texture')
+  const isEditing = mode === 'edit'
+  const isViewing = mode === 'view'
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!name.trim()) {
-      toast.error('El nombre de la textura es requerido')
-      return
-    }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid }
+  } = useForm<TextureFormData>({
+    resolver: zodResolver(textureSchema),
+    defaultValues: {
+      name: texture?.name || ''
+    },
+    mode: 'onChange'
+  })
 
+  const onSubmit = async (data: TextureFormData) => {
     setLoading(true)
     
     try {
@@ -46,7 +70,7 @@ export default function TextureModal({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: name.trim(),
+          ...data,
           companyId
         }),
       })
@@ -69,68 +93,87 @@ export default function TextureModal({
   }
 
   const handleClose = () => {
-    setName('')
+    reset()
     onClose()
   }
 
-  if (!isOpen) return null
+  const title = isViewing ? 'Detalles de la Textura' : isEditing ? 'Editar Textura' : 'Nueva Textura'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-        <div className="flex items-center justify-between p-6 border-b">
-          <div className="flex items-center gap-3">
-            <Palette className="h-5 w-5 text-purple-600" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              {isEditing ? 'Editar Textura' : 'Nueva Textura'}
-            </h3>
-          </div>
-          <button
-            onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="p-6">
+    <BaseModal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={title}
+      icon={<Waves className={`h-5 w-5 ${colors.primary}`} />}
+      size="md"
+    >
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <ModalContent>
           <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Nombre de la Textura
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                placeholder="Ej: Lisa, Rugosa, Mate, Brillante..."
-                disabled={loading}
-              />
+            {/* Texture Icon */}
+            <div className="flex items-center justify-center mb-6">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center border-2 border-purple-200">
+                <Waves className="w-8 h-8 text-purple-600" />
+              </div>
             </div>
-          </div>
 
-          <div className="flex gap-3 mt-6 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={loading}
-              className="flex-1"
+            <FormField
+              label="Nombre de la Textura"
+              required
+              error={errors.name?.message}
+              description="Nombre descriptivo de la textura (ej: Lisa, Rugosa, Mate, Brillante)"
             >
-              Cancelar
-            </Button>
+              <FormInput
+                {...register('name')}
+                placeholder="Ingresa el nombre de la textura..."
+                error={!!errors.name}
+                disabled={loading || isViewing}
+                className="text-center"
+              />
+            </FormField>
+
+            {isViewing && texture && (
+              <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                <div className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Información de la Textura
+                </div>
+                <div className="text-sm text-gray-900">
+                  <strong>ID:</strong> #{texture.id}
+                </div>
+                <div className="text-sm text-gray-900">
+                  <strong>Creado:</strong> {new Date(texture.createdAt).toLocaleDateString()}
+                </div>
+                {texture.updatedAt !== texture.createdAt && (
+                  <div className="text-sm text-gray-900">
+                    <strong>Actualizado:</strong> {new Date(texture.updatedAt).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </ModalContent>
+        
+        <ModalFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+          >
+            {isViewing ? 'Cerrar' : 'Cancelar'}
+          </Button>
+          {!isViewing && (
             <Button
               type="submit"
-              disabled={loading || !name.trim()}
-              className="flex-1 bg-purple-600 hover:bg-purple-700"
+              loading={loading}
+              disabled={!isValid}
+              className={colors.bg}
             >
-              {loading ? 'Guardando...' : isEditing ? 'Actualizar' : 'Crear'}
+              {isEditing ? 'Actualizar' : 'Crear'} Textura
             </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+          )}
+        </ModalFooter>
+      </form>
+    </BaseModal>
   )
 }

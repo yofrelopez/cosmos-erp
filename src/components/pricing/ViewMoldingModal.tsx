@@ -1,8 +1,10 @@
 'use client'
 
 import { Button } from '@/components/ui/Button'
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import BaseModal, { ModalContent, ModalFooter } from '@/components/ui/BaseModal'
+import InfoCard, { Badge, InfoGrid } from '@/components/ui/InfoCard'
+import { getModalColors } from '@/components/ui/modal-tokens'
+import { Shapes } from 'lucide-react'
 
 const QUALITIES = [
   { value: 'SIMPLE', label: 'Simple' },
@@ -33,95 +35,112 @@ interface Props {
 }
 
 export default function ViewMoldingModal({ open, molding, onClose }: Props) {
+  const colors = getModalColors('molding')
+
+  const getQualityBadge = (quality: string) => {
+    switch (quality) {
+      case 'SIMPLE':
+        return <Badge variant="neutral">Simple</Badge>
+      case 'FINA':
+        return <Badge variant="warning">Fina</Badge>
+      case 'BASTIDOR':
+        return <Badge variant="info">Bastidor</Badge>
+      default:
+        return <Badge variant="neutral">{quality}</Badge>
+    }
+  }
+
   return (
-    <Dialog.Root open={open} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-between p-6 border-b">
-            <Dialog.Title className="text-lg font-semibold">
-              Detalles de la Moldura
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
+    <BaseModal
+      isOpen={open}
+      onClose={onClose}
+      title="Detalles de la Moldura"
+      description="Información completa de la moldura seleccionada"
+      icon={<Shapes className={`h-5 w-5 ${colors.primary}`} />}
+      size="lg"
+    >
+      <ModalContent>
+        <div className="space-y-6">
+          {/* Header con icono */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center border-2 border-amber-200">
+              <Shapes className="w-10 h-10 text-amber-600" />
+            </div>
           </div>
 
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Nombre
-                </label>
-                <p className="text-sm text-gray-900 font-medium">
-                  {molding.name}
-                </p>
-              </div>
+          {/* Información principal */}
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">{molding.name}</h3>
+            <div className="flex items-center justify-center gap-3">
+              {getQualityBadge(molding.quality)}
+              <Badge variant={molding.isActive ? 'success' : 'error'}>
+                {molding.isActive ? 'Activo' : 'Inactivo'}
+              </Badge>
+            </div>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Calidad
-                </label>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  molding.quality === 'SIMPLE' 
-                    ? 'bg-gray-100 text-gray-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {QUALITIES.find(q => q.value === molding.quality)?.label || molding.quality}
-                </span>
-              </div>
+          {/* Grid de información */}
+          <InfoGrid columns={2}>
+            <InfoCard
+              label="ID de la Moldura"
+              value={`#${molding.id}`}
+            />
+            
+            <InfoCard
+              label="Espesor"
+              value={molding.thickness.name}
+            />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Espesor
-                </label>
-                <p className="text-sm text-gray-900 font-medium">
-                  {molding.thickness.name}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Precio por metro
-                </label>
-                <p className="text-sm text-gray-900 font-medium">
+            <InfoCard
+              label="Precio por Metro"
+              value={
+                <span className="text-lg font-bold text-green-600">
                   S/ {molding.pricePerM.toFixed(2)}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Vigente desde
-                </label>
-                <p className="text-sm text-gray-900">
-                  {new Date(molding.validFrom).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Estado
-                </label>
-                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                  molding.isActive 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {molding.isActive ? 'Activo' : 'Inactivo'}
                 </span>
-              </div>
-            </div>
+              }
+            />
 
-            <div className="flex justify-end pt-4">
-              <Button variant="outline" onClick={onClose}>
-                Cerrar
-              </Button>
+            <InfoCard
+              label="Empresa"
+              value={`#${molding.companyId}`}
+            />
+
+            <InfoCard
+              label="Vigente Desde"
+              value={new Date(molding.validFrom).toLocaleDateString('es-PE', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            />
+
+            <InfoCard
+              label="Calidad del Material"
+              value={QUALITIES.find(q => q.value === molding.quality)?.label || molding.quality}
+            />
+          </InfoGrid>
+
+          {/* Información adicional */}
+          <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
+            <h4 className="text-sm font-medium text-amber-800 mb-2 flex items-center gap-2">
+              <Shapes className="w-4 h-4" />
+              Información del Sistema
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-amber-700">
+              <div><strong>Creada:</strong> {new Date(molding.validFrom).toLocaleString('es-PE')}</div>
+              <div><strong>Estado:</strong> {molding.isActive ? 'Disponible para uso' : 'Fuera de servicio'}</div>
+              <div><strong>Categoría:</strong> Moldura {molding.quality.toLowerCase()}</div>
+              <div><strong>Precio/m:</strong> {molding.pricePerM} soles</div>
             </div>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </div>
+      </ModalContent>
+      
+      <ModalFooter>
+        <Button variant="outline" onClick={onClose}>
+          Cerrar
+        </Button>
+      </ModalFooter>
+    </BaseModal>
   )
 }

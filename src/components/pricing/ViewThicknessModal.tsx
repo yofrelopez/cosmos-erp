@@ -1,8 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/Button'
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import BaseModal from '@/components/ui/BaseModal'
+import InfoCard, { Badge } from '@/components/ui/InfoCard'
+import { getModalColors } from '@/components/ui/modal-tokens'
+import { Ruler, Hash, Building2, Info } from 'lucide-react'
 import { PricingThickness } from '@prisma/client'
 
 interface Props {
@@ -12,62 +13,79 @@ interface Props {
 }
 
 export default function ViewThicknessModal({ open, thickness, onClose }: Props) {
+  const colors = getModalColors('default')
+
   return (
-    <Dialog.Root open={open} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-between p-6 border-b">
-            <Dialog.Title className="text-lg font-semibold">
-              Detalles del Espesor
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
+    <BaseModal
+      isOpen={open}
+      onClose={onClose}
+      title="Detalles del Espesor"
+      description={`Información completa del espesor: ${thickness.name}`}
+      icon={<Ruler size={20} className={colors.primary} />}
+      size="md"
+      showCloseButton
+    >
+      <div className="p-6 space-y-6">
+        {/* Información Principal */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Info size={16} className="text-gray-500" />
+            <span>Información Principal</span>
           </div>
-
-          <div className="p-6 space-y-4">
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  ID
-                </label>
-                <p className="text-sm text-gray-900 font-medium">
-                  #{thickness.id}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Nombre
-                </label>
-                <p className="text-sm text-gray-900 font-medium">
-                  {thickness.name}
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-500 mb-1">
-                  Empresa ID
-                </label>
-                <p className="text-sm text-gray-900">
-                  {thickness.companyId}
-                </p>
-              </div>
-
-
-            </div>
-
-            <div className="flex justify-end pt-4">
-              <Button variant="outline" onClick={onClose}>
-                Cerrar
-              </Button>
-            </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InfoCard 
+              label="ID del Espesor"
+              value={
+                <div className="flex items-center gap-2">
+                  <Hash size={14} className="text-gray-400" />
+                  <span>#{thickness.id}</span>
+                </div>
+              }
+            />
+            
+            <InfoCard 
+              label="Nombre del Espesor"
+              value={
+                <div className="flex items-center gap-2">
+                  <Ruler size={14} className="text-gray-400" />
+                  <span className="font-semibold">{thickness.name}</span>
+                </div>
+              }
+            />
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </div>
+
+        {/* Información de Sistema */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 text-sm font-medium text-gray-900">
+            <Building2 size={16} className="text-gray-500" />
+            <span>Información del Sistema</span>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <InfoCard 
+              label="ID de Empresa"
+              value={`#${thickness.companyId}`}
+            />
+            
+            <InfoCard 
+              label="Estado"
+              value={<Badge variant="success">Activo</Badge>}
+            />
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end pt-4 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </BaseModal>
   )
 }

@@ -1,6 +1,12 @@
 // app/(dashboard)/cotizaciones/calculadora-vidrios/page.tsx
 
 import FriendlyGlassCalculatorShell from "@/components/glassCalculator/FriendlyGlassCalculatorShell";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: 'Calculadora de Vidrios | ERP V&D Cosmos',
+  description: 'Calcula precios de vidrios y genera cotizaciones automáticamente',
+};
 
 export default async function Page({
   searchParams,

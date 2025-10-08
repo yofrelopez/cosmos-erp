@@ -33,9 +33,9 @@ export default function NavGroup({ group, isCollapsed }: NavGroupProps) {
   }
 
   if (isCollapsed) {
-    // Modo colapsado - solo iconos
+    // Modo colapsado - solo iconos optimizado
     return (
-      <div className="space-y-1 px-2 overflow-hidden">
+      <div className="space-y-2 px-1 overflow-hidden">
         {group.items.map(({ href, label, icon: Icon, badge, shortcut }) => {
           const active = pathname.startsWith(href)
           return (
@@ -43,27 +43,28 @@ export default function NavGroup({ group, isCollapsed }: NavGroupProps) {
               <Link
                 href={href}
                 onClick={handleLinkClick}
-                className={`relative flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-200 hover:scale-105 ${
+                className={`relative flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 hover:scale-105 mx-auto ${
                   active 
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
+                    ? 'bg-blue-50 text-blue-600 border border-blue-200 shadow-sm' 
                     : 'text-gray-600 hover:bg-gray-50 hover:text-blue-600'
                 }`}
               >
-                <Icon size={18} />
+                <Icon size={16} />
                 {badge && (
-                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center font-medium">
-                    {badge}
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 text-white text-[9px] rounded-full flex items-center justify-center font-medium">
+                    {typeof badge === 'string' && badge.length > 1 ? '•' : badge}
                   </div>
                 )}
               </Link>
               
-              {/* Tooltip */}
-              <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 top-1/2 -translate-y-1/2">
-                {label}
+              {/* Tooltip mejorado */}
+              <div className="absolute left-full ml-3 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50 top-1/2 -translate-y-1/2 shadow-lg">
+                <div className="font-medium">{label}</div>
                 {shortcut && (
-                  <span className="ml-1 text-gray-300 text-[10px]">({shortcut})</span>
+                  <div className="text-gray-300 text-[10px] mt-1">{shortcut}</div>
                 )}
-                <div className="absolute right-full top-1/2 -translate-y-1/2 border-2 border-transparent border-r-gray-900"></div>
+                {/* Flecha del tooltip */}
+                <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900"></div>
               </div>
             </div>
           )

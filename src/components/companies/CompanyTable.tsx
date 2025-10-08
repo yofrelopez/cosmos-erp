@@ -3,11 +3,10 @@
 import { useEffect } from 'react';
 import { Company } from '@prisma/client';
 import { useCompanyStore } from '@/lib/store/useCompanyStore';
-
-import { Button } from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
-
-import DeleteCompanyDialog from './crud-dialogo/DeleteCompanyDialog';
+import RowActions, { Action } from '@/components/common/RowActions';
+import { Building2, Phone, Calendar, Eye, Edit2, Trash2 } from 'lucide-react';
+import DeactivateCompanyDialog from './crud-dialogo/DeactivateCompanyDialog';
 
 /* ---------- Props ---------- */
 interface Props {
@@ -29,75 +28,113 @@ export default function CompanyTable({ initialData }: Props) {
 
   const router = useRouter();
 
-  /* hidratar store una sola vez */
+  /* siempre hidratar con datos frescos del servidor */
   useEffect(() => {
-    if (companies.length === 0 && initialData.length > 0) {
-      setCompanies(initialData);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setCompanies(initialData);
+  }, [initialData, setCompanies]);
 
-  /* helper para borrar con confirmación simple */
-  async function handleDelete(id: number) {
-    const ok = window.confirm('¿Eliminar empresa definitivamente?');
-    if (!ok) return;
-
-    const res = await fetch(`/api/empresas/${id}`, { method: 'DELETE' });
-    if (!res.ok) {
-      alert('Error al eliminar'); // reemplaza con toast si tienes
-      return;
+  const getRowActions = (company: Company): Action[] => [
+    {
+      label: 'Ver detalles',
+      icon: Eye,
+      onClick: () => router.push(`/empresas/${company.id}`),
+      variant: 'default'
+    },
+    {
+      label: 'Editar',
+      icon: Edit2,
+      onClick: () => router.push(`/empresas/${company.id}/editar`),
+      variant: 'default'
     }
-    removeCompany(id);
-  }
+  ];
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 bg-white text-sm">
-        <thead className="bg-gray-50 text-left">
-          <tr>
-            <th className="px-4 py-3 font-semibold">Empresa</th>
-            <th className="px-4 py-3 font-semibold">RUC</th>
-            <th className="px-4 py-3 font-semibold">Teléfono</th>
-            <th className="px-4 py-3 font-semibold whitespace-nowrap">Creada</th>
-            <th className="px-4 py-3"></th>
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-gray-100">
-          {companies.map((c) => (
-            <tr key={c.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2">{c.name}</td>
-              <td className="px-4 py-2">{c.ruc}</td>
-              <td className="px-4 py-2">{c.phone ?? '—'}</td>
-              <td className="px-4 py-2">
-                {new Intl.DateTimeFormat('es-PE', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric',
-                }).format(new Date(c.createdAt))}
-                </td>
-
-              <td className="px-4 py-2 space-x-2">
-                {/* Editar -> navegar */}
-                <Button action="edit" onClick={() => router.push(`/empresas/${c.id}/editar`)}>
-                  Editar
-                </Button>
-
-                {/* Eliminar */}
-                <DeleteCompanyDialog id={c.id} name={c.name} />
-              </td>
-            </tr>
-          ))}
-
-          {companies.length === 0 && (
-            <tr>
-              <td colSpan={5} className="px-4 py-6 text-center text-gray-500">
-                No hay empresas registradas.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </table>
+    <div className="p-6">
+      {companies.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
+              <Building2 size={32} className="text-blue-600" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay empresas registradas</h3>
+            <p className="text-gray-500 mb-6">Comienza creando tu primera empresa en el sistema</p>
+          </div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Empresa
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  RUC
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden sm:table-cell">
+                  Contacto
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">
+                  Fecha Creación
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {companies.map((company) => (
+                <tr key={company.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 sm:px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <Building2 size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900">{company.name}</div>
+                        <div className="text-sm text-gray-500">ID: #{company.id}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4">
+                    <div className="text-sm font-mono text-gray-900">{company.ruc}</div>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      {company.phone ? (
+                        <>
+                          <Phone size={14} className="text-gray-400" />
+                          <span>{company.phone}</span>
+                        </>
+                      ) : (
+                        <span className="text-gray-400">—</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Calendar size={14} className="text-gray-400" />
+                      <span>
+                        {new Intl.DateTimeFormat('es-PE', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                        }).format(new Date(company.createdAt))}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <RowActions actions={getRowActions(company)} />
+                      <DeactivateCompanyDialog id={company.id} name={company.name} />
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

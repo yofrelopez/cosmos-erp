@@ -5,11 +5,10 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import BaseModal from '@/components/ui/BaseModal'
+import FormField, { FormInput, FormSelect } from '@/components/ui/FormField'
+import { getModalColors } from '@/components/ui/modal-tokens'
+import { Square } from 'lucide-react'
 
 const GLASS_FAMILIES = [
   { value: 'PLANO', label: 'Plano' },
@@ -48,6 +47,7 @@ interface Props {
 
 export default function AddGlassModal({ open, onClose, onGlassAdded, companyId }: Props) {
   const [loading, setLoading] = useState(false)
+  const colors = getModalColors('glass')
 
   const {
     register,
@@ -55,9 +55,10 @@ export default function AddGlassModal({ open, onClose, onGlassAdded, companyId }
     reset,
     watch,
     setValue,
-    formState: { errors }
+    formState: { errors, isValid }
   } = useForm<GlassFormData>({
     resolver: zodResolver(glassSchema),
+    mode: 'onChange',
     defaultValues: {
       colorType: 'INCOLORO'
     }
@@ -123,141 +124,133 @@ export default function AddGlassModal({ open, onClose, onGlassAdded, companyId }
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={handleClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-between p-6 border-b">
-            <Dialog.Title className="text-lg font-semibold">
-              Nuevo Vidrio
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
+    <BaseModal
+      isOpen={open}
+      onClose={handleClose}
+      title="Agregar Vidrio"
+      description="Crear un nuevo tipo de vidrio para precios"
+      icon={<Square size={20} className={colors.primary} />}
+      size="lg"
+      showCloseButton
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+        {/* Información Comercial */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2">
+            <FormField
+              label="Nombre Comercial"
+              required
+              description="Solo letras, números, espacios, guiones y puntos. Máximo 100 caracteres."
+              error={errors.commercialName?.message}
+            >
+              <FormInput
+                {...register('commercialName')}
+                type="text"
+                placeholder="Ej: Templado 6mm, Doble cristal, etc."
+                disabled={loading}
+                error={!!errors.commercialName}
+              />
+            </FormField>
           </div>
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="commercialName" className="block text-sm font-medium text-gray-700">
-                  Nombre Comercial *
-                </label>
-                <Input
-                  id="commercialName"
-                  type="text"
-                  {...register('commercialName')}
-                  placeholder="Ej: Templado 6mm, Doble cristal, etc."
-                />
-                <p className="text-xs text-gray-500">
-                  Solo letras, números, espacios, guiones y puntos. Máximo 100 caracteres.
-                </p>
-                {errors.commercialName && (
-                  <p className="text-sm text-red-600">{errors.commercialName.message}</p>
-                )}
-              </div>
+          <FormField
+            label="Familia"
+            required
+            error={errors.family?.message}
+          >
+            <FormSelect
+              {...register('family')}
+              onChange={(e) => handleFamilyChange(e.target.value)}
+              disabled={loading}
+              error={!!errors.family}
+            >
+              <option value="">Seleccionar familia</option>
+              {GLASS_FAMILIES.map((family) => (
+                <option key={family.value} value={family.value}>
+                  {family.label}
+                </option>
+              ))}
+            </FormSelect>
+          </FormField>
 
-              <div className="space-y-2">
-                <label htmlFor="family" className="block text-sm font-medium text-gray-700">
-                  Familia *
-                </label>
-                <select
-                  id="family"
-                  {...register('family')}
-                  onChange={(e) => handleFamilyChange(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Seleccionar familia</option>
-                  {GLASS_FAMILIES.map((family) => (
-                    <option key={family.value} value={family.value}>
-                      {family.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.family && (
-                  <p className="text-sm text-red-600">{errors.family.message}</p>
-                )}
-              </div>
+          <FormField
+            label="Espesor (mm)"
+            required
+            error={errors.thicknessMM?.message}
+          >
+            <FormInput
+              {...register('thicknessMM', { valueAsNumber: true })}
+              type="number"
+              step="0.1"
+              min="0"
+              placeholder="5.5"
+              disabled={loading}
+              error={!!errors.thicknessMM}
+            />
+          </FormField>
+        </div>
 
-              <div className="space-y-2">
-                <label htmlFor="thicknessMM" className="block text-sm font-medium text-gray-700">
-                  Espesor (mm) *
-                </label>
-                <Input
-                  id="thicknessMM"
-                  type="number"
-                  step="0.1"
-                  min="0"
-                  {...register('thicknessMM', { valueAsNumber: true })}
-                  placeholder="5.5"
-                />
-                {errors.thicknessMM && (
-                  <p className="text-sm text-red-600">{errors.thicknessMM.message}</p>
-                )}
-              </div>
+        {/* Información de Color */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            label="Tipo de Color"
+            required
+            description={selectedFamily === 'TEMPLADO' ? 'Los vidrios templados solo pueden ser lisos (incoloro)' : undefined}
+            error={errors.colorType?.message}
+          >
+            <FormSelect
+              {...register('colorType')}
+              onChange={(e) => handleColorTypeChange(e.target.value)}
+              disabled={loading || selectedFamily === 'TEMPLADO'}
+              error={!!errors.colorType}
+            >
+              {GLASS_COLOR_TYPES.map((colorType) => (
+                <option key={colorType.value} value={colorType.value}>
+                  {colorType.label}
+                </option>
+              ))}
+            </FormSelect>
+          </FormField>
 
-              <div className="space-y-2">
-                <label htmlFor="colorType" className="block text-sm font-medium text-gray-700">
-                  Tipo de Color *
-                </label>
-                <select
-                  id="colorType"
-                  {...register('colorType')}
-                  onChange={(e) => handleColorTypeChange(e.target.value)}
-                  disabled={selectedFamily === 'TEMPLADO'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                >
-                  {GLASS_COLOR_TYPES.map((colorType) => (
-                    <option key={colorType.value} value={colorType.value}>
-                      {colorType.label}
-                    </option>
-                  ))}
-                </select>
-                {selectedFamily === 'TEMPLADO' && (
-                  <p className="text-sm text-gray-500">Los vidrios templados solo pueden ser lisos (incoloro)</p>
-                )}
-                {errors.colorType && (
-                  <p className="text-sm text-red-600">{errors.colorType.message}</p>
-                )}
-              </div>
+          <FormField
+            label="Precio (S/)"
+            required
+            error={errors.price?.message}
+          >
+            <FormInput
+              {...register('price', { valueAsNumber: true })}
+              type="number"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              disabled={loading}
+              error={!!errors.price}
+            />
+          </FormField>
+        </div>
 
-
-
-              <div className="space-y-2">
-                <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                  Precio (S/) *
-                </label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('price', { valueAsNumber: true })}
-                  placeholder="0.00"
-                />
-                {errors.price && (
-                  <p className="text-sm text-red-600">{errors.price.message}</p>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" loading={loading}>
-                  Crear Vidrio
-                </Button>
-              </div>
-            </form>
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        {/* Actions */}
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={loading}
+            className="px-4 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            disabled={loading || !isValid}
+            className={`px-4 py-2.5 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all ${colors.bg} ${colors.ring}`}
+          >
+            {loading && (
+              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+            )}
+            <span>Crear Vidrio</span>
+          </button>
+        </div>
+      </form>
+    </BaseModal>
   )
 }

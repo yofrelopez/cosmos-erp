@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
-import { Upload, X, ImageIcon } from 'lucide-react';
+import { Upload, X, ImageIcon, Building2 } from 'lucide-react';
 
 /* ---------------------------------- Tipos ---------------------------------- */
 
@@ -321,9 +321,21 @@ export default function GeneralTab({ company, onUpdated }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      {/* Encabezado: grid 2 col + uploader a la derecha */}
-      <div className="flex flex-col md:flex-row items-start gap-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      {/* Sección: Información Básica */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+            <Building2 size={18} className="text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Información Básica</h3>
+            <p className="text-sm text-gray-500">Datos fundamentales de la empresa</p>
+          </div>
+        </div>
+
+        {/* Layout principal: grid 2 col + uploader a la derecha */}
+        <div className="flex flex-col md:flex-row items-start gap-8">
         {/* Datos básicos: 2 columnas en md+ */}
         <div className="order-2 grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
           <div>
@@ -384,17 +396,26 @@ export default function GeneralTab({ company, onUpdated }: Props) {
           </div>
         </div>
 
-        {/* Uploader de logo (cuadrado, moderno) */}
-        <LogoUploader
-          initialUrl={currentLogoUrl}
-          onFileChange={handleLogoFileChange}
-          onRemove={handleLogoRemove}
-        />
+          {/* Uploader de logo (cuadrado, moderno) */}
+          <LogoUploader
+            initialUrl={currentLogoUrl}
+            onFileChange={handleLogoFileChange}
+            onRemove={handleLogoRemove}
+          />
+        </div>
       </div>
 
-      {/* Perfil institucional */}
-      <div className="space-y-3">
-        <h2 className="text-sm font-semibold text-gray-600">Perfil</h2>
+      {/* Sección: Perfil Institucional */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+            <ImageIcon size={18} className="text-green-600" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Perfil Institucional</h3>
+            <p className="text-sm text-gray-500">Información adicional y descripción de la empresa</p>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input label="Slogan" placeholder="Frase comercial" {...register('slogan')} />
@@ -419,10 +440,13 @@ export default function GeneralTab({ company, onUpdated }: Props) {
         </div>
       </div>
 
-      <div className="pt-2">
-        <Button type="submit" size="md" action="save" loading={isSubmitting}>
-          Guardar cambios
-        </Button>
+      {/* Sección: Acciones */}
+      <div className="pt-6 border-t border-gray-200">
+        <div className="flex justify-end">
+          <Button type="submit" size="md" action="save" loading={isSubmitting}>
+            Guardar cambios
+          </Button>
+        </div>
       </div>
     </form>
   );

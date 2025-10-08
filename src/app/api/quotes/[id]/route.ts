@@ -3,9 +3,23 @@ import { prisma } from '@/lib/prisma'
 import { NextResponse, NextRequest } from 'next/server'
 import { z } from 'zod';
 
+// Schema para actualización simple (solo status y notes)
 const UpdateQuoteSchema = z.object({
   status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
   notes:  z.string().optional(),
+});
+
+// Schema para actualización completa (incluye items)
+const FullUpdateQuoteSchema = z.object({
+  status: z.enum(['PENDING', 'ACCEPTED', 'REJECTED']),
+  notes:  z.string().optional(),
+  items: z.array(z.object({
+    id: z.number().optional(),
+    description: z.string().min(1),
+    unit: z.string().min(1),
+    quantity: z.number().positive(),
+    unitPrice: z.number().nonnegative(),
+  })).optional(),
 });
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
@@ -15,12 +29,59 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
     }
 
-    /* 🚩 Solo UNA llamada a req.json() */
-    const body = await req.json();                     // ← 1ª y única vez
-    const parsed = UpdateQuoteSchema.safeParse(body);  // solo valida, no vuelve a leer
+    const body = await req.json();
+    
+    // Intentar parseo completo primero (con items)
+    const fullParsed = FullUpdateQuoteSchema.safeParse(body);
+    
+    if (fullParsed.success && fullParsed.data.items) {
+      // Actualización completa con items
+      const { status, notes, items } = fullParsed.data;
+      
+      // Calcular subtotales y total
+      const itemsWithSubtotal = items.map((item) => ({
+        description: item.description,
+        unit: item.unit,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.quantity * item.unitPrice,
+      }));
+      
+      const total = itemsWithSubtotal.reduce((sum, item) => sum + item.subtotal, 0);
 
+      // Actualizar en transacción
+      const updated = await prisma.$transaction(async (tx) => {
+        // Eliminar items existentes
+        await tx.quoteItem.deleteMany({
+          where: { quoteId: id }
+        });
+
+        // Actualizar cotización con nuevos items
+        return await tx.quote.update({
+          where: { id },
+          data: {
+            status,
+            notes,
+            total,
+            items: {
+              create: itemsWithSubtotal
+            }
+          },
+          include: { items: true, client: true }
+        });
+      });
+
+      return NextResponse.json(updated);
+    }
+    
+    // Fallback: actualización simple (solo status y notes)
+    const parsed = UpdateQuoteSchema.safeParse(body);
+    
     if (!parsed.success) {
-      return NextResponse.json({ error: 'Datos inválidos', details: parsed.error.format() }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'Datos inválidos', 
+        details: parsed.error.format() 
+      }, { status: 400 });
     }
 
     const { status, notes } = parsed.data;
@@ -28,9 +89,10 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const updated = await prisma.quote.update({
       where: { id },
       data: { status, notes },
+      include: { items: true, client: true }
     });
 
-    return NextResponse.json(updated); // 200 OK
+    return NextResponse.json(updated);
   } catch (err) {
     console.error('[API] PUT /api/quotes/[id] >', err);
     return NextResponse.json({ error: 'Error interno al actualizar' }, { status: 500 });

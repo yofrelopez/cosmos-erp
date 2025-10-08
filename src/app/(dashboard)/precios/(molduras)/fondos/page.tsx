@@ -3,56 +3,52 @@
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
 import { Button } from '@/components/ui/Button'
 import { Plus } from 'lucide-react'
+import PageHeader from '@/components/common/PageHeader'
+import MatboardsTable from '@/components/pricing/MatboardsTable'
 
 export default function FondosPage() {
   const companyId = useCompanyStore((s) => s.company?.id)
 
   if (!companyId) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Fondos</h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Gestiona precios de fondos para marcos y cuadros
-            </p>
+      <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Gestión de Precios - Fondos"
+            subtitle="Gestiona precios de fondos para marcos y cuadros"
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Precios', href: '/precios' },
+              { label: 'Fondos', href: '/precios/fondos' }
+            ]}
+          />
+          <div className="text-center py-10">
+            <p className="text-gray-500">Selecciona una empresa para continuar</p>
           </div>
         </div>
-        <div className="text-center py-10">
-          <p className="text-gray-500">Selecciona una empresa para continuar</p>
-        </div>
-      </div>
+      </main>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Fondos</h2>
-          <p className="mt-1 text-sm text-gray-600">
-            Gestiona precios de fondos para marcos y cuadros
-          </p>
-        </div>
-        <div className="flex-shrink-0">
-          <Button 
-            className="gap-2 w-full sm:w-auto"
-            disabled
-          >
-            <Plus size={16} />
-            Nuevo Fondo
-          </Button>
-        </div>
-      </div>
-      
-      <div className="bg-white rounded-lg border p-8 text-center">
-        <div className="max-w-sm mx-auto">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Próximamente</h3>
-          <p className="text-gray-500">
-            La gestión de precios de fondos estará disponible próximamente.
-          </p>
+    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Gestión de Precios - Fondos"
+          subtitle="Gestiona precios de fondos para marcos y cuadros"
+          breadcrumbs={[
+            { label: 'Dashboard', href: '/dashboard' },
+            { label: 'Precios', href: '/precios' },
+            { label: 'Fondos', href: '/precios/fondos' }
+          ]}
+        />
+        
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="p-0">
+            <MatboardsTable companyId={companyId} />
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

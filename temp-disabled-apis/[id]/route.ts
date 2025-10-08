@@ -1,6 +1,6 @@
 // app/api/pricing/pricing-glass-base/[id]/route.ts
 import { NextResponse } from 'next/server'
-import { PrismaClient, PricingGlassFamily } from '@prisma/client'
+import { PrismaClient, GlassFamily } from '@prisma/client'
 import { z } from 'zod'
 
 const prisma = new PrismaClient()
@@ -10,11 +10,11 @@ const toDec = (n?: number | null) =>
   typeof n === 'number' ? n.toString() : undefined
 
 /* Zod */
-const FAMILY_VALUES = Object.values(PricingGlassFamily) as [
-  PricingGlassFamily,
-  ...PricingGlassFamily[]
+const FAMILY_VALUES = Object.values(GlassFamily) as [
+  GlassFamily,
+  ...GlassFamily[]
 ]
-const familySchema = z.enum(FAMILY_VALUES).transform(v => v as PricingGlassFamily)
+const familySchema = z.enum(FAMILY_VALUES).transform(v => v as GlassFamily)
 
 const updateSchema = z.object({
   family: familySchema.optional(),
@@ -36,7 +36,7 @@ export async function GET(
     const id = Number(params.id)
     if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
 
-    const item = await prisma.pricingGlassBase.findUnique({ where: { id } })
+    const item = await prisma.pricingGlass.findUnique({ where: { id } })
     if (!item) return NextResponse.json({ message: 'No encontrado' }, { status: 404 })
 
     return NextResponse.json(item)
@@ -55,7 +55,7 @@ export async function PATCH(
     const id = Number(params.id)
     if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
 
-    const current = await prisma.pricingGlassBase.findUnique({ where: { id } })
+    const current = await prisma.pricingGlass.findUnique({ where: { id } })
     if (!current) return NextResponse.json({ message: 'No encontrado' }, { status: 404 })
 
     const body = await req.json()
@@ -75,7 +75,7 @@ export async function PATCH(
     }
 
     // Duplicado excepto el mismo ID
-    const dup = await prisma.pricingGlassBase.findFirst({
+    const dup = await prisma.pricingGlass.findFirst({
       where: {
         id: { not: id },
         companyId: candidate.companyId,
@@ -92,7 +92,7 @@ export async function PATCH(
       )
     }
 
-    const updated = await prisma.pricingGlassBase.update({
+    const updated = await prisma.pricingGlass.update({
       where: { id },
       data: {
         family: candidate.family,
@@ -125,7 +125,7 @@ export async function DELETE(
     const id = Number(params.id)
     if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
 
-    await prisma.pricingGlassBase.delete({ where: { id } })
+    await prisma.pricingGlass.delete({ where: { id } })
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('DELETE [id] error:', e)

@@ -50,8 +50,8 @@ export const useCompanyStore = create<CompanyState>()(
     {
       name: 'selected-company',
       partialize: (state) => ({
-        company:   state.company,   // persiste la empresa seleccionada
-        companies: state.companies, // y la lista para no recargar
+        company: state.company, // Solo persiste la empresa seleccionada
+        // companies: NO persistir la lista, siempre refrescar desde servidor
       }),
     }
   )

@@ -8,6 +8,7 @@ import { Eye, Pencil, Trash2, Plus, Palette } from 'lucide-react'
 import { toast } from 'sonner'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
 import ColorModal from '@/components/pricing/ColorModal'
+import PageHeader from '@/components/common/PageHeader'
 
 export default function ColoresPage() {
   const companyId = useCompanyStore((s) => s.company?.id)
@@ -15,6 +16,7 @@ export default function ColoresPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [editingColor, setEditingColor] = useState<MoldingColor | null>(null)
+  const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create')
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function ColoresPage() {
   // Handle edit color
   const handleEdit = (color: MoldingColor) => {
     setEditingColor(color)
+    setModalMode('edit')
     setShowModal(true)
   }
 
@@ -93,7 +96,11 @@ export default function ColoresPage() {
     {
       label: 'Ver detalles',
       icon: Eye,
-      onClick: () => console.log('Ver color:', color.id),
+      onClick: () => {
+        setEditingColor(color)
+        setModalMode('view')
+        setShowModal(true)
+      },
       variant: 'default'
     },
     {
@@ -121,136 +128,141 @@ export default function ColoresPage() {
 
   if (!companyId) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <Palette className="h-6 w-6 text-amber-600" />
-              <div>
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Colores de Molduras</h2>
-                <p className="mt-1 text-sm text-gray-600">
-                  Gestiona el catálogo de colores disponibles para molduras
-                </p>
-              </div>
+      <>
+        <PageHeader
+          title="Colores"
+        />
+        <main className="flex-1 p-2.5 sm:p-6">
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                No hay empresa seleccionada
+              </h2>
+              <p className="text-gray-600">
+                Selecciona una empresa para ver los colores
+              </p>
             </div>
           </div>
-        </div>
-        <div className="text-center py-10">
-          <p className="text-gray-500">Selecciona una empresa para continuar</p>
-        </div>
-      </div>
+        </main>
+      </>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-3">
-            <Palette className="h-6 w-6 text-amber-600" />
-            <div>
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 truncate">Colores de Molduras</h2>
-              <p className="mt-1 text-sm text-gray-600">
-                Gestiona el catálogo de colores disponibles para molduras
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="flex-shrink-0">
+    <>
+      <PageHeader 
+        title="Colores"
+        action={
           <Button 
-            onClick={() => setShowModal(true)} 
-            className="gap-2 w-full sm:w-auto bg-amber-600 hover:bg-amber-700"
+            onClick={() => {
+              setModalMode('create')
+              setShowModal(true)
+            }} 
+            className="gap-2 w-full sm:w-auto"
           >
             <Plus size={16} />
             Nuevo Color
           </Button>
-        </div>
-      </div>
-      
-      <div className="overflow-x-auto rounded-lg border bg-white">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                ID
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Color
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nombre
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Creado
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  Cargando colores...
-                </td>
-              </tr>
-            ) : colors.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
-                  <div className="flex flex-col items-center gap-2">
-                    <Palette className="h-8 w-8 text-gray-400" />
-                    <p>No hay colores registrados</p>
-                    <Button 
-                      onClick={() => setShowModal(true)}
-                      variant="outline"
-                      size="sm"
-                      className="gap-1"
-                    >
-                      <Plus size={14} />
-                      Crear primer color
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              colors.map((color) => (
-                <tr key={color.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">#{color.id}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {renderColorSwatch(color)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{color.name}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">
-                      {new Date(color.createdAt).toLocaleDateString()}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <RowActions actions={getRowActions(color)} />
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      <ColorModal
-        isOpen={showModal}
-        onClose={() => {
-          setShowModal(false)
-          setEditingColor(null)
-        }}
-        onSave={handleSave}
-        color={editingColor}
-        companyId={companyId!}
+        }
       />
-    </div>
+
+      <main className="flex-1 p-2.5 sm:p-6">
+        <div className="space-y-6">
+          <div className="overflow-x-auto rounded-lg border bg-white">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    ID
+                  </th>
+                  <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Color
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Nombre
+                  </th>
+                  <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Creado
+                  </th>
+                  <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {loading ? (
+                  <tr>
+                    <td colSpan={5} className="px-3 sm:px-6 py-4 text-center text-gray-500">
+                      Cargando colores...
+                    </td>
+                  </tr>
+                ) : colors.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-3 sm:px-6 py-4 text-center text-gray-500">
+                      <div className="flex flex-col items-center gap-2">
+                        <Palette className="h-8 w-8 text-gray-400" />
+                        <p>No hay colores registrados</p>
+                        <Button 
+                          onClick={() => {
+                            setModalMode('create')
+                            setShowModal(true)
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                        >
+                          <Plus size={14} />
+                          Crear primer color
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  colors.map((color) => (
+                    <tr key={color.id} className="hover:bg-gray-50">
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">#{color.id}</div>
+                      </td>
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+                        {renderColorSwatch(color)}
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center sm:block">
+                          <div className="w-4 h-4 rounded mr-2 border border-gray-300 flex-shrink-0 sm:hidden">
+                            {renderColorSwatch(color)}
+                          </div>
+                          <div className="font-medium text-gray-900 truncate">{color.name}</div>
+                        </div>
+                      </td>
+                      <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(color.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
+                        <RowActions actions={getRowActions(color)} />
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Modal */}
+          <ColorModal
+            isOpen={showModal}
+            onClose={() => {
+              setShowModal(false)
+              setEditingColor(null)
+            }}
+            onSave={handleSave}
+            color={editingColor}
+            mode={modalMode}
+            companyId={companyId!}
+          />
+        </div>
+      </main>
+    </>
   )
 }

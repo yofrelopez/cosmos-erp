@@ -137,26 +137,45 @@ export default function MoldingsTable({ companyId }: Props) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <select
-            value={selectedQuality}
-            onChange={(e) => setSelectedQuality(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Todas las calidades</option>
-            {QUALITIES.map((quality) => (
-              <option key={quality.value} value={quality.value}>
-                {quality.label}
-              </option>
-            ))}
-          </select>
+    <div className="space-y-4 sm:space-y-6 p-2.5 sm:p-6">
+      {/* Header con filtros y acciones */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          {/* Filtro por calidad */}
+          <div>
+            <label htmlFor="quality-filter" className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+              Filtrar por calidad
+            </label>
+            <select
+              id="quality-filter"
+              value={selectedQuality}
+              onChange={(e) => setSelectedQuality(e.target.value)}
+              className="w-full sm:w-auto px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+            >
+              <option value="">Todas las calidades</option>
+              {QUALITIES.map((quality) => (
+                <option key={quality.value} value={quality.value}>
+                  {quality.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Contador de resultados */}
+          <div className="text-xs sm:text-sm text-gray-500 flex items-center">
+            <span className="bg-gray-100 px-2 py-1 rounded-full text-xs sm:text-sm">
+              {moldings.length} {moldings.length === 1 ? 'moldura' : 'molduras'}
+            </span>
+          </div>
         </div>
         
-        <Button onClick={() => setShowAddModal(true)} className="gap-2">
+        <Button 
+          onClick={() => setShowAddModal(true)} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm sm:text-base"
+        >
           <Plus size={16} />
-          Nueva Moldura
+          <span className="hidden sm:inline">Nueva Moldura</span>
+          <span className="sm:hidden">Nueva</span>
         </Button>
       </div>
 
@@ -164,25 +183,25 @@ export default function MoldingsTable({ companyId }: Props) {
         <table className="min-w-full divide-y divide-gray-200 bg-white">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Nombre
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Calidad
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden lg:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Espesor
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Precio por metro (S/)
+              <th className="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Precio (S/)
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Vigente desde
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="hidden sm:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-3 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Acciones
               </th>
             </tr>
@@ -196,31 +215,56 @@ export default function MoldingsTable({ companyId }: Props) {
               </tr>
             ) : moldings.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                  No hay molduras registradas
+                <td colSpan={7} className="px-3 sm:px-6 py-8 text-center text-gray-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+                      <Plus className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="font-medium">No hay molduras registradas</p>
+                    <p className="text-sm">Comienza agregando tu primera moldura</p>
+                    <Button 
+                      onClick={() => setShowAddModal(true)}
+                      size="sm"
+                      className="mt-2"
+                    >
+                      <Plus className="w-4 h-4 mr-1" />
+                      Nueva Moldura
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ) : (
               moldings.map((molding) => (
                 <tr key={molding.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{molding.name}</div>
+                  <td className="px-3 sm:px-6 py-4">
+                    <div className="font-medium text-gray-900 truncate">{molding.name}</div>
+                    <div className="sm:hidden text-xs text-gray-500 flex items-center gap-2 mt-1">
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${getQualityStyle(molding.quality)}`}>
+                        {QUALITIES.find(q => q.value === molding.quality)?.label}
+                      </span>
+                      <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                        molding.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {molding.isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getQualityStyle(molding.quality)}`}>
                       {QUALITIES.find(q => q.value === molding.quality)?.label || molding.quality}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden lg:table-cell px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">{molding.thickness.name}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-gray-900">S/ {molding.pricePerM.toFixed(2)}</div>
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap">
+                    <div className="text-gray-900 font-medium">S/ {molding.pricePerM.toFixed(2)}</div>
+                    <div className="lg:hidden text-xs text-gray-500">{molding.thickness.name}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {new Date(molding.validFrom).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                       molding.isActive 
                         ? 'bg-green-100 text-green-800' 
@@ -229,7 +273,7 @@ export default function MoldingsTable({ companyId }: Props) {
                       {molding.isActive ? 'Activo' : 'Inactivo'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
+                  <td className="px-3 sm:px-6 py-4 whitespace-nowrap text-right">
                     <RowActions actions={getRowActions(molding)} />
                   </td>
                 </tr>

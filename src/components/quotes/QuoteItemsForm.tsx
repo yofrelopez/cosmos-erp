@@ -83,7 +83,7 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
     <div className="space-y-4 sm:space-y-6">
 
       {fields.map((field, index) => (
-        <div key={field.id} className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
+        <div key={field.id} className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 shadow-sm hover:shadow-md transition-shadow duration-200">
           
           {/* MOBILE: Layout vertical con pares - DESKTOP: Layout horizontal */}
           <div className="space-y-4 lg:space-y-0 lg:flex lg:items-start lg:gap-4">
@@ -97,7 +97,12 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
                 className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
                 placeholder="Ej. Vidrio templado transparente 6mm con bordes pulidos y esquinas redondeadas"
               />
-              {isEditMode && <p className="text-xs text-gray-500 mt-1">Este campo no se puede editar.</p>}
+              {isEditMode && (
+                <div className="flex items-center gap-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <span className="text-amber-600">🔒</span>
+                  <p className="text-xs text-amber-700 font-medium">Campo no editable</p>
+                </div>
+              )}
             </div>
 
             {/* MOBILE: Cantidad y Unidad en 2 columnas - DESKTOP: Flex con gap */}
@@ -113,7 +118,12 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
                   className="w-full border-2 border-gray-200 rounded-lg px-3 py-3 sm:py-2 text-sm focus:outline-none focus:border-blue-800 focus:ring-2 focus:ring-blue-100 disabled:bg-gray-100 disabled:text-gray-500 transition-all duration-200"
                   min={1}
                 />
-                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+                {isEditMode && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
+                    <span>🔒</span>
+                    <span>No editable</span>
+                  </div>
+                )}
               </div>
 
               {/* Unidad de medida */}
@@ -131,7 +141,12 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
                     </option>
                   ))}
                 </select>
-                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+                {isEditMode && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
+                    <span>🔒</span>
+                    <span>No editable</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -150,7 +165,12 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
                   min={0}
                   placeholder="0.00"
                 />
-                {isEditMode && <p className="text-xs text-gray-500 mt-1">Ineditable.</p>}
+                {isEditMode && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
+                    <span>🔒</span>
+                    <span>No editable</span>
+                  </div>
+                )}
               </div>
 
               {/* Subtotal */}
@@ -197,58 +217,64 @@ export default function QuoteItemsForm({ defaultValues, isEditMode = false }: Qu
       ))}
 
       {/* Sección de botón agregar y total - Responsive */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t-2 border-gray-100">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-6 mt-6 border-t-2 border-gradient-to-r from-gray-100 via-gray-200 to-gray-100">
         
         {!isEditMode && (
           <button
             type="button"
             onClick={handleAddItem}
-            className="bg-blue-800 text-white px-6 py-3 rounded-lg hover:bg-blue-900 text-sm font-medium cursor-pointer transition-all duration-200 border-l-4 border-orange-500 min-h-[48px] sm:min-h-0 w-full sm:w-auto"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm border-l-4 border-orange-400 min-h-[48px] sm:min-h-0 w-full sm:w-auto flex items-center justify-center gap-2"
           >
-            + Agregar ítem
+            <span className="text-lg">➕</span>
+            Agregar ítem
           </button>
         )}
 
         {/* Total destacado */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl px-6 py-4 w-full sm:w-auto">
+        <div className="bg-gradient-to-r from-green-50 via-emerald-50 to-green-50 border-2 border-green-200 rounded-xl px-6 py-5 w-full sm:w-auto shadow-sm">
           <div className="text-center sm:text-right">
-            <p className="text-sm text-green-700 font-medium mb-1">Total de la cotización</p>
-            <p className="text-2xl font-bold text-green-800">
+            <div className="flex items-center justify-center sm:justify-end gap-2 mb-2">
+              <span className="text-green-600">💰</span>
+              <p className="text-sm text-green-700 font-semibold">Total de la cotización</p>
+            </div>
+            <p className="text-3xl font-bold text-green-800 tracking-tight">
               S/. {total.toFixed(2)}
             </p>
           </div>
         </div>
       </div>
 
-      {isEditMode  && (
-        <div className="space-y-4 pt-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Observaciones
+      {isEditMode && (
+        <div className="space-y-6 pt-6">
+          {/* Sección de observaciones */}
+          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+              📝 Observaciones
             </label>
             <textarea
               {...register('notes')}
-              rows={3}
-              className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Agrega alguna nota adicional..."
+              rows={4}
+              className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200 resize-none"
+              placeholder="Agrega observaciones, términos especiales, condiciones de entrega, etc..."
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estado de la cotización
+          {/* Sección de estado */}
+          <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-3">
+              🎯 Estado de la cotización
             </label>
-
             <select
               {...register('status')}
-              className="w-full border rounded px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border-2 border-gray-200 rounded-lg px-4 py-3 text-sm bg-white focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition-all duration-200"
             >
-              <option value="PENDING">Pendiente</option>
-              <option value="ACCEPTED">Aprobada</option>
-              <option value="REJECTED">Rechazada</option>
+              <option value="PENDING">🟡 Pendiente</option>
+              <option value="ACCEPTED">🟢 Aprobada</option>
+              <option value="REJECTED">🔴 Rechazada</option>
             </select>
-            
-            
+            <p className="text-xs text-gray-500 mt-2">
+              Cambia el estado según el progreso de la cotización
+            </p>
           </div>
         </div>
       )}

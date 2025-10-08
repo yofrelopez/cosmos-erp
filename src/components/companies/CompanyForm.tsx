@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { companySchema, CompanySchema } from '@/forms/companySchema';
 import { useState, useEffect } from 'react';
 import { useCompanyStore } from '@/lib/store/useCompanyStore';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import FormField, { FormInput } from '@/components/ui/FormField';
 import { toast } from 'sonner';
+import { Upload, Image } from 'lucide-react';
 
 interface Props {
   initialData?: Partial<CompanySchema> & {
@@ -87,39 +87,70 @@ export default function CompanyForm({ initialData, onSuccess, onCancel }: Props)
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Input
-          label="Nombre *"
-          {...register('name')}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <FormField
+          label="Nombre de la Empresa"
           error={errors.name?.message}
           required
           className="md:col-span-2"
-        />
-        <Input
-          label="RUC *"
-          {...register('ruc')}
+        >
+          <input
+            {...register('name')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Ingrese el nombre de la empresa"
+          />
+        </FormField>
+        
+        <FormField
+          label="RUC"
           error={errors.ruc?.message}
           required
-        />
-        <Input
+        >
+          <input
+            {...register('ruc')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="RUC de la empresa"
+          />
+        </FormField>
+        
+        <FormField
           label="Teléfono"
-          {...register('phone')}
-        />
-        <Input
+          error={errors.phone?.message}
+        >
+          <input
+            {...register('phone')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Teléfono de contacto"
+          />
+        </FormField>
+        
+        <FormField
           label="Dirección"
-          {...register('address')}
-        />
-        <Input
-          label="Sitio web"
-          type="text"
-          {...register('website', {
-            pattern: {
-              value: /^https?:\/\/.+$/,
-              message: 'Debes comenzar con http:// o https://', // 👈 aquí el mensaje UX mejorado
-            },
-          })}
+          error={errors.address?.message}
+        >
+          <input
+            {...register('address')}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Dirección de la empresa"
+          />
+        </FormField>
+        
+        <FormField
+          label="Sitio Web"
           error={errors.website?.message}
-        />
+        >
+          <input
+            {...register('website', {
+              pattern: {
+                value: /^https?:\/\/.+$/,
+                message: 'Debe comenzar con http:// o https://',
+              },
+            })}
+            type="url"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="https://www.empresa.com"
+          />
+        </FormField>
       </div>
 
       {/* 🖼️ Logo uploader con estilo e ícono */}
@@ -166,24 +197,24 @@ export default function CompanyForm({ initialData, onSuccess, onCancel }: Props)
       </div>
 
       {/* 🔘 Botones */}
-      <div className="flex gap-3">
-        <Button
-          type="submit"
-          action="save"
-          size="md"
-          loading={isSubmitting}
-        >
-          Guardar
-        </Button>
-        <Button
+      <div className="flex gap-3 justify-end pt-4">
+        <button
           type="button"
-          action="cancel"
-          size="md"
-          variant="outline"
-          onClick={onCancel} // 👈 simplemente llamamos a la función que cierra el modal
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200"
         >
           Cancelar
-        </Button>
+        </button>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center gap-2"
+        >
+          {isSubmitting && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          )}
+          Guardar
+        </button>
       </div>
     </form>
   );

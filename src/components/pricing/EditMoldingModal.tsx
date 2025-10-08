@@ -6,9 +6,10 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import * as Dialog from '@radix-ui/react-dialog'
-import { X } from 'lucide-react'
+import BaseModal, { ModalContent, ModalFooter } from '@/components/ui/BaseModal'
+import FormField, { FormInput, FormSelect } from '@/components/ui/FormField'
+import { getModalColors } from '@/components/ui/modal-tokens'
+import { Shapes } from 'lucide-react'
 
 const QUALITIES = [
   { value: 'SIMPLE', label: 'Simple' },
@@ -58,12 +59,13 @@ export default function EditMoldingModal({ open, molding, onClose, onSuccess, co
   const [loading, setLoading] = useState(false)
   const [thicknesses, setThicknesses] = useState<ThicknessOption[]>([])
   const [loadingThicknesses, setLoadingThicknesses] = useState(false)
+  const colors = getModalColors('molding')
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors }
+    formState: { errors, isValid }
   } = useForm<MoldingFormData>({
     resolver: zodResolver(moldingSchema),
     defaultValues: {
@@ -71,7 +73,8 @@ export default function EditMoldingModal({ open, molding, onClose, onSuccess, co
       quality: molding.quality,
       thicknessId: molding.thicknessId,
       pricePerM: molding.pricePerM
-    }
+    },
+    mode: 'onChange'
   })
 
   // Reset form when molding changes
@@ -144,45 +147,51 @@ export default function EditMoldingModal({ open, molding, onClose, onSuccess, co
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={handleClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-lg z-50 w-full max-w-md mx-4 max-h-[90vh] overflow-auto">
-          <div className="flex items-center justify-between p-6 border-b">
-            <Dialog.Title className="text-lg font-semibold">
-              Editar Moldura
-            </Dialog.Title>
-            <Dialog.Close asChild>
-              <button className="p-2 hover:bg-gray-100 rounded-md">
-                <X size={20} />
-              </button>
-            </Dialog.Close>
-          </div>
+    <BaseModal
+      isOpen={open}
+      onClose={handleClose}
+      title="Editar Moldura"
+      description="Modifica los datos de la moldura seleccionada"
+      icon={<Shapes className={`h-5 w-5 ${colors.primary}`} />}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <ModalContent>
+          <div className="space-y-6">
+            {/* Moldura Icon */}
+            <div className="flex items-center justify-center mb-8">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center border-2 border-amber-200">
+                <Shapes className="w-10 h-10 text-amber-600" />
+              </div>
+            </div>
 
-          <div className="p-6">
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                  Nombre de la Moldura *
-                </label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="Ingrese el nombre de la moldura"
-                />
-                {errors.name && (
-                  <p className="text-sm text-red-600">{errors.name.message}</p>
-                )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="sm:col-span-2">
+                <FormField
+                  label="Nombre de la Moldura"
+                  required
+                  error={errors.name?.message}
+                  description="Nombre descriptivo y único para la moldura"
+                >
+                  <FormInput
+                    {...register('name')}
+                    placeholder="Ej: Moldura Clásica 2cm, Marco Moderno Slim"
+                    error={!!errors.name}
+                    disabled={loading}
+                  />
+                </FormField>
               </div>
 
-              <div className="space-y-2">
-                <label htmlFor="quality" className="block text-sm font-medium text-gray-700">
-                  Calidad *
-                </label>
-                <select
-                  id="quality"
+              <FormField
+                label="Calidad"
+                required
+                error={errors.quality?.message}
+                description="Nivel de calidad del material"
+              >
+                <FormSelect
                   {...register('quality')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  error={!!errors.quality}
+                  disabled={loading}
                 >
                   <option value="">Seleccionar calidad</option>
                   {QUALITIES.map((quality) => (
@@ -190,21 +199,19 @@ export default function EditMoldingModal({ open, molding, onClose, onSuccess, co
                       {quality.label}
                     </option>
                   ))}
-                </select>
-                {errors.quality && (
-                  <p className="text-sm text-red-600">{errors.quality.message}</p>
-                )}
-              </div>
+                </FormSelect>
+              </FormField>
 
-              <div className="space-y-2">
-                <label htmlFor="thicknessId" className="block text-sm font-medium text-gray-700">
-                  Espesor *
-                </label>
-                <select
-                  id="thicknessId"
+              <FormField
+                label="Espesor"
+                required
+                error={errors.thicknessId?.message}
+                description={loadingThicknesses ? "Cargando espesores..." : "Grosor del material"}
+              >
+                <FormSelect
                   {...register('thicknessId', { valueAsNumber: true })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  disabled={loadingThicknesses}
+                  error={!!errors.thicknessId}
+                  disabled={loading || loadingThicknesses}
                 >
                   <option value="">Seleccionar espesor</option>
                   {thicknesses.map((thickness) => (
@@ -212,49 +219,62 @@ export default function EditMoldingModal({ open, molding, onClose, onSuccess, co
                       {thickness.name}
                     </option>
                   ))}
-                </select>
-                {loadingThicknesses && (
-                  <p className="text-xs text-gray-500">Cargando espesores...</p>
-                )}
-                {errors.thicknessId && (
-                  <p className="text-sm text-red-600">{errors.thicknessId.message}</p>
-                )}
-              </div>
+                </FormSelect>
+              </FormField>
 
-              <div className="space-y-2">
-                <label htmlFor="pricePerM" className="block text-sm font-medium text-gray-700">
-                  Precio por metro (S/) *
-                </label>
-                <Input
-                  id="pricePerM"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  {...register('pricePerM', { valueAsNumber: true })}
-                  placeholder="0.00"
-                />
-                {errors.pricePerM && (
-                  <p className="text-sm text-red-600">{errors.pricePerM.message}</p>
-                )}
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleClose}
-                  disabled={loading}
+              <div className="sm:col-span-2">
+                <FormField
+                  label="Precio por Metro (S/)"
+                  required
+                  error={errors.pricePerM?.message}
+                  description="Precio de venta por metro lineal"
                 >
-                  Cancelar
-                </Button>
-                <Button type="submit" loading={loading}>
-                  Actualizar
-                </Button>
+                  <FormInput
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="9999.99"
+                    {...register('pricePerM', { valueAsNumber: true })}
+                    placeholder="0.00"
+                    error={!!errors.pricePerM}
+                    disabled={loading}
+                  />
+                </FormField>
               </div>
-            </form>
+            </div>
+
+            {/* Información de la moldura */}
+            <div className="bg-gray-50 rounded-lg p-4 border">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Información</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                <div>ID: #{molding.id}</div>
+                <div>Empresa: #{molding.companyId}</div>
+                <div>Creado: {new Date(molding.validFrom).toLocaleDateString()}</div>
+                <div>Estado: {molding.isActive ? 'Activo' : 'Inactivo'}</div>
+              </div>
+            </div>
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        </ModalContent>
+        
+        <ModalFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            loading={loading}
+            disabled={!isValid}
+            className={colors.bg}
+          >
+            Actualizar Moldura
+          </Button>
+        </ModalFooter>
+      </form>
+    </BaseModal>
   )
 }

@@ -2,6 +2,8 @@
 
 import { useCompanyStore } from "@/lib/store/useCompanyStore";
 import FriendlyFrameCalculator from "./FriendlyFrameCalculator";
+import PageHeader from "@/components/common/PageHeader";
+import { Frame, Building2 } from "lucide-react";
 
 type Props = {
   quoteId?: number;
@@ -20,23 +22,51 @@ export default function FriendlyFrameCalculatorShell({ quoteId, companyId }: Pro
 
   if (!resolvedCompanyId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-3xl p-12 shadow-xl text-center max-w-md">
-          <div className="text-6xl mb-6">🏢</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
-            Selecciona una empresa
-          </h2>
-          <p className="text-gray-600 text-lg">
-            Para usar la calculadora necesitas seleccionar una empresa primero
-          </p>
+      <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Calculadora de Cuadros"
+            subtitle="Calcula precios de cuadros y marcos para cotizaciones"
+            showBreadcrumb={true}
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Cotizaciones', href: '/cotizaciones' },
+              { label: 'Calculadora Cuadros', href: '/cotizaciones/calculadora-cuadros' },
+            ]}
+          />
+          
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Building2 size={24} className="text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una empresa</h3>
+              <p className="text-gray-500">Para usar la calculadora necesitas seleccionar una empresa primero.</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <FriendlyFrameCalculator 
-      companyId={resolvedCompanyId}
-    />
+    <div>
+      <main className="px-4 sm:px-6 pt-3 pb-1">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Calculadora de Cuadros"
+            subtitle="Cotiza marcos y cuadros rápidamente"
+            showBreadcrumb={true}
+            breadcrumbs={[
+              { label: 'Dashboard', href: '/dashboard' },
+              { label: 'Cotizaciones', href: '/cotizaciones' },
+              { label: 'Calculadora Cuadros', href: '/cotizaciones/calculadora-cuadros' },
+            ]}
+          />
+        </div>
+      </main>
+      
+      <FriendlyFrameCalculator companyId={resolvedCompanyId} />
+    </div>
   );
 }

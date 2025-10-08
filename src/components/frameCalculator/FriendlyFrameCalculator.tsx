@@ -146,59 +146,32 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header responsive coherente con COSMOS */}
-      <div className={`fixed top-0 right-0 bg-white shadow-sm border-b-4 border-blue-800 z-40 transition-all duration-300 ease-in-out ${
-        isMobile 
-          ? 'left-0' 
-          : isCollapsed 
-            ? 'left-16' 
-            : 'left-64'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Botón hamburguesa integrado - Solo móvil */}
-              <div className="lg:hidden">
-                <MobileMenuButton />
-              </div>
-              
-              <div className="w-1 h-4 sm:h-6 bg-orange-500 rounded-full"></div>
-              <div>
-                <h1 className="text-base sm:text-lg font-semibold text-gray-900">Calculadora de Cuadros</h1>
-                <nav className="text-gray-500 text-xs hidden sm:block">
-                  <span>Cotizaciones</span>
-                  <span className="mx-1">/</span>
-                  <span className="text-blue-800">Calculadora Cuadros</span>
-                </nav>
-              </div>
-            </div>
-            
-            {/* Contador de items en carrito */}
-            <div className="flex items-center gap-2">
-              {items.length > 0 && (
-                <span className="text-xs sm:text-sm text-green-700 bg-green-50 px-3 py-1.5 rounded-full font-medium border border-green-200">
-                  {items.length} {items.length === 1 ? 'item' : 'items'} • S/ {totalCart.toFixed(2)}
-                </span>
-              )}
+      {/* Floating cart counter - Solo visible cuando hay items */}
+      {items.length > 0 && (
+        <div className="fixed top-3 right-3 z-50 lg:hidden">
+          <div className="bg-purple-500/90 backdrop-blur text-white rounded-lg px-3 py-1.5 shadow-sm border border-purple-400/20">
+            <div className="flex items-center gap-1.5 text-xs font-medium">
+              <Package size={14} />
+              <span>{items.length} • S/ {totalCart.toFixed(0)}</span>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Contenido principal con padding para header fijo */}
-      <div className="pt-16 sm:pt-20">
+      {/* Contenido principal optimizado */}
+      <div>
         {/* Layout responsive - Desktop: 2 columnas, Móvil: 1 columna */}
-        <div className="lg:flex lg:h-[calc(100vh-80px)]">
+        <div className="lg:flex lg:h-[calc(100vh-120px)]">
         
         {/* COLUMNA IZQUIERDA: Calculadora - Full width en móvil */}
-        <div className="flex-1 p-4 lg:overflow-y-auto lg:pb-4 pb-20">
-          <div className="max-w-4xl mx-auto space-y-6">
+        <div className="flex-1 px-4 pt-2 pb-20 lg:overflow-y-auto lg:pb-4">
+          <div className="max-w-4xl mx-auto space-y-4">
             
             {/* Panel de medidas */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-purple-200">
-              <div className="flex items-center gap-3 mb-4">
-                <Ruler className="text-purple-500" size={24} />
-                <h2 className="text-xl font-bold text-gray-800">Medidas del cuadro</h2>
+            <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+              <div className="flex items-center gap-2 mb-3">
+                <Ruler className="text-purple-500" size={20} />
+                <h2 className="text-lg font-semibold text-gray-700">Medidas del cuadro</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -266,9 +239,9 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
             {/* Selección de moldura */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <Frame className="text-purple-500" size={20} />
-                <h2 className="text-lg font-semibold text-gray-800">Seleccionar moldura</h2>
+              <div className="flex items-center gap-2 mb-3">
+                <Frame className="text-purple-500" size={18} />
+                <h2 className="text-base font-medium text-gray-600">Seleccionar moldura</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -346,9 +319,9 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
             {/* Selección de vidrio */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
+              <div className="flex items-center gap-2 mb-3">
                 <div className="text-blue-500">🪟</div>
-                <h2 className="text-lg font-semibold text-gray-800">Seleccionar vidrio (2mm)</h2>
+                <h2 className="text-base font-medium text-gray-600">Seleccionar vidrio (2mm)</h2>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
