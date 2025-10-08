@@ -1,8 +1,24 @@
 import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
 export default withAuth(
   function middleware(req) {
-    // Aquí puedes agregar lógica adicional de autorización por roles
+    const token = req.nextauth.token
+    const { pathname } = req.nextUrl
+    
+    // Redirigir página raíz (admin pages) si no es Super Admin
+    if (pathname === "/" && token?.role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/select-company", req.url))
+    }
+    
+    // Permitir acceso a otras rutas admin solo para Super Admin
+    if (pathname.startsWith("/empresas") || 
+        pathname.startsWith("/usuarios") || 
+        pathname.startsWith("/precios")) {
+      if (token?.role !== "SUPER_ADMIN") {
+        return NextResponse.redirect(new URL("/select-company", req.url))
+      }
+    }
   },
   {
     callbacks: {

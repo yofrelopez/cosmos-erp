@@ -1,4 +1,3 @@
-import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
@@ -8,14 +7,7 @@ import ClientProbe from '@/components/ClientProbe'
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   
-  if (!session?.user) {
-    redirect('/auth/signin')
-  }
-
-  // Si no es Super Admin, redirigir a selección de empresa
-  if (session.user.role !== 'SUPER_ADMIN') {
-    redirect('/select-company')
-  }
+  // El middleware ya maneja la autorización, aquí solo renderizamos
 
   // Obtener estadísticas para Super Admin
   const stats = await Promise.all([
