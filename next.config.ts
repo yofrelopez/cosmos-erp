@@ -2,7 +2,12 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ['res.cloudinary.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
   },
   eslint: {
     // Para producción - ignora algunos warnings de ESLint durante build
@@ -12,7 +17,13 @@ const nextConfig: NextConfig = {
     // Temporal para Next.js 15 - hay un bug conocido con tipos de rutas API
     ignoreBuildErrors: true,
   },
-  /* config options here */
+  // Fix para Vercel build con Next.js 15
+  experimental: {
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+  outputFileTracing: {
+    ignores: ['**/@prisma/engines/**'],
+  },
 };
 
 export default nextConfig;
