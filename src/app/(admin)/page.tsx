@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import SuperAdminDashboard from '@/components/dashboard/SuperAdminDashboard'
+import ClientProbe from '@/components/ClientProbe'
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
@@ -50,6 +51,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="p-6 space-y-6">
+      <ClientProbe />
       <div className="max-w-7xl mx-auto">
         <SuperAdminDashboard 
           stats={{
