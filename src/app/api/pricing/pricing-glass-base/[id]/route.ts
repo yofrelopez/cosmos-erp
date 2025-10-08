@@ -17,11 +17,11 @@ const FAMILY_VALUES = Object.values(GlassFamily) as [
 const familySchema = z.enum(FAMILY_VALUES).transform(v => v as GlassFamily)
 
 const updateSchema = z.object({
+  commercialName: z.string().min(1).optional(),
   family: familySchema.optional(),
   thicknessMM: z.number().positive().optional(),
-  pricePerFt2: z.number().nonnegative().optional(),
-  minBillableFt2: z.number().positive().optional(),
-  minCharge: z.number().nonnegative().optional(),
+  colorType: z.string().optional(),
+  price: z.number().nonnegative().optional(),
   validFrom: z.coerce.date().optional(),
   validTo: z.coerce.date().nullable().optional(),
   isActive: z.boolean().optional(),
@@ -69,6 +69,7 @@ export async function PATCH(
     // Combinación candidata (usa valores nuevos o actuales)
     const candidate = {
       companyId: current.companyId,
+      commercialName: data.commercialName ?? current.commercialName,
       family: data.family ?? current.family,
       thicknessMM: toDec(data.thicknessMM ?? Number(current.thicknessMM)),
       validFrom: data.validFrom ?? current.validFrom,
@@ -95,12 +96,12 @@ export async function PATCH(
     const updated = await prisma.pricingGlass.update({
       where: { id },
       data: {
+        commercialName: candidate.commercialName,
         family: candidate.family,
         thicknessMM: candidate.thicknessMM!,
+        colorType: data.colorType as any ?? undefined,
+        price: toDec(data.price) ?? undefined,
         validFrom: candidate.validFrom,
-        pricePerFt2: toDec(data.pricePerFt2) ?? undefined,
-        minBillableFt2: toDec(data.minBillableFt2),
-        minCharge: toDec(data.minCharge),
         validTo: data.validTo ?? undefined,
         isActive: data.isActive ?? undefined,
       },
