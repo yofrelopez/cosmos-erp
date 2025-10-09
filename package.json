@@ -2,7 +2,9 @@
   "name": "erp-vd-cosmos",
   "version": "0.1.0",
   "private": true,
-  "engines": { "node": "22.x" },
+  "engines": {
+    "node": "22.x"
+  },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
   },
@@ -60,6 +62,7 @@
     "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
+    "pg": "^8.16.3",
     "postcss": "^8.5.6",
     "prisma": "^6.17.0",
     "tailwindcss": "^4.1.11",

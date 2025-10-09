@@ -11,11 +11,10 @@ export default withAuth(
       if (!token) {
         // No autenticado: ir a login
         return NextResponse.redirect(new URL("/auth/signin", req.url))
-      } else if (token.role !== "SUPER_ADMIN") {
-        // Autenticado pero no Super Admin: ir a selección de empresa
-        return NextResponse.redirect(new URL("/select-company", req.url))
+      } else {
+        // Todos los usuarios autenticados van al dashboard
+        return NextResponse.redirect(new URL("/dashboard", req.url))
       }
-      // Si es Super Admin, continúa a la página admin
     }
     
     // Permitir acceso a rutas admin solo para Super Admin
@@ -40,7 +39,7 @@ export default withAuth(
         const { pathname } = req.nextUrl
         
         // Permitir acceso sin autenticación a páginas públicas
-        if (pathname.startsWith('/auth') || pathname === '/select-company') {
+        if (pathname.startsWith('/auth')) {
           return true
         }
         
