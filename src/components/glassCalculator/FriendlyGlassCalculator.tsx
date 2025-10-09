@@ -157,7 +157,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
     localStorage.setItem('quoteItems', JSON.stringify(combinedItems));
     
     // 4. Navegar a cotización con indicador de origen
-    router.push('/cotizaciones/nueva?from=calculator');
+    router.push('/admin/cotizaciones/nueva?from=calculator');
   };
 
   return (

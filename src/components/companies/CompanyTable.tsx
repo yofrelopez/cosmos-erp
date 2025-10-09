@@ -37,13 +37,13 @@ export default function CompanyTable({ initialData }: Props) {
     {
       label: 'Ver detalles',
       icon: Eye,
-      onClick: () => router.push(`/empresas/${company.id}`),
+      onClick: () => router.push(`/admin/empresas/${company.id}`),
       variant: 'default'
     },
     {
       label: 'Editar',
       icon: Edit2,
-      onClick: () => router.push(`/empresas/${company.id}/editar`),
+      onClick: () => router.push(`/admin/empresas/${company.id}/editar`),
       variant: 'default'
     }
   ];

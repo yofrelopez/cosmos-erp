@@ -9,7 +9,7 @@ export default function CompanyCard(props: Company) {
 
   const handleSelect = () => {
     setCompany(props)
-    router.push('/cotizaciones')
+    router.push('/admin')
   }
 
   return (

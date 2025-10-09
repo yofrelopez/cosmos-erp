@@ -14,9 +14,9 @@ export default function MoldurasPage() {
           <PageHeader
             title="Gestión de Precios - Molduras"
             breadcrumbs={[
-              { label: 'Admin', href: '/' },
-              { label: 'Precios', href: '/precios' },
-              { label: 'Molduras', href: '/precios/molduras' }
+              { label: 'Admin', href: '/admin' },
+              { label: 'Precios', href: '/admin/precios' },
+              { label: 'Molduras', href: '/admin/precios/molduras' }
             ]}
           />
           <div className="text-center py-10">
@@ -33,9 +33,9 @@ export default function MoldurasPage() {
         <PageHeader
           title="Gestión de Precios - Molduras"
           breadcrumbs={[
-            { label: 'Admin', href: '/' },
-            { label: 'Precios', href: '/precios' },
-            { label: 'Molduras', href: '/precios/molduras' }
+            { label: 'Admin', href: '/admin' },
+            { label: 'Precios', href: '/admin/precios' },
+            { label: 'Molduras', href: '/admin/precios/molduras' }
           ]}
         />
         

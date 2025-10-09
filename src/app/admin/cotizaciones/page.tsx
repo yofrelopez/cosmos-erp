@@ -71,7 +71,7 @@ export default function QuotesPage() {
               
               <div className="flex flex-col sm:flex-row gap-3">
                 <Link 
-                  href="/cotizaciones/nueva"
+                  href="/admin/cotizaciones/nueva"
                   className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
                 >
                   <Plus size={18} />
@@ -119,7 +119,7 @@ export default function QuotesPage() {
             <h3 className="text-sm font-semibold text-gray-700 mb-3">Acciones Rápidas</h3>
             <div className="flex flex-wrap gap-3">
               <Link 
-                href="/cotizaciones/calculadora-vidrios"
+                href="/admin/cotizaciones/calculadora-vidrios"
                 className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:bg-blue-50 hover:border-blue-200 transition-all duration-200"
               >
                 <Calculator size={18} className="text-blue-600" />
@@ -127,7 +127,7 @@ export default function QuotesPage() {
               </Link>
               
               <Link 
-                href="/cotizaciones/calculadora-cuadros"
+                href="/admin/cotizaciones/calculadora-cuadros"
                 className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-4 py-3 hover:bg-purple-50 hover:border-purple-200 transition-all duration-200"
               >
                 <Frame size={18} className="text-purple-600" />

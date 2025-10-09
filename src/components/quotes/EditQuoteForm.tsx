@@ -68,7 +68,7 @@ export default function EditQuoteForm({
       }
 
       toast.success('Cotización actualizada correctamente');
-      router.push('/cotizaciones');
+      router.push('/admin/cotizaciones');
     } catch (error) {
       toast.error('No se pudo actualizar la cotización');
       console.error(error);
@@ -84,7 +84,7 @@ export default function EditQuoteForm({
         <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-gray-200">        
           <button
             type="button"
-            onClick={() => router.push('/cotizaciones')}
+            onClick={() => router.push('/admin/cotizaciones')}
             className="flex items-center justify-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-medium transition-all duration-200 min-h-[44px] sm:min-h-0"
           >
             <XCircle className="w-4 h-4" />

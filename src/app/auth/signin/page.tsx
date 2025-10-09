@@ -31,7 +31,7 @@ export default function SignInPage() {
       } else {
         // Obtener sesión para redireccionar según rol
         const session = await getSession()
-        router.push('/cotizaciones')
+        router.push('/admin')
         router.refresh()
       }
     } catch (error) {

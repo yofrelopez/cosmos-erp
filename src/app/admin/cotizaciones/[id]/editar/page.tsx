@@ -40,8 +40,8 @@ export default async function EditQuotePage({ params }: EditQuotePageProps) {
           breadcrumbs={[
             { label: 'Dashboard', href: '/dashboard' },
             { label: 'Cotizaciones', href: '/cotizaciones' },
-            { label: `Cotización #${quote.id}`, href: `/cotizaciones/${quote.id}` },
-            { label: 'Editar', href: `/cotizaciones/${quote.id}/editar` },
+            { label: `Cotización #${quote.id}`, href: `/admin/cotizaciones/${quote.id}` },
+            { label: 'Editar', href: `/admin/cotizaciones/${quote.id}/editar` },
           ]}
         />
 

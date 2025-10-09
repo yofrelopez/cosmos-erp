@@ -25,13 +25,13 @@ const getNavigationGroups = (userRole?: string) => [
     label: 'Calculadoras',
     items: [
       { 
-        href: '/cotizaciones/calculadora-vidrios', 
+        href: '/admin/cotizaciones/calculadora-vidrios', 
         label: 'Vidrios', 
         icon: Calculator,
         shortcut: 'Ctrl+V'
       },
       { 
-        href: '/cotizaciones/calculadora-cuadros', 
+        href: '/admin/cotizaciones/calculadora-cuadros', 
         label: 'Cuadros', 
         icon: Frame,
         shortcut: 'Ctrl+C'
@@ -42,14 +42,14 @@ const getNavigationGroups = (userRole?: string) => [
     label: 'Ventas',
     items: [
       { 
-        href: '/clientes', 
+        href: '/admin/clientes', 
         label: 'Clientes', 
         icon: User,
         badge: '12',
         shortcut: 'Ctrl+U'
       },
       { 
-        href: '/cotizaciones', 
+        href: '/admin/cotizaciones', 
         label: 'Cotizaciones', 
         icon: FileText,
         badge: '3',
@@ -61,13 +61,13 @@ const getNavigationGroups = (userRole?: string) => [
     label: 'Precios',
     items: [
       { 
-        href: '/precios/vidrios', 
+        href: '/admin/precios/vidrios', 
         label: 'Vidrios', 
         icon: DollarSign,
         shortcut: 'Ctrl+P+V'
       },
       { 
-        href: '/precios/molduras', 
+        href: '/admin/precios/molduras', 
         label: 'Molduras', 
         icon: Frame,
         shortcut: 'Ctrl+P+M'
@@ -78,13 +78,13 @@ const getNavigationGroups = (userRole?: string) => [
     label: 'Sistema',
     items: [
       { 
-        href: '/empresas', 
+        href: '/admin/empresas', 
         label: 'Empresas', 
         icon: Building,
         shortcut: 'Ctrl+E'
       },
       ...(userRole === 'SUPER_ADMIN' ? [{
-        href: '/usuarios', 
+        href: '/admin/usuarios', 
         label: 'Usuarios', 
         icon: Settings,
         shortcut: 'Ctrl+Alt+U',

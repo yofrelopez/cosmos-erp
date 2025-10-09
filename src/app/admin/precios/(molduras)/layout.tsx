@@ -5,13 +5,13 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const moldurasSubTabs = [
-  { href: '/precios/molduras', label: 'Molduras' },
-  { href: '/precios/espesores', label: 'Espesores' },
-  { href: '/precios/texturas', label: 'Texturas' },
-  { href: '/precios/colores', label: 'Colores' },
-  { href: '/precios/fondos', label: 'Fondos' },
-  { href: '/precios/soportes', label: 'Soportes' },
-  { href: '/precios/accesorios', label: 'Accesorios' },
+  { href: '/admin/precios/molduras', label: 'Molduras' },
+  { href: '/admin/precios/espesores', label: 'Espesores' },
+  { href: '/admin/precios/texturas', label: 'Texturas' },
+  { href: '/admin/precios/colores', label: 'Colores' },
+  { href: '/admin/precios/fondos', label: 'Fondos' },
+  { href: '/admin/precios/soportes', label: 'Soportes' },
+  { href: '/admin/precios/accesorios', label: 'Accesorios' },
 ]
 
 export default function MoldurasLayout({ children }: { children: ReactNode }) {

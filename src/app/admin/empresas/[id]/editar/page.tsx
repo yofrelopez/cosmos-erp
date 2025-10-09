@@ -50,8 +50,8 @@ export default async function EditCompanyPage({ params }: Props) {
           breadcrumbs={[
             { label: 'Admin', href: '/' },
             { label: 'Empresas', href: '/empresas' },
-            { label: company.name, href: `/empresas/${company.id}` },
-            { label: 'Editar', href: `/empresas/${company.id}/editar` },
+            { label: company.name, href: `/admin/empresas/${company.id}` },
+            { label: 'Editar', href: `/admin/empresas/${company.id}/editar` },
           ]}
         />
 

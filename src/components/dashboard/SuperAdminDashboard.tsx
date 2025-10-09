@@ -59,7 +59,7 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
       updatedAt: new Date(),
     }
     setCompany(fullCompany)
-    router.push('/cotizaciones')
+    router.push('/admin')
   }
 
   return (

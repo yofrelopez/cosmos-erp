@@ -121,7 +121,7 @@ const tableHeaders = ["#", "Cotización", "Estado", "Cliente", "Fecha", "Total",
             {
               label: "Editar",
               icon: Pencil,
-              onClick: () => router.push(`/cotizaciones/${quote.id}/editar`),   // ⬅️ antes hacía console.log
+              onClick: () => router.push(`/admin/cotizaciones/${quote.id}/editar`),   // ⬅️ antes hacía console.log
             },
             {
               label: "Eliminar",
@@ -178,7 +178,7 @@ const tableHeaders = ["#", "Cotización", "Estado", "Cliente", "Fecha", "Total",
             }
           </p>
           <a 
-            href="/cotizaciones/nueva"
+            href="/admin/cotizaciones/nueva"
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Plus size={16} />

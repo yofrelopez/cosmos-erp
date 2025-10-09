@@ -68,7 +68,7 @@ export default async function CompanyDetailsPage({ params }: Props) {
           breadcrumbs={[
             { label: 'Admin', href: '/' },
             { label: 'Empresas', href: '/empresas' },
-            { label: company.name, href: `/empresas/${company.id}` },
+            { label: company.name, href: `/admin/empresas/${company.id}` },
           ]}
         />
 

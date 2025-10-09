@@ -50,7 +50,7 @@ export default function UserDashboard({ user, companies }: UserDashboardProps) {
       updatedAt: new Date(),
     }
     setCompany(fullCompany)
-    router.push('/cotizaciones')
+    router.push('/admin')
   }
 
   const getRoleLabel = (role?: string) => {

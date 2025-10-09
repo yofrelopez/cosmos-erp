@@ -135,7 +135,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
       localStorage.setItem('quoteItems', JSON.stringify(combinedItems));
       
       // Navegar a cotización con indicador de origen
-      router.push('/cotizaciones/nueva?from=calculator');
+      router.push('/admin/cotizaciones/nueva?from=calculator');
     } catch (error) {
       console.error('Error enviando a cotización:', error);
       alert('Error al enviar la cotización. Inténtalo nuevamente.');
