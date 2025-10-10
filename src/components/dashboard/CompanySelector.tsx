@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Building2, ChevronDown, Check } from 'lucide-react'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
 
-interface Company {
+interface BaseCompany {
   id: number
   name: string
   ruc: string
@@ -17,12 +17,12 @@ interface Company {
   }
 }
 
-interface CompanySelectorProps {
-  companies: Company[]
-  onSelectCompany: (company: Company) => void
+interface CompanySelectorProps<T extends BaseCompany = BaseCompany> {
+  companies: T[]
+  onSelectCompany: (company: T) => void
 }
 
-export default function CompanySelector({ companies, onSelectCompany }: CompanySelectorProps) {
+export default function CompanySelector<T extends BaseCompany = BaseCompany>({ companies, onSelectCompany }: CompanySelectorProps<T>) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const selectedCompany = useCompanyStore((s) => s.company)
@@ -41,7 +41,7 @@ export default function CompanySelector({ companies, onSelectCompany }: CompanyS
     }
   }, [])
 
-  const handleCompanySelect = (company: Company) => {
+  const handleCompanySelect = (company: T) => {
     onSelectCompany(company)
     setIsOpen(false)
   }
