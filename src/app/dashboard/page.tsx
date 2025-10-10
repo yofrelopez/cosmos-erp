@@ -52,7 +52,7 @@ export default async function DashboardPage() {
       <SidebarProvider>
         <div className="min-h-screen bg-gray-50">
           <Sidebar />
-          <main className="ml-64 p-6 space-y-6">
+          <main className="lg:ml-64 p-4 lg:p-6 space-y-4 lg:space-y-6">
             <div className="max-w-7xl mx-auto">
               <SuperAdminDashboard 
                 stats={{

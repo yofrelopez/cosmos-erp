@@ -49,15 +49,17 @@ export default function CompanyTable({ initialData }: Props) {
   ];
 
   return (
-    <div className="p-6">
+    <div className="card-padding">
       {companies.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mb-4">
-              <Building2 size={32} className="text-blue-600" />
+        <div className="empty-state-container">
+          <div className="empty-state-content">
+            <div className="empty-state-icon">
+              <Building2 size={32} className="text-orange-500" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay empresas registradas</h3>
-            <p className="text-gray-500 mb-6">Comienza creando tu primera empresa en el sistema</p>
+            <h3 className="empty-state-title">No hay empresas registradas</h3>
+            <p className="empty-state-description">
+              Comienza creando tu primera empresa en el sistema para gestionar cotizaciones y clientes
+            </p>
           </div>
         </div>
       ) : (

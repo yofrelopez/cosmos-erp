@@ -1,0 +1,85 @@
+/**
+ * Design System - Typography Utilities
+ * Clases reutilizables para títulos y subtítulos consistentes en toda la aplicación
+ */
+
+/* === TÍTULOS PRINCIPALES === */
+
+/* Título de página principal */
+.title-page {
+  @apply text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-800;
+}
+
+/* Título de sección */
+.title-section {
+  @apply text-lg sm:text-xl lg:text-2xl font-medium text-gray-900;
+}
+
+/* Título de componente/card */
+.title-component {
+  @apply text-base sm:text-lg font-medium text-gray-900;
+}
+
+/* Título de empty state */
+.title-empty-state {
+  @apply text-lg font-medium text-gray-900;
+}
+
+/* Título secundario - para secciones dentro de páginas */
+.title-secondary {
+  @apply text-lg sm:text-xl font-medium text-gray-900;
+}
+
+/* === SUBTÍTULOS === */
+
+/* Subtítulo de página */
+.subtitle-page {
+  @apply text-sm text-gray-600;
+}
+
+/* Subtítulo de sección */
+.subtitle-section {
+  @apply text-sm text-gray-500;
+}
+
+/* Descripción de empty state */
+.description-empty-state {
+  @apply text-sm text-gray-600 leading-relaxed;
+}
+
+/* === ESPACIADO ESTANDARIZADO === */
+
+/* Contenedor de página principal */
+.page-container {
+  @apply p-4 lg:p-6 space-y-4 lg:space-y-6;
+}
+
+/* Card principal con padding estandarizado */
+.main-card {
+  @apply bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden;
+}
+
+/* Padding interno de cards */
+.card-padding {
+  @apply p-6 lg:p-8;
+}
+
+/* Empty state container */
+.empty-state-container {
+  @apply text-center py-12 px-6 lg:py-16 lg:px-8;
+}
+
+/* === UTILIDADES ESPECÍFICAS === */
+
+/* Header con botón hamburguesa móvil */
+.header-with-mobile-nav {
+  @apply flex items-start gap-3;
+}
+
+.mobile-nav-button {
+  @apply sm:hidden mt-1;
+}
+
+.header-content {
+  @apply flex-1;
+}

@@ -23,14 +23,42 @@ export default function QuotesPage() {
 
   if (!companyId) {
     return (
-      <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+      <main className="page-container">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FileText size={24} className="text-gray-400" />
+          <PageHeader
+            title="Gestión de Cotizaciones"
+            subtitle="Administra y crea nuevas cotizaciones para tus clientes"
+            showBreadcrumb={true}
+            breadcrumbs={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Cotizaciones', href: '/admin/cotizaciones' },
+            ]}
+          />
+          
+          <div className="main-card">
+            <div className="empty-state-container">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <FileText size={28} className="text-orange-600" />
+              </div>
+              <h3 className="title-secondary mb-3">
+                Selecciona una empresa
+              </h3>
+              <p className="description-empty-state mb-8 max-w-sm mx-auto">
+                Para ver las cotizaciones necesitas seleccionar una empresa primero.
+              </p>
+              <div className="space-y-3">
+                <Link 
+                  href="/dashboard"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                >
+                  <FileText size={18} />
+                  Ir al Dashboard
+                </Link>
+                <p className="text-xs text-gray-500">
+                  Selecciona una empresa para gestionar cotizaciones
+                </p>
+              </div>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una empresa</h3>
-            <p className="text-gray-500">Para ver las cotizaciones necesitas seleccionar una empresa primero.</p>
           </div>
         </div>
       </main>
@@ -38,15 +66,15 @@ export default function QuotesPage() {
   }
 
   return (
-    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+    <main className="page-container">
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Gestión de Cotizaciones"
           subtitle="Administra y crea nuevas cotizaciones para tus clientes"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Admin', href: '/' },
-            { label: 'Cotizaciones', href: '/cotizaciones' },
+            { label: 'Admin', href: '/admin' },
+            { label: 'Cotizaciones', href: '/admin/cotizaciones' },
           ]}
         />
 

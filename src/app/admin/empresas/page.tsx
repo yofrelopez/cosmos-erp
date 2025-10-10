@@ -32,33 +32,33 @@ export default async function EmpresasPage() {
   });
 
   return (
-    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+    <main className="page-container">
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Gestión de Empresas"
           subtitle="Administra las empresas registradas en el sistema"
           showBreadcrumb={true}
           breadcrumbs={[
-            { label: 'Admin', href: '/' },
-            { label: 'Empresas', href: '/empresas' },
+            { label: 'Admin', href: '/admin' },
+            { label: 'Empresas', href: '/admin/empresas' },
           ]}
         />
 
         {/* Contenedor principal */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          {/* Header con estadísticas */}
-          <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="main-card">
+          {/* Header con estadísticas mejorado */}
+          <div className="card-padding border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <Building2 size={24} className="text-white" />
+                <div className="w-14 h-14 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Building2 size={26} className="text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900">
+                  <h2 className="title-section">
                     Empresas Registradas
                   </h2>
-                  <p className="text-sm text-gray-600">
-                    {companies.length} {companies.length === 1 ? 'empresa registrada' : 'empresas registradas'}
+                  <p className="subtitle-section">
+                    {companies.length} {companies.length === 1 ? 'empresa registrada' : 'empresas registradas'} en el sistema
                   </p>
                 </div>
               </div>

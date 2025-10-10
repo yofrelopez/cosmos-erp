@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
 import GlassesTable from '@/components/pricing/GlassesTable'
 import SimpleTexturesTable from '@/components/pricing/SimpleTexturesTable'
@@ -16,17 +17,46 @@ export default function VidriosPage() {
 
   if (!companyId) {
     return (
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-xl font-semibold">Vidrios</h2>
-            <p className="text-gray-600 text-sm">Gestiona precios y texturas de vidrios</p>
+      <main className="page-container">
+        <div className="max-w-7xl mx-auto">
+          <PageHeader
+            title="Gestión de Vidrios"
+            subtitle="Gestiona precios y texturas de vidrios"
+            showBreadcrumb={true}
+            breadcrumbs={[
+              { label: 'Admin', href: '/admin' },
+              { label: 'Precios', href: '/admin/precios' },
+              { label: 'Vidrios', href: '/admin/precios/vidrios' },
+            ]}
+          />
+          
+          <div className="main-card">
+            <div className="empty-state-container">
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-100 to-orange-200 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-sm">
+                <DollarSign size={28} className="text-orange-600" />
+              </div>
+              <h3 className="title-secondary mb-3">
+                Selecciona una empresa
+              </h3>
+              <p className="description-empty-state mb-8 max-w-sm mx-auto">
+                Para gestionar precios de vidrios necesitas seleccionar una empresa primero.
+              </p>
+              <div className="space-y-3">
+                <Link 
+                  href="/dashboard"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
+                >
+                  <DollarSign size={18} />
+                  Ir al Dashboard
+                </Link>
+                <p className="text-xs text-gray-500">
+                  Selecciona una empresa para gestionar precios
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="text-center py-10">
-          <p className="text-gray-500">Selecciona una empresa para continuar</p>
-        </div>
-      </div>
+      </main>
     )
   }
 
@@ -55,7 +85,7 @@ export default function VidriosPage() {
   ]
 
   return (
-    <main className="p-2.5 sm:p-6 space-y-4 sm:space-y-6">
+    <main className="page-container">
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Gestión de Vidrios"
@@ -69,7 +99,7 @@ export default function VidriosPage() {
         />
 
         {/* Pestañas Modernas */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="main-card">
           <div className="border-b border-gray-200 bg-gray-50">
             <nav className="flex space-x-0" aria-label="Tabs">
               {tabs.map((tab) => {

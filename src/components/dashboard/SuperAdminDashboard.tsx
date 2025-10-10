@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Building2, Users, FileText, UserCheck } from 'lucide-react'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
+import MobileMenuButton from '@/components/ui/MobileMenuButton'
+import CompanySelector from './CompanySelector'
 
 interface Stats {
   totalCompanies: number
@@ -65,29 +67,49 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="border-b border-gray-200 pb-5">
-        <h1 className="text-3xl font-bold leading-6 text-gray-900">
-          Dashboard Super Administrador
-        </h1>
-        <p className="mt-2 max-w-4xl text-sm text-gray-500">
-          Vista general del sistema y gestión de empresas
-        </p>
+      <div className="border-b border-gray-200 pb-5 space-y-4">
+        <div className="header-with-mobile-nav">
+          <div className="mobile-nav-button">
+            <MobileMenuButton />
+          </div>
+          <div className="header-content">
+            <h1 className="title-page">
+              Dashboard Super Admin
+            </h1>
+            <p className="mt-1 sm:mt-2 max-w-4xl subtitle-page">
+              Vista general del sistema y gestión de empresas
+            </p>
+          </div>
+        </div>
+        
+        {/* Selector de empresa - Layout en dos columnas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+          <div>
+            {/* Espacio para futuras funcionalidades o información adicional */}
+          </div>
+          <div className="md:justify-self-end">
+            <CompanySelector 
+              companies={companies}
+              onSelectCompany={handleSelectCompany}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Estadísticas Generales */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:gap-5">
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Building2 className="h-6 w-6 text-blue-600" />
+                <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-2 sm:ml-3 lg:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Empresas Activas
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-sm sm:text-lg font-medium text-gray-900">
                     {stats.activeCompanies} / {stats.totalCompanies}
                   </dd>
                 </dl>
@@ -97,17 +119,17 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
         </div>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Users className="h-6 w-6 text-green-600" />
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-2 sm:ml-3 lg:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Usuarios Activos
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-sm sm:text-lg font-medium text-gray-900">
                     {stats.activeUsers} / {stats.totalUsers}
                   </dd>
                 </dl>
@@ -117,17 +139,17 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
         </div>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <FileText className="h-6 w-6 text-orange-600" />
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-orange-600" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-2 sm:ml-3 lg:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Cotizaciones Total
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-sm sm:text-lg font-medium text-gray-900">
                     {stats.totalQuotes}
                   </dd>
                 </dl>
@@ -137,17 +159,17 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
         </div>
 
         <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="p-5">
+          <div className="p-3 sm:p-4 lg:p-5">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <UserCheck className="h-6 w-6 text-purple-600" />
+                <UserCheck className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
-              <div className="ml-5 w-0 flex-1">
+              <div className="ml-2 sm:ml-3 lg:ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                     Clientes Total
                   </dt>
-                  <dd className="text-lg font-medium text-gray-900">
+                  <dd className="text-sm sm:text-lg font-medium text-gray-900">
                     {stats.totalClients}
                   </dd>
                 </dl>
@@ -172,9 +194,10 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
             <li key={company.id}>
               <button
                 onClick={() => handleSelectCompany(company)}
-                className="w-full block hover:bg-gray-50 px-4 py-4 sm:px-6 text-left transition-colors"
+                className="w-full block hover:bg-gray-50 px-3 py-3 sm:px-4 sm:py-4 lg:px-6 text-left transition-colors"
               >
-                <div className="flex items-center justify-between">
+                {/* Desktop Layout */}
+                <div className="hidden sm:flex items-center justify-between">
                   <div className="flex items-center">
                     <div className="flex-shrink-0 h-10 w-10">
                       {company.logoUrl ? (
@@ -219,6 +242,47 @@ export default function SuperAdminDashboard({ stats, companies }: SuperAdminDash
                     <div className="text-center">
                       <p className="text-sm font-medium text-gray-900">{company._count.clients}</p>
                       <p className="text-xs">Clientes</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Layout */}
+                <div className="sm:hidden">
+                  <div className="flex items-start space-x-3">
+                    <div className="flex-shrink-0 h-8 w-8">
+                      {company.logoUrl ? (
+                        <img 
+                          className="h-8 w-8 rounded-full object-cover" 
+                          src={company.logoUrl} 
+                          alt={company.name}
+                        />
+                      ) : (
+                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                          <Building2 className="h-4 w-4 text-blue-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-gray-900 truncate">
+                          {company.name}
+                        </p>
+                        <span
+                          className={`ml-2 inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                            company.status === 'ACTIVE'
+                              ? 'bg-green-100 text-green-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
+                        >
+                          {company.status === 'ACTIVE' ? '●' : '○'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">RUC: {company.ruc}</p>
+                      <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                        <span>{company._count.users} usuarios</span>
+                        <span>{company._count.quotes} cotizaciones</span>
+                        <span>{company._count.clients} clientes</span>
+                      </div>
                     </div>
                   </div>
                 </div>

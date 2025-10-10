@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { Building2, FileText, Users } from 'lucide-react'
 import { useCompanyStore } from '@/lib/store/useCompanyStore'
+import CompanySelector from './CompanySelector'
 
 interface UserDashboardProps {
   user: {
@@ -65,13 +66,23 @@ export default function UserDashboard({ user, companies }: UserDashboardProps) {
   return (
     <div className="space-y-8">
       {/* Header de Bienvenida */}
-      <div className="text-center">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          ¡Bienvenido, {user.name || 'Usuario'}!
-        </h1>
-        <p className="text-gray-600">
-          {getRoleLabel(user.role)} • {user.email}
-        </p>
+      <div className="text-center space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            ¡Bienvenido, {user.name || 'Usuario'}!
+          </h1>
+          <p className="text-gray-600">
+            {getRoleLabel(user.role)} • {user.email}
+          </p>
+        </div>
+        
+        {/* Selector de empresa */}
+        <div className="flex justify-center">
+          <CompanySelector 
+            companies={companies}
+            onSelectCompany={handleSelectCompany}
+          />
+        </div>
       </div>
 
       {/* Estadísticas del Usuario */}
