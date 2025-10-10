@@ -18,7 +18,7 @@ import { PlusCircle, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useCompanyStore } from '@/lib/store/useCompanyStore';
-import MobileMenuButton from '@/components/ui/MobileMenuButton';
+import PageHeader from '@/components/common/PageHeader';
 
 
 
@@ -36,6 +36,7 @@ export default function NuevaCotizacionPage() {
 
     const [client, setClient] = useState<Client | null>(null)
     const [showAddClient, setShowAddClient] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
 
     const companyId = useCompanyStore((s) => s.company?.id);
 
@@ -131,54 +132,79 @@ export default function NuevaCotizacionPage() {
     
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header responsive con borde azul */}
-      <div className="fixed top-0 left-0 right-0 bg-white shadow-sm border-b-4 border-blue-800 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Botón hamburguesa integrado - Solo móvil */}
-              <div className="lg:hidden">
-                <MobileMenuButton />
-              </div>
+    <main className="page-container">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          title="Nueva Cotización"
+          subtitle={methods.watch('items')?.length > 0 
+            ? `${methods.watch('items')?.length} ${methods.watch('items')?.length === 1 ? 'ítem agregado' : 'ítems agregados'} - Total: S/. ${methods.watch('items')?.reduce((sum, item) => sum + (item.quantity * item.unitPrice || 0), 0).toFixed(2) || '0.00'}`
+            : "Crear una nueva cotización para tus clientes"
+          }
+          showBreadcrumb={true}
+          breadcrumbs={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Cotizaciones', href: '/admin/cotizaciones' },
+            { label: 'Nueva', href: '/admin/cotizaciones/nueva' },
+          ]}
+        />
+
+        {/* Barra de progreso minimalista */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            {/* Barra de progreso delgada */}
+            <div className="flex items-center gap-1 flex-1 max-w-xs">
+              {/* Cliente */}
+              <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                client ? 'bg-green-500' : 'bg-gray-200'
+              }`}></div>
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                client ? 'bg-green-500' : 'bg-gray-300'
+              }`}></div>
               
-              <div className="w-1 h-4 sm:h-6 bg-orange-500 rounded-full"></div>
-              <div>
-                <h1 className="text-base sm:text-lg font-semibold text-gray-900">Nueva Cotización</h1>
-                <nav className="text-gray-500 text-xs hidden sm:block">
-                  <span>Cotizaciones</span>
-                  <span className="mx-1">/</span>
-                  <span className="text-blue-800">Nueva</span>
-                </nav>
-              </div>
+              {/* Ítems */}
+              <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                methods.watch('items')?.length > 0 ? 'bg-blue-500' : 'bg-gray-200'
+              }`}></div>
+              <div className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                methods.watch('items')?.length > 0 ? 'bg-blue-500' : 'bg-gray-300'
+              }`}></div>
+              
+              {/* Listo */}
+              <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                (client && methods.watch('items')?.length > 0) ? 'bg-orange-500 animate-pulse' : 'bg-gray-200'
+              }`}></div>
             </div>
-            
-            {/* Contador de items - Visible siempre */}
-            <div className="flex items-center gap-2">
-              {methods.watch('items')?.length > 0 && (
-                <span className="text-xs sm:text-sm text-blue-800 bg-blue-50 px-3 py-1.5 rounded-full font-medium border border-blue-200">
-                  {methods.watch('items')?.length} {methods.watch('items')?.length === 1 ? 'item' : 'items'}
+
+            {/* Total en una línea */}
+            {methods.watch('items')?.length > 0 && (
+              <div className="text-right">
+                <span className="text-sm text-gray-600">Total: </span>
+                <span className="text-lg font-bold text-green-600">
+                  S/. {methods.watch('items')?.reduce((sum, item) => sum + (item.quantity * item.unitPrice || 0), 0).toFixed(2) || '0.00'}
                 </span>
-              )}
-              
-              {/* Indicador de progreso móvil - Solo si no hay items */}
-              {(!methods.watch('items')?.length || methods.watch('items')?.length === 0) && (
-                <div className="flex items-center gap-1 sm:hidden">
-                  <div className="w-2 h-2 bg-blue-800 rounded-full"></div>
-                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                  <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
-                </div>
-              )}
-            </div>
+                <span className="text-xs text-gray-500 ml-2">
+                  ({methods.watch('items')?.length} {methods.watch('items')?.length === 1 ? 'ítem' : 'ítems'})
+                </span>
+              </div>
+            )}
+          </div>
+          
+          {/* Labels minimalistas solo cuando sea necesario */}
+          <div className="flex items-center gap-4 text-xs text-gray-500">
+            <span className={client ? 'text-green-600' : 'text-gray-400'}>
+              {client ? '✓ Cliente' : '○ Cliente'}
+            </span>
+            <span className={methods.watch('items')?.length > 0 ? 'text-blue-600' : 'text-gray-400'}>
+              {methods.watch('items')?.length > 0 ? `✓ ${methods.watch('items')?.length} ítems` : '○ Ítems'}
+            </span>
+            <span className={(client && methods.watch('items')?.length > 0) ? 'text-orange-600 animate-pulse' : 'text-gray-400'}>
+              {(client && methods.watch('items')?.length > 0) ? '🚀 Listo' : '○ Pendiente'}
+            </span>
           </div>
         </div>
-      </div>
 
-      {/* Contenido principal responsive */}
-      <div className="pt-16 sm:pt-20 px-4 sm:px-6 pb-6">
-        <div className="max-w-7xl mx-auto">
+        {/* Contenido principal responsive */}
         <FormProvider {...methods}>
-        
           <form onSubmit={methods.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
 
             {/* Card de selección de cliente */}
@@ -192,12 +218,15 @@ export default function NuevaCotizacionPage() {
               
               <div className="p-4 sm:p-6 space-y-4">
                 <ClientAutocomplete
-        key={client ? client.id : 'empty'} // 👈 fuerza reinicio visual
+        key={client ? `selected-client-${client.id}` : 'no-client-selected'} // 👈 key única y estable
           onSelect={(clientLite) => {
             setClient(clientLite as Client); // Conversión explícita
             methods.setValue('clientId', clientLite.id);
           }}
-          onCreateNew={() => setShowAddClient(true)}
+          onCreateNew={(term) => {
+            setSearchTerm(term);
+            setShowAddClient(true);
+          }}
         />
 
 
@@ -206,13 +235,53 @@ export default function NuevaCotizacionPage() {
                 {/* Info del cliente seleccionado */}
                 {client && (
                   <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-2 h-4 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-green-800">Cliente Seleccionado</span>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">
+                          {(client.fullName || client.businessName || '').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-sm font-semibold text-green-800">✓ Cliente Seleccionado</span>
+                        <p className="text-xs text-green-600">Listo para agregar ítems</p>
+                      </div>
                     </div>
-                    <div className="text-sm space-y-1">
-                      <p><span className="font-medium text-gray-700">Nombre/Razón Social:</span> <span className="text-gray-900">{client.fullName || client.businessName}</span></p>
-                      <p><span className="font-medium text-gray-700">Documento:</span> <span className="text-gray-900">{client.documentNumber}</span></p>
+                    
+                    <div className="text-sm space-y-2">
+                      {/* Mostrar nombre o razón social según corresponda */}
+                      {client.fullName && (
+                        <p>
+                          <span className="font-medium text-gray-700">👤 Nombre:</span> 
+                          <span className="text-gray-900 ml-2">{client.fullName}</span>
+                        </p>
+                      )}
+                      
+                      {client.businessName && (
+                        <p>
+                          <span className="font-medium text-gray-700">🏢 Razón Social:</span> 
+                          <span className="text-gray-900 ml-2">{client.businessName}</span>
+                        </p>
+                      )}
+                      
+                      <p>
+                        <span className="font-medium text-gray-700">📋 Documento:</span> 
+                        <span className="text-gray-900 ml-2">{client.documentType} - {client.documentNumber}</span>
+                      </p>
+                      
+                      {/* Información adicional si existe */}
+                      {client.email && (
+                        <p>
+                          <span className="font-medium text-gray-700">📧 Email:</span> 
+                          <span className="text-gray-900 ml-2">{client.email}</span>
+                        </p>
+                      )}
+                      
+                      {client.phone && (
+                        <p>
+                          <span className="font-medium text-gray-700">📱 Teléfono:</span> 
+                          <span className="text-gray-900 ml-2">{client.phone}</span>
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}
@@ -222,18 +291,50 @@ export default function NuevaCotizacionPage() {
             {/* Modal para crear nuevo cliente */}
             {showAddClient && (
               <AddClientModal
-                onSuccess={async (newClient) => {
-                  // Fetch the full client object after creation if needed
-                  const response = await fetch(`/api/clients/${newClient.id}`);
-                  const fullClient: Client = await response.json();
-                  setClient(fullClient);
+                searchTerm={searchTerm}
+                onSuccess={(newClient) => {
+                  // Crear objeto Client compatible
+                  const clientData: Client = {
+                    ...newClient,
+                    businessName: newClient.businessName || null,
+                    phone: newClient.phone || null,
+                    email: newClient.email || null,
+                    address: newClient.address || null,
+                    notes: newClient.notes || null,
+                    createdAt: new Date().toISOString(),
+                  };
+                  setClient(clientData);
+                  methods.setValue('clientId', clientData.id);
                   setShowAddClient(false);
+                  setSearchTerm(''); // Limpiar término
                 }}
               />
             )}
 
             {/* Card de Items de cotización */}
             <div className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden">
+              <div className="bg-gray-50 border-l-4 border-blue-800 px-4 sm:px-6 py-3">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <div className="w-1 h-4 bg-orange-500 rounded-full"></div>
+                    Items de la Cotización
+                  </h2>
+                  
+                  {/* Contador de ítems en el header */}
+                  {methods.watch('items')?.length > 0 && (
+                    <span className="text-xs text-blue-800 bg-blue-100 px-3 py-1 rounded-full font-medium">
+                      {methods.watch('items')?.length} {methods.watch('items')?.length === 1 ? 'ítem' : 'ítems'}
+                    </span>
+                  )}
+                </div>
+                
+                {methods.watch('items')?.length === 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Agrega productos o servicios a tu cotización
+                  </p>
+                )}
+              </div>
+              
               <div className="p-4 sm:p-6">
                 <QuoteItemsWrapper />
               </div>
@@ -348,13 +449,9 @@ export default function NuevaCotizacionPage() {
               </div>
             </div>
 
-
-
           </form>
         </FormProvider>
-
-        </div>
       </div>
-    </div>
-  )
+    </main>
+  );
 }

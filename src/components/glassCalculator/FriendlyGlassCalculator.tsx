@@ -63,6 +63,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
   const [quantity, setQuantity] = useState(1);
   const [items, setItems] = useState<any[]>([]);
   const [showMobileCart, setShowMobileCart] = useState(false);
+  const [isSendingToQuote, setIsSendingToQuote] = useState(false);
 
   const {
     filters,
@@ -134,30 +135,43 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
 
   const totalCart = items.reduce((sum, item) => sum + item.total, 0);
 
-  const handleSendToQuote = () => {
+  const handleSendToQuote = async () => {
     if (items.length === 0) {
       alert('No hay items en el carrito para enviar');
       return;
     }
 
-    // 1. Mapear items del carrito → formato QuoteItem
-    const quoteItems = items.map(item => ({
-      description: item.description,
-      unit: 'pieza',
-      quantity: item.quantity,
-      unitPrice: item.unitPrice,
-      subtotal: item.total
-    }));
+    if (isSendingToQuote) return; // Prevenir doble click
 
-    // 2. Obtener items existentes de localStorage 'quoteItems'
-    const existingItems = JSON.parse(localStorage.getItem('quoteItems') || '[]');
-    
-    // 3. Combinar y guardar en localStorage
-    const combinedItems = [...existingItems, ...quoteItems];
-    localStorage.setItem('quoteItems', JSON.stringify(combinedItems));
-    
-    // 4. Navegar a cotización con indicador de origen
-    router.push('/admin/cotizaciones/nueva?from=calculator');
+    setIsSendingToQuote(true);
+
+    try {
+      // 1. Mapear items del carrito → formato QuoteItem
+      const quoteItems = items.map(item => ({
+        description: item.description,
+        unit: 'pieza',
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        subtotal: item.total
+      }));
+
+      // 2. Obtener items existentes de localStorage 'quoteItems'
+      const existingItems = JSON.parse(localStorage.getItem('quoteItems') || '[]');
+      
+      // 3. Combinar y guardar en localStorage
+      const combinedItems = [...existingItems, ...quoteItems];
+      localStorage.setItem('quoteItems', JSON.stringify(combinedItems));
+      
+      // Pequeña pausa para mostrar el estado loading
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // 4. Navegar a cotización con indicador de origen
+      router.push('/admin/cotizaciones/nueva?from=calculator');
+    } catch (error) {
+      console.error('Error al enviar a cotización:', error);
+      alert('Error al enviar a cotización. Inténtalo nuevamente.');
+      setIsSendingToQuote(false);
+    }
   };
 
   return (
@@ -554,9 +568,14 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
               <div className="flex gap-2">
                 <button 
                   onClick={handleSendToQuote}
-                  className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm"
+                  disabled={isSendingToQuote}
+                  className={`flex-1 font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm ${
+                    isSendingToQuote 
+                      ? 'bg-green-300 cursor-not-allowed text-white' 
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  }`}
                 >
-                  🚀 Enviar a Cotización ({items.length})
+                  {isSendingToQuote ? '🔄 Enviando...' : `🚀 Enviar a Cotización (${items.length})`}
                 </button>
                 
                 <button 
@@ -663,9 +682,14 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     <div className="flex gap-2">
                       <button 
                         onClick={handleSendToQuote}
-                        className="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm"
+                        disabled={isSendingToQuote}
+                        className={`flex-1 font-bold py-3 px-4 rounded-xl transition-all duration-200 text-sm ${
+                          isSendingToQuote 
+                            ? 'bg-green-300 cursor-not-allowed text-white' 
+                            : 'bg-green-500 hover:bg-green-600 text-white'
+                        }`}
                       >
-                        🚀 Enviar a Cotización ({items.length})
+                        {isSendingToQuote ? '🔄 Enviando...' : `🚀 Enviar a Cotización (${items.length})`}
                       </button>
                       
                       <button 

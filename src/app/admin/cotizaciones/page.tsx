@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 export default function QuotesPage() {
   const companyId = useCompanyStore((s) => s.company?.id);
   const [stats, setStats] = useState({ total: 0, pending: 0, approved: 0 });
+  const [tempItems, setTempItems] = useState<any[]>([]);
 
   // Cargar estadísticas
   useEffect(() => {
@@ -20,6 +21,23 @@ export default function QuotesPage() {
         .catch(() => setStats({ total: 0, pending: 0, approved: 0 }));
     }
   }, [companyId]);
+
+  // Detectar ítems temporales en localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const itemsFromStorage = localStorage.getItem('quoteItems');
+      if (itemsFromStorage) {
+        try {
+          const parsed = JSON.parse(itemsFromStorage);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setTempItems(parsed);
+          }
+        } catch (e) {
+          console.warn('Error al parsear quoteItems desde localStorage', e);
+        }
+      }
+    }
+  }, []);
 
   if (!companyId) {
     return (
@@ -77,6 +95,35 @@ export default function QuotesPage() {
             { label: 'Cotizaciones', href: '/admin/cotizaciones' },
           ]}
         />
+
+        {/* Indicador de cotización temporal en progreso */}
+        {tempItems.length > 0 && (
+          <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-orange-500 rounded-lg p-4 mb-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center animate-pulse">
+                  <FileText size={20} className="text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-orange-800">
+                    📝 Tienes una cotización en progreso
+                  </h3>
+                  <p className="text-xs text-orange-700 mt-1">
+                    {tempItems.length} {tempItems.length === 1 ? 'ítem agregado' : 'ítems agregados'} sin guardar
+                  </p>
+                </div>
+              </div>
+              
+              <Link 
+                href="/admin/cotizaciones/nueva"
+                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+              >
+                <Plus size={16} />
+                Continuar Cotización
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Contenedor principal */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">

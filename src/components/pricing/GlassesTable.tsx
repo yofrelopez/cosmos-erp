@@ -26,14 +26,20 @@ const GLASS_FAMILIES = [
 const GLASS_COLOR_TYPES = [
   { value: 'INCOLORO', label: 'Incoloro' },
   { value: 'COLOR', label: 'Color' },
-  { value: 'POLARIZADO', label: 'Polarizado' }
+  { value: 'POLARIZADO', label: 'Polarizado' },
+  { value: 'REFLEJANTE', label: 'Reflejante' }
 ]
+
+type SortField = 'commercialName' | 'thicknessMM' | 'price'
+type SortDirection = 'asc' | 'desc'
 
 export default function GlassesTable({ companyId }: Props) {
   const [glasses, setGlasses] = useState<SerializedPricingGlass[]>([])
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [selectedFamily, setSelectedFamily] = useState<string>('')
+  const [sortField, setSortField] = useState<SortField>('commercialName')
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const { colors } = useColors()
 
   // Modal states
@@ -144,6 +150,21 @@ export default function GlassesTable({ companyId }: Props) {
     return familyConfig?.label || family
   }
 
+  const getFamilyBadgeClasses = (family: string) => {
+    switch (family) {
+      case 'PLANO':
+        return 'bg-blue-100 text-blue-800 border-blue-200'
+      case 'CATEDRAL':
+        return 'bg-purple-100 text-purple-800 border-purple-200'
+      case 'TEMPLADO':
+        return 'bg-green-100 text-green-800 border-green-200'
+      case 'ESPEJO':
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+      default:
+        return 'bg-blue-100 text-blue-800 border-blue-200' // Fallback a azul
+    }
+  }
+
   const getColorTypeLabel = (colorType: string) => {
     const colorTypeConfig = GLASS_COLOR_TYPES.find(c => c.value === colorType)
     return colorTypeConfig?.label || colorType
@@ -155,6 +176,51 @@ export default function GlassesTable({ companyId }: Props) {
       return `${colorTypeLabel} (${glass.colorName})`
     }
     return colorTypeLabel
+  }
+
+  // Función para manejar el ordenamiento
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortField(field)
+      setSortDirection('asc')
+    }
+  }
+
+  // Función para ordenar los vidrios
+  const sortedGlasses = [...glasses].sort((a, b) => {
+    let aValue: string | number
+    let bValue: string | number
+
+    switch (sortField) {
+      case 'commercialName':
+        aValue = a.commercialName.toLowerCase()
+        bValue = b.commercialName.toLowerCase()
+        break
+      case 'thicknessMM':
+        aValue = a.thicknessMM
+        bValue = b.thicknessMM
+        break
+      case 'price':
+        aValue = a.price
+        bValue = b.price
+        break
+      default:
+        return 0
+    }
+
+    if (sortDirection === 'asc') {
+      return aValue < bValue ? -1 : aValue > bValue ? 1 : 0
+    } else {
+      return aValue > bValue ? -1 : aValue < bValue ? 1 : 0
+    }
+  })
+
+  // Función helper para mostrar íconos de ordenamiento
+  const getSortIcon = (field: SortField) => {
+    if (sortField !== field) return '↕️'
+    return sortDirection === 'asc' ? '↑' : '↓'
   }
 
   return (
@@ -206,19 +272,43 @@ export default function GlassesTable({ companyId }: Props) {
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Nombre Comercial
+                <button
+                  onClick={() => handleSort('commercialName')}
+                  className="flex items-center gap-1 hover:text-gray-800 transition-colors group"
+                >
+                  <span>Nombre Comercial</span>
+                  <span className="text-gray-400 group-hover:text-gray-600 font-normal">
+                    {getSortIcon('commercialName')}
+                  </span>
+                </button>
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Familia
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Espesor
+                <button
+                  onClick={() => handleSort('thicknessMM')}
+                  className="flex items-center gap-1 hover:text-gray-800 transition-colors group"
+                >
+                  <span>Espesor</span>
+                  <span className="text-gray-400 group-hover:text-gray-600 font-normal">
+                    {getSortIcon('thicknessMM')}
+                  </span>
+                </button>
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                 Color
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Precio m²
+                <button
+                  onClick={() => handleSort('price')}
+                  className="flex items-center gap-1 hover:text-gray-800 transition-colors group"
+                >
+                  <span>Precio</span>
+                  <span className="text-gray-400 group-hover:text-gray-600 font-normal">
+                    {getSortIcon('price')}
+                  </span>
+                </button>
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">
                 Vigente desde
@@ -266,13 +356,13 @@ export default function GlassesTable({ companyId }: Props) {
                 </td>
               </tr>
             ) : (
-              glasses.map((glass) => (
+              sortedGlasses.map((glass) => (
                 <tr key={glass.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
                     <div className="text-gray-900 font-semibold text-sm">{glass.commercialName}</div>
                   </td>
                   <td className="px-3 sm:px-6 py-3 sm:py-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getFamilyBadgeClasses(glass.family)}`}>
                       {getFamilyLabel(glass.family)}
                     </span>
                   </td>
