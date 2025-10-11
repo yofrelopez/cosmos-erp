@@ -183,7 +183,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                     type="number"
                     value={dimensions.ancho || ''}
                     onChange={(e) => setDimensions(prev => ({ ...prev, ancho: Number(e.target.value) }))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500 text-gray-900 placeholder-gray-400"
                     placeholder="30"
                   />
                 </div>
@@ -196,7 +196,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                     type="number"
                     value={dimensions.alto || ''}
                     onChange={(e) => setDimensions(prev => ({ ...prev, alto: Number(e.target.value) }))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500 text-gray-900 placeholder-gray-400"
                     placeholder="40"
                   />
                 </div>
@@ -210,7 +210,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-200 focus:border-purple-500 text-gray-900 placeholder-gray-400"
                   />
                 </div>
               </div>

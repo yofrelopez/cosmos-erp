@@ -213,7 +213,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     type="number"
                     value={dimensions.ancho || ''}
                     onChange={(e) => setDimensions(prev => ({ ...prev, ancho: Number(e.target.value) }))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                     placeholder="100"
                   />
                 </div>
@@ -226,7 +226,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     type="number"
                     value={dimensions.alto || ''}
                     onChange={(e) => setDimensions(prev => ({ ...prev, alto: Number(e.target.value) }))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                     placeholder="150"
                   />
                 </div>
@@ -240,7 +240,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     min="1"
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                    className="w-full text-xl p-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-gray-900 placeholder-gray-400"
                   />
                 </div>
               </div>
@@ -273,7 +273,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                   <select 
                     value={filters.family}
                     onChange={(e) => handleFilterChange('family', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
                   >
                     <option value="">Todos los tipos</option>
                     {options.families?.map((family: string) => (
@@ -296,7 +296,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     value={filters.thickness}
                     onChange={(e) => handleFilterChange('thickness', e.target.value)}
                     disabled={!filters.family}
-                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                   >
                     <option value="">Todos los grosores</option>
                     {options.thicknesses?.map((thickness: number) => (
@@ -316,7 +316,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     value={filters.colorType}
                     onChange={(e) => handleFilterChange('colorType', e.target.value)}
                     disabled={!filters.thickness}
-                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
+                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 text-gray-900"
                   >
                     <option value="">Todos los tipos</option>
                     {options.colorTypes?.map((colorType: string) => (
@@ -339,7 +339,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     <select 
                       value={filters.colorId}
                       onChange={(e) => handleFilterChange('colorId', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                     >
                       <option value="">Sin especificar color</option>
                       {options.colors?.map((color: {id: number, name: string}) => (
@@ -360,7 +360,7 @@ export default function FriendlyGlassCalculator({ companyId }: { companyId: numb
                     <select 
                       value={filters.textureId}
                       onChange={(e) => handleFilterChange('textureId', e.target.value)}
-                      className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900"
                     >
                       <option value="">Sin especificar textura</option>
                       {options.textures?.map((texture: {id: number, name: string}) => (
