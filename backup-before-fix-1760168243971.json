@@ -1,0 +1,192 @@
+{
+  "timestamp": "2025-10-11T07:37:23.970Z",
+  "clients": [
+    {
+      "id": 1,
+      "documentType": "DNI",
+      "documentNumber": "12345678",
+      "fullName": "Carlos Mendoza",
+      "contactPerson": null,
+      "businessName": null,
+      "phone": "947-077-626",
+      "email": "carlos@email.com",
+      "address": "Rincón Antonia Alonzo 6",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.051Z",
+      "companyId": 1
+    },
+    {
+      "id": 2,
+      "documentType": "DNI",
+      "documentNumber": "87654321",
+      "fullName": "Ana Torres",
+      "contactPerson": null,
+      "businessName": null,
+      "phone": "970 347 147",
+      "email": "ana@email.com",
+      "address": "Ferrocarril Lucas s/n.",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.054Z",
+      "companyId": 1
+    },
+    {
+      "id": 3,
+      "documentType": "RUC",
+      "documentNumber": "20123456789",
+      "fullName": "Empresa ABC SAC",
+      "contactPerson": null,
+      "businessName": "Empresa ABC SAC",
+      "phone": "946 607 682",
+      "email": "contacto@abc.com",
+      "address": "Edificio Pilar, 22",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.057Z",
+      "companyId": 1
+    },
+    {
+      "id": 4,
+      "documentType": "DNI",
+      "documentNumber": "11223344",
+      "fullName": "Pedro Ramírez",
+      "contactPerson": null,
+      "businessName": null,
+      "phone": "935 324 146",
+      "email": "pedro@email.com",
+      "address": "Rincón Mariano, 95",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.060Z",
+      "companyId": 1
+    },
+    {
+      "id": 5,
+      "documentType": "RUC",
+      "documentNumber": "20987654321",
+      "fullName": "Construcciones XYZ",
+      "contactPerson": null,
+      "businessName": "Construcciones XYZ",
+      "phone": "919 965 289",
+      "email": "ventas@xyz.com",
+      "address": "Barrio Soledad Cavazos 2",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.063Z",
+      "companyId": 1
+    },
+    {
+      "id": 6,
+      "documentType": "DNI",
+      "documentNumber": "55667788",
+      "fullName": "Rosa Jiménez",
+      "contactPerson": null,
+      "businessName": null,
+      "phone": "976 725 565",
+      "email": "rosa@email.com",
+      "address": "Barrio Gonzalo Carbajal 6",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.066Z",
+      "companyId": 1
+    },
+    {
+      "id": 7,
+      "documentType": "RUC",
+      "documentNumber": "20456789123",
+      "fullName": "Decoraciones Elite",
+      "contactPerson": null,
+      "businessName": "Decoraciones Elite",
+      "phone": "936.498.759",
+      "email": "info@elite.com",
+      "address": "Municipio Pilar Palomino 1",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.069Z",
+      "companyId": 1
+    },
+    {
+      "id": 8,
+      "documentType": "DNI",
+      "documentNumber": "99887766",
+      "fullName": "Luis Vargas",
+      "contactPerson": null,
+      "businessName": null,
+      "phone": "921 847 251",
+      "email": "luis@email.com",
+      "address": "Rua Jordi s/n.",
+      "notes": null,
+      "createdAt": "2025-10-07T21:31:43.072Z",
+      "companyId": 1
+    },
+    {
+      "id": 1,
+      "documentType": "RUC",
+      "documentNumber": "23456789012",
+      "fullName": "Juan Pérez",
+      "contactPerson": null,
+      "businessName": "Ferretería Texas",
+      "phone": "34556677788",
+      "email": "testmailez@gmail.com",
+      "address": "Test dirección",
+      "notes": "Ninguna observación",
+      "createdAt": "2025-10-10T18:42:30.052Z",
+      "companyId": 1
+    },
+    {
+      "id": 2,
+      "documentType": "RUC",
+      "documentNumber": "20325117835",
+      "fullName": "Agrokasa",
+      "contactPerson": null,
+      "businessName": "Agrokasa",
+      "phone": "955547394",
+      "email": "pvaldeos@agrokasa.com.pe",
+      "address": "",
+      "notes": "",
+      "createdAt": "2025-10-11T05:13:02.382Z",
+      "companyId": 1
+    }
+  ],
+  "quotes": [
+    {
+      "id": 1,
+      "clientId": 1,
+      "code": "COT-2024-001"
+    },
+    {
+      "id": 2,
+      "clientId": 2,
+      "code": "COT-2024-002"
+    },
+    {
+      "id": 3,
+      "clientId": 3,
+      "code": "COT-2024-003"
+    },
+    {
+      "id": 4,
+      "clientId": 4,
+      "code": "COT-2024-004"
+    },
+    {
+      "id": 5,
+      "clientId": 5,
+      "code": "COT-2024-005"
+    },
+    {
+      "id": 6,
+      "clientId": 6,
+      "code": "COT-2024-006"
+    },
+    {
+      "id": 1,
+      "clientId": 2,
+      "code": "COT-2025-0001"
+    },
+    {
+      "id": 2,
+      "clientId": 1,
+      "code": "COT-2025-0002"
+    },
+    {
+      "id": 3,
+      "clientId": 2,
+      "code": "COT-2025-0003"
+    }
+  ]
+}
