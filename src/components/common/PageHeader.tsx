@@ -13,6 +13,7 @@ interface PageHeaderProps {
   showBreadcrumb?: boolean
   breadcrumbs?: Breadcrumb[]
   action?: React.ReactNode
+  compact?: boolean
 }
 
 export default function PageHeader({
@@ -21,9 +22,10 @@ export default function PageHeader({
   showBreadcrumb = false,
   breadcrumbs = [],
   action,
+  compact = false,
 }: PageHeaderProps) {
   return (
-    <div className="border-b border-gray-200 pb-5 sm:pb-6">
+    <div className={`border-b border-gray-200 ${compact ? 'pb-3 sm:pb-4' : 'pb-5 sm:pb-6'}`}>
       {showBreadcrumb && breadcrumbs.length > 0 && (
         <nav className="flex mb-4" aria-label="Breadcrumb">
           <ol className="flex items-center space-x-2">
@@ -60,7 +62,7 @@ export default function PageHeader({
         <div className="min-w-0 flex-1 flex items-center gap-3">
           <MobileMenuButton />
           <div>
-            <h1 className="title-page sm:truncate sm:tracking-tight">
+            <h1 className={`${compact ? 'title-calculator' : 'title-page'} sm:truncate sm:tracking-tight`}>
               {title}
             </h1>
             {subtitle && (

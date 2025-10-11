@@ -3,11 +3,15 @@ import { useState, useEffect } from 'react'
 interface MoldingFilterOptions {
   qualities?: Array<{ value: string; label: string }>
   thicknesses?: Array<{ id: number; name: string }>
+  textures?: Array<{ id: number; name: string }>
+  colors?: Array<{ id: number; name: string }>
 }
 
 interface MoldingFilters {
   quality: string
   thicknessId: string
+  texture: string
+  color: string
   search: string
 }
 
@@ -15,6 +19,8 @@ export function useMoldingFilters(companyId: number) {
   const [filters, setFilters] = useState<MoldingFilters>({
     quality: '',
     thicknessId: '',
+    texture: '',
+    color: '',
     search: ''
   })
 
@@ -27,12 +33,24 @@ export function useMoldingFilters(companyId: number) {
 
     setLoading(true)
     try {
-      // Obtener calidades (estáticas)
-      const qualities = [
-        { value: 'SIMPLE', label: '🔹 Simple' },
-        { value: 'FINA', label: '✨ Fina' },
-        { value: 'BASTIDOR', label: '🔲 Bastidor' }
-      ]
+      // Obtener calidades disponibles dinámicamente
+      console.log('🔍 Fetching qualities from:', `/api/pricing/molding-qualities?companyId=${companyId}`)
+      const qualitiesResponse = await fetch(`/api/pricing/molding-qualities?companyId=${companyId}`)
+      let qualities: Array<{ value: string; label: string }> = []
+      
+      if (qualitiesResponse.ok) {
+        qualities = await qualitiesResponse.json()
+        console.log('✅ Available qualities received:', qualities)
+      } else {
+        console.error('❌ Error fetching qualities:', qualitiesResponse.status, qualitiesResponse.statusText)
+        // Fallback a calidades estáticas en caso de error
+        qualities = [
+          { value: 'SIMPLE', label: '🔹 Simple' },
+          { value: 'FINA', label: '✨ Fina' },
+          { value: 'BASTIDOR', label: '🔲 Bastidor' }
+        ]
+        console.log('🔄 Using fallback qualities:', qualities)
+      }
 
       let thicknesses: Array<{ id: number; name: string }> = []
 
@@ -56,7 +74,30 @@ export function useMoldingFilters(companyId: number) {
         }
       }
 
-      setOptions({ qualities, thicknesses })
+      // Obtener texturas y colores en paralelo
+      const [texturesResponse, colorsResponse] = await Promise.all([
+        fetch(`/api/pricing/molding-textures?companyId=${companyId}`),
+        fetch(`/api/pricing/molding-colors?companyId=${companyId}`)
+      ])
+
+      let textures: Array<{ id: number; name: string }> = []
+      let colors: Array<{ id: number; name: string }> = []
+
+      if (texturesResponse.ok) {
+        textures = await texturesResponse.json()
+        console.log('✅ Available textures received:', textures)
+      } else {
+        console.error('❌ Error fetching textures:', texturesResponse.status)
+      }
+
+      if (colorsResponse.ok) {
+        colors = await colorsResponse.json()
+        console.log('✅ Available colors received:', colors)
+      } else {
+        console.error('❌ Error fetching colors:', colorsResponse.status)
+      }
+
+      setOptions({ qualities, thicknesses, textures, colors })
     } catch (error) {
       console.error('Error fetching molding filter options:', error)
     } finally {
@@ -64,12 +105,19 @@ export function useMoldingFilters(companyId: number) {
     }
   }
 
-  // Cargar opciones iniciales y cuando cambie la calidad
+  // Cargar opciones iniciales
   useEffect(() => {
     if (companyId) {
       fetchOptions()
     }
-  }, [companyId, filters.quality])
+  }, [companyId])
+
+  // Recargar espesores cuando cambie la calidad
+  useEffect(() => {
+    if (companyId && filters.quality) {
+      fetchOptions()
+    }
+  }, [filters.quality])
 
   // Función para actualizar filtros con cascada
   const updateFilter = (key: keyof MoldingFilters, value: string) => {
@@ -93,6 +141,8 @@ export function useMoldingFilters(companyId: number) {
     setFilters({
       quality: '',
       thicknessId: '',
+      texture: '',
+      color: '',
       search: ''
     })
   }
@@ -126,6 +176,8 @@ export function useFilteredMoldings(companyId: number, filters: MoldingFilters) 
 
         if (filters.quality) params.append('quality', filters.quality)
         if (filters.thicknessId) params.append('thicknessId', filters.thicknessId)
+        if (filters.texture) params.append('texture', filters.texture)
+        if (filters.color) params.append('color', filters.color)
 
         console.log('Fetching moldings with params:', params.toString())
 
@@ -150,7 +202,7 @@ export function useFilteredMoldings(companyId: number, filters: MoldingFilters) 
     const timeoutId = setTimeout(fetchMoldings, filters.search ? 300 : 0)
     return () => clearTimeout(timeoutId)
 
-  }, [companyId, filters.quality, filters.thicknessId, filters.search])
+  }, [companyId, filters.quality, filters.thicknessId, filters.texture, filters.color, filters.search])
 
   return { moldings, loading }
 }

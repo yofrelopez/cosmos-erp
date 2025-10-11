@@ -10,6 +10,11 @@
   @apply text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-800;
 }
 
+/* Título compacto para calculadora */
+.title-calculator {
+  @apply text-lg sm:text-xl font-medium text-gray-800;
+}
+
 /* Título de sección */
 .title-section {
   @apply text-lg sm:text-xl lg:text-2xl font-medium text-gray-900;

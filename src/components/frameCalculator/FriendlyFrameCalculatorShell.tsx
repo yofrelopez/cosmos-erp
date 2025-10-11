@@ -26,13 +26,14 @@ export default function FriendlyFrameCalculatorShell({ quoteId, companyId }: Pro
         <div className="max-w-7xl mx-auto">
           <PageHeader
             title="Calculadora de Cuadros"
-            subtitle="Calcula precios de cuadros y marcos para cotizaciones"
+            subtitle="Cotiza marcos y cuadros rápidamente"
             showBreadcrumb={true}
             breadcrumbs={[
               { label: 'Admin', href: '/admin' },
               { label: 'Cotizaciones', href: '/admin/cotizaciones' },
               { label: 'Calculadora Cuadros', href: '/admin/cotizaciones/calculadora-cuadros' },
             ]}
+            compact={true}
           />
           
           <div className="main-card">
@@ -66,6 +67,7 @@ export default function FriendlyFrameCalculatorShell({ quoteId, companyId }: Pro
               { label: 'Cotizaciones', href: '/admin/cotizaciones' },
               { label: 'Calculadora Cuadros', href: '/admin/cotizaciones/calculadora-cuadros' },
             ]}
+            compact={true}
           />
         </div>
       </main>

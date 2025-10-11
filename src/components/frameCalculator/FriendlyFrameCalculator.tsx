@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calculator, Package, Frame, Ruler, Palette } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import MobileMenuButton from '@/components/ui/MobileMenuButton';
 import { useSidebar } from '@/contexts/SidebarContext';
 import { useMoldingFilters, useFilteredMoldings } from '@/hooks/useMoldingFilters';
-import { useGlass2mmForFrames } from '@/hooks/useGlass2mmForFrames';
+import { useFrameGlasses } from '@/hooks/useFrameGlasses';
 import { useFrameCalculator } from '@/hooks/useFrameCalculator';
 
 interface Dimensions {
@@ -21,7 +21,9 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
   const [quantity, setQuantity] = useState(1);
   const [items, setItems] = useState<any[]>([]);
   const [selectedMolding, setSelectedMolding] = useState<any>(null);
-  const [selectedGlass, setSelectedGlass] = useState<any>(null);
+  const [activeGlassTab, setActiveGlassTab] = useState<'vidrio' | 'espejo'>('vidrio');
+  const [userChangedTab, setUserChangedTab] = useState(false);
+
   const [isSendingToQuote, setIsSendingToQuote] = useState(false);
   const [showMobileCart, setShowMobileCart] = useState(false);
 
@@ -36,28 +38,56 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
   const { moldings, loading: moldingsLoading } = useFilteredMoldings(companyId, moldingFilters);
 
-  // Hook para vidrios de 2mm
+  // Hook para vidrios de cuadros
   const {
-    filters: glassFilters,
-    options: glassOptions,
-    glasses: glasses2mm,
+    glasses: frameGlasses,
+    groupedGlasses,
+    selectedGlass,
     loading: glassLoading,
-    updateFilter: updateGlassFilter,
-    resetFilters: resetGlassFilters
-  } = useGlass2mmForFrames(companyId);
+    selectGlass,
+    resetSelection: resetGlassSelection
+  } = useFrameGlasses(companyId);
+
+  // Adaptador para el hook de cálculo
+  const adaptedGlass = selectedGlass ? {
+    id: selectedGlass.id,
+    commercialName: selectedGlass.name,
+    family: 'PLANO' as const,
+    thicknessMM: selectedGlass.thickness,
+    colorType: 'INCOLORO' as const,
+    unitPrice: selectedGlass.unitPrice
+  } : null;
 
   // Hook de cálculo
-  const calculation = useFrameCalculator(dimensions, selectedMolding, selectedGlass, quantity);
+  const calculation = useFrameCalculator(dimensions, selectedMolding, adaptedGlass, quantity);
 
   const handleMoldingFilterChange = (key: string, value: string) => {
     updateMoldingFilter(key as any, value);
     setSelectedMolding(null); // Limpiar selección al cambiar filtros
   };
 
-  const handleGlassFilterChange = (key: string, value: string) => {
-    updateGlassFilter(key as any, value);
-    setSelectedGlass(null); // Limpiar selección al cambiar filtros
-  };
+  // Auto-seleccionar moldura cuando solo haya una disponible
+  useEffect(() => {
+    if (moldings.length === 1 && !selectedMolding) {
+      setSelectedMolding(moldings[0]);
+      console.log('🎯 Auto-selected single molding:', moldings[0].name);
+    }
+  }, [moldings, selectedMolding]);
+
+  // Auto-cambiar tab cuando se selecciona un vidrio de diferente categoría (solo si no cambió manualmente)
+  useEffect(() => {
+    if (selectedGlass && !userChangedTab) {
+      const newTab = selectedGlass.category === 'VIDRIO' ? 'vidrio' : 'espejo';
+      if (activeGlassTab !== newTab) {
+        setActiveGlassTab(newTab);
+        // Auto-switched to match selected glass category
+      }
+    }
+  }, [selectedGlass, userChangedTab, activeGlassTab]);
+
+
+
+  // Ya no necesitamos handleGlassFilterChange - selección directa
 
   const handleAddItem = () => {
     if (!selectedMolding || !selectedGlass || !dimensions.ancho || !dimensions.alto) {
@@ -65,7 +95,27 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
       return;
     }
 
-    const description = `Cuadro ${selectedMolding.name} + ${selectedGlass.commercialName} (${dimensions.ancho}×${dimensions.alto}cm)`;
+    // Construir descripción enriquecida con textura y color
+    let moldingDescription = selectedMolding.name;
+    
+    // Agregar textura si está seleccionada
+    const selectedTexture = moldingFilters.texture ? moldingOptions.textures?.find(t => t.id.toString() === moldingFilters.texture) : null;
+    if (selectedTexture) {
+      moldingDescription += ` - ${selectedTexture.name}`;
+    }
+    
+    // Agregar color si está seleccionado
+    const selectedColor = moldingFilters.color ? moldingOptions.colors?.find(c => c.id.toString() === moldingFilters.color) : null;
+    if (selectedColor) {
+      moldingDescription += ` - ${selectedColor.name}`;
+    }
+
+    // Construir descripción del vidrio con prefijo apropiado
+    const glassDescription = selectedGlass.category === 'VIDRIO' 
+      ? `Vidrio ${selectedGlass.name}`
+      : selectedGlass.name;
+    
+    const description = `Cuadro ${moldingDescription} + ${glassDescription} (${dimensions.ancho}×${dimensions.alto}cm)`;
 
     const newItem = {
       id: Date.now(),
@@ -77,6 +127,8 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
         dimensions: { ancho: dimensions.ancho, alto: dimensions.alto },
         molding: selectedMolding,
         glass: selectedGlass,
+        texture: selectedTexture,
+        color: selectedColor,
         perimeterM: calculation.perimeterM,
         areaFt2: calculation.areaFt2,
         breakdown: calculation.breakdown
@@ -85,7 +137,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
     setItems(prev => [...prev, newItem]);
 
-    let confirmMessage = `✅ Agregado: Cuadro ${selectedMolding.name}\n`;
+    let confirmMessage = `✅ Agregado: Cuadro ${moldingDescription}\n`;
     confirmMessage += `📏 Perímetro: ${calculation.perimeterM.toFixed(2)}m\n`;
     confirmMessage += `🪟 Área vidrio: ${calculation.areaFt2.toFixed(2)} ft²\n`;
     confirmMessage += `🔲 Moldura: S/ ${calculation.moldingPrice.toFixed(2)}\n`;
@@ -97,11 +149,10 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
 
     // Limpiar selecciones
     setSelectedMolding(null);
-    setSelectedGlass(null);
+    resetGlassSelection();
     setDimensions({ ancho: 0, alto: 0 });
     setQuantity(1);
     resetMoldingFilters();
-    resetGlassFilters();
   };
 
   const totalCart = items.reduce((sum, item) => sum + item.total, 0);
@@ -118,13 +169,13 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
       // Simular operación de procesamiento para mejor UX
       await new Promise(resolve => setTimeout(resolve, 800));
 
-      // Mapear items del carrito → formato QuoteItem
+      // Mapear items del carrito → formato QuoteItem correcto para API
       const quoteItems = items.map(item => ({
         description: item.description,
         unit: 'pieza',
         quantity: item.quantity,
-        unitPrice: item.unitPrice,
-        subtotal: item.total
+        unitPrice: item.unitPrice
+        // Nota: no incluimos subtotal ya que el API lo calcula automáticamente
       }));
 
       // Obtener items existentes de localStorage 'quoteItems'
@@ -215,26 +266,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                 </div>
               </div>
 
-              {dimensions.ancho > 0 && dimensions.alto > 0 && (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 bg-purple-50 rounded-lg border border-purple-200">
-                    <div className="text-center">
-                      <div className="text-sm text-purple-600 font-medium">Perímetro moldura:</div>
-                      <div className="text-xl font-bold text-purple-800">
-                        {calculation.perimeterM.toFixed(2)} metros
-                      </div>
-                    </div>
-                  </div>
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="text-center">
-                      <div className="text-sm text-blue-600 font-medium">Área vidrio:</div>
-                      <div className="text-xl font-bold text-blue-800">
-                        {calculation.areaFt2.toFixed(2)} pies cuadrados
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
+
             </div>
 
             {/* Selección de moldura */}
@@ -256,8 +288,8 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                     className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="">Todas las calidades</option>
-                    {moldingOptions.qualities?.map((quality) => (
-                      <option key={quality.value} value={quality.value}>
+                    {moldingOptions.qualities?.map((quality, index) => (
+                      <option key={`molding-quality-${quality.value}-${index}`} value={quality.value}>
                         {quality.label}
                       </option>
                     ))}
@@ -276,129 +308,182 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                     className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-100"
                   >
                     <option value="">Todos los espesores</option>
-                    {moldingOptions.thicknesses?.map((thickness) => (
-                      <option key={thickness.id} value={thickness.id.toString()}>
+                    {moldingOptions.thicknesses?.map((thickness, index) => (
+                      <option key={`molding-thickness-${thickness.id}-${index}`} value={thickness.id.toString()}>
                         {thickness.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Filtro textura */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Textura <span className="text-xs text-gray-500">(decorativo)</span>
+                  </label>
+                  <select 
+                    value={moldingFilters.texture}
+                    onChange={(e) => handleMoldingFilterChange('texture', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Todas las texturas</option>
+                    {moldingOptions.textures?.map((texture, index) => (
+                      <option key={`molding-texture-${texture.id}-${index}`} value={texture.id.toString()}>
+                        {texture.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Filtro color */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Color <span className="text-xs text-gray-500">(decorativo)</span>
+                  </label>
+                  <select 
+                    value={moldingFilters.color}
+                    onChange={(e) => handleMoldingFilterChange('color', e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="">Todos los colores</option>
+                    {moldingOptions.colors?.map((color, index) => (
+                      <option key={`molding-color-${color.id}-${index}`} value={color.id.toString()}>
+                        {color.name}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Lista de molduras disponibles */}
-              {moldings.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700 mb-2">Molduras disponibles:</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {moldings.map((molding) => (
-                      <div
-                        key={molding.id}
-                        onClick={() => setSelectedMolding(molding)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                          selectedMolding?.id === molding.id
-                            ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
-                            : 'border-gray-200 hover:border-purple-300 hover:bg-purple-25'
-                        }`}
-                      >
-                        <div className="font-medium text-gray-900">{molding.name}</div>
-                        <div className="text-sm text-gray-600">{molding.quality} • {molding.thickness.name}</div>
-                        <div className="text-sm font-bold text-purple-600">S/ {molding.pricePerM.toFixed(2)}/metro</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {moldings.length === 0 && !moldingsLoading && moldingFilters.quality && (
-                <div className="text-center text-gray-500 py-4">
-                  <Frame className="mx-auto mb-2" size={32} />
-                  <p>No hay molduras disponibles con estos filtros</p>
-                </div>
-              )}
             </div>
 
             {/* Selección de vidrio */}
             <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-3">
                 <div className="text-blue-500">🪟</div>
-                <h2 className="text-base font-medium text-gray-600">Seleccionar vidrio (2mm)</h2>
+                <h2 className="text-base font-medium text-gray-600">Seleccionar vidrio</h2>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                {/* Filtro familia */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de vidrio
-                  </label>
-                  <select 
-                    value={glassFilters.family}
-                    onChange={(e) => handleGlassFilterChange('family', e.target.value)}
-                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Todos los tipos</option>
-                    {glassOptions.families?.map((family) => (
-                      <option key={family} value={family}>
-                        {family === 'PLANO' ? '🪟 Cristal Normal' : 
-                         family === 'CATEDRAL' ? '🏰 Catedral' : 
-                         family === 'TEMPLADO' ? '🔥 Templado' : 
-                         family === 'ESPEJO' ? '✨ Espejo' : family}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Filtro tipo de color */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de color
-                  </label>
-                  <select 
-                    value={glassFilters.colorType}
-                    onChange={(e) => handleGlassFilterChange('colorType', e.target.value)}
-                    disabled={!glassFilters.family}
-                    className="w-full p-3 border border-gray-200 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100"
-                  >
-                    <option value="">Todos los tipos</option>
-                    {glassOptions.colorTypes?.map((colorType) => (
-                      <option key={colorType} value={colorType}>
-                        {colorType === 'INCOLORO' ? 'Transparente' : 
-                         colorType === 'COLOR' ? 'Con color' : 
-                         colorType === 'POLARIZADO' ? 'Polarizado' : 
-                         colorType === 'REFLEJANTE' ? 'Reflejante' : colorType}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Lista de vidrios disponibles */}
-              {glasses2mm.length > 0 && (
-                <div className="space-y-2">
-                  <div className="text-sm font-medium text-gray-700 mb-2">Vidrios disponibles (2mm):</div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {glasses2mm.map((glass) => (
-                      <div
-                        key={glass.id}
-                        onClick={() => setSelectedGlass(glass)}
-                        className={`p-3 rounded-lg border cursor-pointer transition-all ${
-                          selectedGlass?.id === glass.id
-                            ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                            : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
-                        }`}
-                      >
-                        <div className="font-medium text-gray-900">{glass.commercialName}</div>
-                        <div className="text-sm text-gray-600">{glass.family} • {glass.colorType}</div>
-                        <div className="text-sm font-bold text-blue-600">S/ {glass.unitPrice.toFixed(2)}/ft²</div>
-                      </div>
-                    ))}
+              {frameGlasses.length > 0 && (
+                <>
+                  {/* Tabs de Vidrio/Espejo */}
+                  <div className="flex mb-4 bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => {
+                        setActiveGlassTab('vidrio');
+                        setUserChangedTab(true);
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                        activeGlassTab === 'vidrio'
+                          ? 'bg-white text-blue-600 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      🪟 Vidrios ({groupedGlasses.vidrios.length})
+                    </button>
+                    <button
+                      onClick={() => {
+                        setActiveGlassTab('espejo');
+                        setUserChangedTab(true);
+                      }}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                        activeGlassTab === 'espejo'
+                          ? 'bg-white text-purple-600 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      ✨ Espejos ({groupedGlasses.espejos.length})
+                    </button>
                   </div>
-                </div>
+
+                  {/* Contenido del tab activo */}
+                  <div>
+                    {/* TAB VIDRIOS */}
+                    <div className={`${activeGlassTab === 'vidrio' ? 'block' : 'hidden'}`}>
+                      {groupedGlasses.vidrios.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {groupedGlasses.vidrios.map((glass, index) => (
+                            <div
+                              key={`frame-vidrio-${glass.id}-${index}`}
+                              onClick={() => selectGlass(glass)}
+                              className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                selectedGlass?.id === glass.id
+                                  ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
+                                  : 'border-gray-200 hover:border-blue-300 hover:bg-blue-25'
+                              } ${glass.isDefault ? 'ring-1 ring-green-300 bg-green-50/30' : ''}`}
+                            >
+                              <div className="space-y-2">
+                                <div className="font-medium text-gray-900 text-sm leading-tight">
+                                  {glass.name}
+                                  {glass.isDefault && (
+                                    <span className="block text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full mt-1 w-fit">
+                                      Predeterminado
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-600">{glass.thickness}mm</div>
+                                  <div className="text-sm font-bold text-blue-600">S/ {glass.unitPrice.toFixed(2)}/ft²</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500 py-4">
+                          <div className="text-4xl mb-2">🪟</div>
+                          <p>No hay vidrios disponibles</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* TAB ESPEJOS */}
+                    <div className={`${activeGlassTab === 'espejo' ? 'block' : 'hidden'}`}>
+                      {groupedGlasses.espejos.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {groupedGlasses.espejos.map((glass, index) => (
+                            <div
+                              key={`frame-espejo-${glass.id}-${index}`}
+                              onClick={() => selectGlass(glass)}
+                              className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                                selectedGlass?.id === glass.id
+                                  ? 'border-purple-500 bg-purple-50 ring-2 ring-purple-200'
+                                  : 'border-gray-200 hover:border-purple-300 hover:bg-purple-25'
+                              }`}
+                            >
+                              <div className="space-y-2">
+                                <div className="font-medium text-gray-900 text-sm leading-tight">{glass.name}</div>
+                                <div className="flex items-center justify-between">
+                                  <div className="text-xs text-gray-600">{glass.thickness}mm</div>
+                                  <div className="text-sm font-bold text-purple-600">S/ {glass.unitPrice.toFixed(2)}/ft²</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center text-gray-500 py-4">
+                          <div className="text-4xl mb-2">✨</div>
+                          <p>No hay espejos disponibles</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
 
-              {glasses2mm.length === 0 && !glassLoading && (
+              {frameGlasses.length === 0 && !glassLoading && (
                 <div className="text-center text-gray-500 py-4">
                   <div className="text-4xl mb-2">🪟</div>
-                  <p>No hay vidrios de 2mm disponibles</p>
+                  <p>No hay vidrios disponibles para cuadros</p>
+                </div>
+              )}
+              
+              {glassLoading && (
+                <div className="text-center text-gray-500 py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-2"></div>
+                  <p>Cargando vidrios...</p>
                 </div>
               )}
             </div>
@@ -426,7 +511,7 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                   <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                     <div className="text-xs font-medium text-blue-700 mb-2">VIDRIO</div>
                     <div className="space-y-1">
-                      <div className="font-medium text-sm">{selectedGlass.commercialName}</div>
+                      <div className="font-medium text-sm">{selectedGlass.name}</div>
                       <div className="text-xs text-blue-600">{calculation.areaFt2.toFixed(2)}ft² × S/ {selectedGlass.unitPrice.toFixed(2)}</div>
                       <div className="text-lg font-bold text-blue-700">S/ {calculation.glassPrice.toFixed(2)}</div>
                     </div>
@@ -475,24 +560,60 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
           <div className="flex-1 overflow-y-auto p-4">
             {items.length > 0 ? (
               <div className="space-y-3">
-                {items.map(item => (
-                  <div key={item.id} className="p-3 bg-gray-50 rounded-lg border">
-                    <div className="font-medium text-sm mb-2">{item.specifications.molding.name} + {item.specifications.glass.commercialName}</div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      📐 {item.specifications.dimensions.ancho} × {item.specifications.dimensions.alto} cm
+                {items.map((item, index) => (
+                  <div key={`cart-item-${item.id}-${index}`} className="p-3 bg-gray-50 rounded-lg border">
+                    {/* Título principal con descripción completa */}
+                    <div className="font-medium text-sm mb-2 text-gray-800">
+                      {item.description}
                     </div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      🔲 Moldura: S/ {item.specifications.breakdown.moldingCost.toFixed(2)} • 
-                      🪟 Vidrio: S/ {item.specifications.breakdown.glassCost.toFixed(2)}
+                    
+                    {/* Detalles de moldura con textura y color */}
+                    <div className="space-y-1 mb-3">
+                      <div className="text-xs text-gray-600">
+                        🔲 <strong>Moldura:</strong> {item.specifications.molding.name}
+                        {item.specifications.molding.quality && ` (${item.specifications.molding.quality})`}
+                      </div>
+                      
+                      {item.specifications.texture && (
+                        <div className="text-xs text-gray-600">
+                          🎨 <strong>Textura:</strong> {item.specifications.texture.name}
+                        </div>
+                      )}
+                      
+                      {item.specifications.color && (
+                        <div className="text-xs text-gray-600">
+                          🌈 <strong>Color:</strong> {item.specifications.color.name}
+                        </div>
+                      )}
+                      
+                      <div className="text-xs text-gray-600">
+                        🪟 <strong>Vidrio:</strong> {item.specifications.glass.category === 'VIDRIO' ? `Vidrio ${item.specifications.glass.name}` : item.specifications.glass.name}
+                      </div>
+                      
+                      <div className="text-xs text-gray-600">
+                        📐 <strong>Dimensiones:</strong> {item.specifications.dimensions.ancho} × {item.specifications.dimensions.alto} cm
+                      </div>
                     </div>
+                    
+                    {/* Desglose de precios */}
+                    <div className="text-xs text-gray-500 mb-2 space-y-1">
+                      <div>• Moldura: S/ {item.specifications.breakdown.moldingCost.toFixed(2)}</div>
+                      <div>• Vidrio: S/ {item.specifications.breakdown.glassCost.toFixed(2)}</div>
+                      <div className="border-t pt-1">
+                        <strong>Precio unitario: S/ {item.unitPrice.toFixed(2)}</strong>
+                      </div>
+                    </div>
+                    
+                    {/* Total y acciones */}
                     <div className="flex justify-between items-center">
                       <div>
-                        <div className="text-xs text-green-600">S/ {item.unitPrice.toFixed(2)} × {item.quantity}</div>
-                        <div className="font-bold text-green-600">S/ {item.total.toFixed(2)}</div>
+                        <div className="text-xs text-green-600">Cantidad: {item.quantity}</div>
+                        <div className="font-bold text-green-600 text-lg">S/ {item.total.toFixed(2)}</div>
                       </div>
                       <button
                         onClick={() => setItems(items.filter(i => i.id !== item.id))}
-                        className="text-red-500 hover:text-red-700 text-sm p-1"
+                        className="text-red-500 hover:text-red-700 text-sm p-2 hover:bg-red-50 rounded-md transition-colors"
+                        title="Eliminar item"
                       >
                         🗑️
                       </button>
@@ -598,20 +719,38 @@ export default function FriendlyFrameCalculator({ companyId }: { companyId: numb
                 <div className="flex-1 overflow-y-auto p-4">
                   {items.length > 0 ? (
                     <div className="space-y-3">
-                      {items.map(item => (
-                        <div key={item.id} className="p-3 bg-gray-50 rounded-lg border">
-                          <div className="font-medium text-sm mb-1">{item.molding.name} + {item.glass.commercialName}</div>
-                          <div className="text-xs text-gray-600 mb-2">
-                            📐 {item.specifications.dimensions.ancho} × {item.specifications.dimensions.alto} cm
+                      {items.map((item, index) => (
+                        <div key={`mobile-cart-item-${item.id}-${index}`} className="p-3 bg-gray-50 rounded-lg border">
+                          {/* Título principal con descripción completa */}
+                          <div className="font-medium text-sm mb-2 text-gray-800">
+                            {item.description}
                           </div>
+                          
+                          {/* Detalles compactos para móvil */}
+                          <div className="space-y-1 mb-2">
+                            <div className="text-xs text-gray-600">
+                              🔲 {item.specifications.molding.name}
+                              {item.specifications.texture && ` - ${item.specifications.texture.name}`}
+                              {item.specifications.color && ` - ${item.specifications.color.name}`}
+                            </div>
+                            
+                            <div className="text-xs text-gray-600">
+                              🪟 {item.specifications.glass.category === 'VIDRIO' ? `Vidrio ${item.specifications.glass.name}` : item.specifications.glass.name}
+                            </div>
+                            
+                            <div className="text-xs text-gray-600">
+                              📐 {item.specifications.dimensions.ancho} × {item.specifications.dimensions.alto} cm
+                            </div>
+                          </div>
+                          
                           <div className="flex justify-between items-center">
                             <div>
-                              <div className="text-xs text-green-600">S/ {item.unitPrice.toFixed(2)} × {item.quantity}</div>
+                              <div className="text-xs text-gray-500">Cantidad: {item.quantity}</div>
                               <div className="font-bold text-green-600">S/ {item.total.toFixed(2)}</div>
                             </div>
                             <button
                               onClick={() => setItems(items.filter(i => i.id !== item.id))}
-                              className="text-red-500 hover:text-red-700 text-sm p-2"
+                              className="text-red-500 hover:text-red-700 text-sm p-2 hover:bg-red-50 rounded-md"
                             >
                               🗑️
                             </button>
