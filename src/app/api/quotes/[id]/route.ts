@@ -128,3 +128,51 @@ export async function GET(
 
   return NextResponse.json(quote);                // solo ejemplo
 }
+
+export async function DELETE(
+  _req: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    const quoteId = Number(id);
+
+    if (isNaN(quoteId)) {
+      return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
+    }
+
+    // Verificar que la cotización existe antes de eliminar
+    const existingQuote = await prisma.quote.findUnique({
+      where: { id: quoteId },
+      include: { items: true }
+    });
+
+    if (!existingQuote) {
+      return NextResponse.json({ error: 'Cotización no encontrada' }, { status: 404 });
+    }
+
+    // Eliminar en transacción para mantener integridad
+    await prisma.$transaction(async (tx) => {
+      // Primero eliminar los items de la cotización
+      await tx.quoteItem.deleteMany({
+        where: { quoteId: quoteId }
+      });
+
+      // Luego eliminar la cotización
+      await tx.quote.delete({
+        where: { id: quoteId }
+      });
+    });
+
+    return NextResponse.json({ 
+      message: 'Cotización eliminada exitosamente',
+      deletedId: quoteId 
+    });
+
+  } catch (err) {
+    console.error('[API] DELETE /api/quotes/[id] >', err);
+    return NextResponse.json({ 
+      error: 'Error interno al eliminar la cotización' 
+    }, { status: 500 });
+  }
+}

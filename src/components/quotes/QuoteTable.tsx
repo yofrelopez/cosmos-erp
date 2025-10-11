@@ -2,9 +2,10 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, Pencil, Trash, FileText, Plus } from "lucide-react";
+import { Eye, Pencil, Trash, FileText, Plus, AlertTriangle } from "lucide-react";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import clsx from "clsx";
 
 import { usePaginatedList } from "@/hooks/usePaginatedList";
 import PaginatedTable from "@/components/common/PaginatedTable";
@@ -16,6 +17,7 @@ import { Quote, Client } from "@prisma/client";
 import QuoteStatusBadge from "./QuoteStatusBadge";
 
 import { useRouter } from 'next/navigation';   // ⬅️ nuevo
+import { useDeleteQuote } from '@/hooks/useDeleteQuote';
 
 import { Prisma } from "@prisma/client";
 
@@ -37,7 +39,9 @@ type QuoteWithClientAndItems = Prisma.QuoteGetPayload<{
 export default function QuoteTable({ fetchUrl }: QuoteTableProps) {
 
   const router = useRouter();                  // ⬅️ nuevo
+  const { deleteQuote, isDeleting } = useDeleteQuote();
   const [search, setSearch] = useState<string>("");
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const pageSize = 5;
 
   // Hook reutilizable (mismo patrón que ClientsTable)
@@ -60,21 +64,78 @@ const tableHeaders = ["#", "Cotización", "Estado", "Cliente", "Fecha", "Total",
 
   const [selectedQuote, setSelectedQuote] = useState<QuoteWithClientAndItems | null>(null);
 
+  // Función para manejar eliminación con confirmación
+  const handleDeleteQuote = (quote: QuoteWithClientAndItems) => {
+    const clientName = quote.client?.fullName || quote.client?.businessName || 'Cliente desconocido';
+    
+    toast(`¿Eliminar cotización ${quote.code}?`, {
+      description: `Esta acción eliminará permanentemente la cotización para ${clientName}. Total: S/ ${quote.total.toFixed(2)}`,
+      action: {
+        label: 'Sí, eliminar',
+        onClick: async () => {
+          try {
+            setDeletingId(quote.id);
+            await deleteQuote(quote.id);
+            // Recargar la lista después de eliminar
+            mutate();
+          } catch (error) {
+            // El error ya se maneja en el hook
+          } finally {
+            setDeletingId(null);
+          }
+        },
+      },
+      cancel: {
+        label: 'Cancelar',
+        onClick: () => {
+          // No hacer nada, solo cerrar
+        },
+      },
+      duration: 15000, // 15 segundos para decidir
+      icon: <AlertTriangle className="w-5 h-5" />,
+    });
+  };
 
-  const tableRows = (quotes ?? []).map((quote: any, idx: number) => (
+
+  const tableRows = (quotes ?? []).map((quote: any, idx: number) => {
+    const isBeingDeleted = deletingId === quote.id;
+    
+    return (
     <tr
       key={quote.id}
-      className="hover:bg-gray-50 transition-colors border-b border-gray-200"
+      className={clsx(
+        "transition-all duration-200 border-b border-gray-200",
+        isBeingDeleted 
+          ? "bg-red-50 opacity-60" 
+          : "hover:bg-gray-50"
+      )}
     >
       <td className="px-4 py-4 text-sm text-gray-600">
         {(currentPage - 1) * pageSize + idx + 1}
       </td>
       <td className="px-4 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-            <FileText size={16} className="text-blue-600" />
+          <div className={clsx(
+            "w-8 h-8 rounded-lg flex items-center justify-center",
+            isBeingDeleted 
+              ? "bg-red-100" 
+              : "bg-blue-100"
+          )}>
+            {isBeingDeleted ? (
+              <Loader2 size={16} className="text-red-600 animate-spin" />
+            ) : (
+              <FileText size={16} className="text-blue-600" />
+            )}
           </div>
-          <span className="font-medium text-gray-900">{quote.code}</span>
+          <span className={clsx(
+            "font-medium",
+            isBeingDeleted ? "text-red-600" : "text-gray-900"
+          )}>
+            {quote.code}
+            {isBeingDeleted && (
+              <span className="text-xs text-red-500 ml-2">(Eliminando...)</span>
+            )}
+          </span>
         </div>
       </td>
       <td className="px-4 py-4">
@@ -126,14 +187,16 @@ const tableHeaders = ["#", "Cotización", "Estado", "Cliente", "Fecha", "Total",
             {
               label: "Eliminar",
               icon: Trash,
-              onClick: () => console.log("Eliminar", quote.id),
+              onClick: () => handleDeleteQuote(quote),
               variant: "danger",
+              disabled: isBeingDeleted || isDeleting,
             },
           ]}
         />
       </td>
     </tr>
-  ));
+    );
+  });
 
   /* -------------------- Render -------------------- */
   if (error) {
