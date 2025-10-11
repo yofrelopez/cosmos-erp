@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { QuoteItem, QuoteStatus } from '@prisma/client';
 
 import { useSaveQuote } from '@/hooks/useSaveQuote';
-import { PlusCircle, XCircle } from 'lucide-react';
+import { PlusCircle, XCircle, Loader2, Save, CheckCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 import { useCompanyStore } from '@/lib/store/useCompanyStore';
@@ -37,11 +37,12 @@ export default function NuevaCotizacionPage() {
     const [client, setClient] = useState<Client | null>(null)
     const [showAddClient, setShowAddClient] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
+    const [isSaved, setIsSaved] = useState(false)
 
     const companyId = useCompanyStore((s) => s.company?.id);
 
 
-    const { saveQuote } = useSaveQuote();
+    const { saveQuote, isLoading, error, clearError } = useSaveQuote();
 
     const router = useRouter();
 
@@ -99,31 +100,61 @@ export default function NuevaCotizacionPage() {
         return;
       }
 
-        if (!companyId) {
-    toast.error("No se ha seleccionado una empresa.");
-    return;
-  }
+      if (!companyId) {
+        toast.error("No se ha seleccionado una empresa.");
+        return;
+      }
 
-      await saveQuote({
-        ...data,
-        companyId, // ✅ ahora sí cumple con el backend
-      });
+      try {
+        // Limpiar errores previos
+        clearError();
+        
+        await saveQuote({
+          ...data,
+          companyId, // ✅ ahora sí cumple con el backend
+        });
 
-      // ✅ Limpiar localStorage
-      localStorage.removeItem('quoteItems');
+        // ✅ Marcar como guardado exitosamente
+        setIsSaved(true);
 
-      // ✅ Resetear formulario
-      methods.reset({
-      clientId: 0,  // ⚠️ esto es number
-      items: [],
-    });
+        // ✅ Solo limpiar si el guardado fue exitoso
+        localStorage.removeItem('quoteItems');
 
+        // ✅ Resetear formulario
+        methods.reset({
+          clientId: 0,
+          items: [],
+        });
 
-      toast.success("Formulario limpio. Listo para nueva cotización.");
-
-
-      // ✅ Limpiar estado del cliente seleccionado
-      setClient(null);
+        // ✅ Limpiar estado del cliente seleccionado
+        setClient(null);
+        
+        // Toast con opciones de navegación
+        toast.success("¡Cotización guardada exitosamente!", {
+          description: "¿Qué quieres hacer ahora?",
+          duration: 4000,
+          action: {
+            label: "Ver lista",
+            onClick: () => router.push('/admin/cotizaciones')
+          },
+          cancel: {
+            label: "Crear otra",
+            onClick: () => {
+              // Ya está limpio el formulario, solo mostrar mensaje
+              toast.success("Formulario listo para nueva cotización");
+            }
+          }
+        });
+        
+        // Redirección automática después de 4 segundos si no hace nada
+        setTimeout(() => {
+          router.push('/admin/cotizaciones');
+        }, 4000);
+        
+      } catch (error) {
+        // El error ya se maneja en el hook
+        console.log('Error handled by hook:', error);
+      }
     };
 
 
@@ -171,6 +202,7 @@ export default function NuevaCotizacionPage() {
               
               {/* Listo */}
               <div className={`h-1 flex-1 rounded-full transition-all duration-300 ${
+                isLoading ? 'bg-blue-500 animate-pulse' :
                 (client && methods.watch('items')?.length > 0) ? 'bg-orange-500 animate-pulse' : 'bg-gray-200'
               }`}></div>
             </div>
@@ -197,11 +229,59 @@ export default function NuevaCotizacionPage() {
             <span className={methods.watch('items')?.length > 0 ? 'text-blue-600' : 'text-gray-400'}>
               {methods.watch('items')?.length > 0 ? `✓ ${methods.watch('items')?.length} ítems` : '○ Ítems'}
             </span>
-            <span className={(client && methods.watch('items')?.length > 0) ? 'text-orange-600 animate-pulse' : 'text-gray-400'}>
-              {(client && methods.watch('items')?.length > 0) ? '🚀 Listo' : '○ Pendiente'}
+            <span className={
+              isLoading ? 'text-blue-600 animate-pulse' :
+              (client && methods.watch('items')?.length > 0) ? 'text-orange-600 animate-pulse' : 'text-gray-400'
+            }>
+              {isLoading ? '💾 Guardando...' : 
+               (client && methods.watch('items')?.length > 0) ? '🚀 Listo' : '○ Pendiente'}
             </span>
           </div>
         </div>
+
+        {/* Estado de guardado exitoso */}
+        {isSaved && !isLoading && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-green-800">¡Cotización guardada exitosamente!</p>
+                <p className="text-xs text-green-600">Redirigiendo a la lista de cotizaciones...</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-green-500">Ir a:</p>
+                <p className="text-xs font-medium text-green-700">/admin/cotizaciones</p>
+              </div>
+            </div>
+            
+            {/* Barra de progreso de redirección */}
+            <div className="mt-3 bg-white rounded-full h-2 overflow-hidden">
+              <div className="bg-gradient-to-r from-green-400 to-green-600 h-full animate-pulse"></div>
+            </div>
+          </div>
+        )}
+
+        {/* Estado de guardado global */}
+        {isLoading && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-blue-800">Guardando cotización...</p>
+                <p className="text-xs text-blue-600">Se redirigirá automáticamente al completar</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-blue-500">Destino:</p>
+                <p className="text-xs font-medium text-blue-700">/admin/cotizaciones</p>
+              </div>
+            </div>
+            
+            {/* Barra de progreso animada */}
+            <div className="mt-3 bg-white rounded-full h-2 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-400 to-blue-600 h-full animate-pulse"></div>
+            </div>
+          </div>
+        )}
 
         {/* Contenido principal responsive */}
         <FormProvider {...methods}>
@@ -406,30 +486,80 @@ export default function NuevaCotizacionPage() {
                   </div>
                 )}
 
+                {/* Mensaje de error si existe */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1 h-4 bg-red-500 rounded-full"></div>
+                      <div>
+                        <p className="text-sm font-medium text-red-800">Error al guardar</p>
+                        <p className="text-xs text-red-600 mt-1">{error}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={clearError}
+                        className="ml-auto text-red-500 hover:text-red-700"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Botones responsivos */}
                 <div className="flex flex-col sm:flex-row gap-3 sm:justify-between sm:items-center">
                   
                   {/* Botón Cancelar */}
                   <button
                     type="button"
-                    onClick={() => router.push('/cotizaciones')}
-                    className="flex items-center justify-center gap-2 bg-gray-100 text-gray-700 px-6 py-4 sm:py-3 rounded-lg hover:bg-gray-200 transition-all duration-200 font-medium border border-gray-300 hover:shadow-md min-h-[48px] sm:min-h-0 order-2 sm:order-1"
+                    disabled={isLoading}
+                    onClick={() => router.push('/admin/cotizaciones')}
+                    className={`
+                      flex items-center justify-center gap-2 px-6 py-4 sm:py-3 rounded-lg 
+                      transition-all duration-200 font-medium border 
+                      min-h-[48px] sm:min-h-0 order-2 sm:order-1
+                      ${isLoading 
+                        ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' 
+                        : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200 hover:shadow-md'
+                      }
+                    `}
                   >
                     <XCircle className="w-5 h-5" />
                     Cancelar
                   </button>
 
-                  {/* Botón Guardar - Destacado */}
+                  {/* Botón Guardar - Destacado con estados */}
                   {client && methods.watch('items')?.length > 0 && (
                     <button
                       type="submit"
-                      className="flex items-center justify-center gap-3 bg-gradient-to-r from-blue-800 to-blue-700 text-white px-8 py-4 sm:py-3 rounded-lg hover:from-blue-900 hover:to-blue-800 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl border-2 border-orange-500 min-h-[48px] sm:min-h-0 order-1 sm:order-2"
+                      disabled={isLoading}
+                      className={`
+                        flex items-center justify-center gap-3 px-8 py-4 sm:py-3 rounded-lg 
+                        transition-all duration-200 font-semibold shadow-lg 
+                        min-h-[48px] sm:min-h-0 order-1 sm:order-2
+                        ${isLoading 
+                          ? 'bg-gray-400 cursor-not-allowed' 
+                          : 'bg-gradient-to-r from-blue-800 to-blue-700 text-white hover:from-blue-900 hover:to-blue-800 hover:shadow-xl border-2 border-orange-500'
+                        }
+                      `}
                     >
-                      <PlusCircle className="w-5 h-5" />
-                      <span>Guardar Cotización</span>
-                      <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                        {methods.watch('items')?.length}
-                      </span>
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                          <span>Guardando...</span>
+                          <div className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full animate-pulse">
+                            {methods.watch('items')?.length}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-5 h-5" />
+                          <span>Guardar Cotización</span>
+                          <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                            {methods.watch('items')?.length}
+                          </span>
+                        </>
+                      )}
                     </button>
                   )}
 
