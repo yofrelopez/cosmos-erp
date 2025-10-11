@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
     const companyId = searchParams.get('companyId')
     const quality = searchParams.get('quality')
     const thicknessId = searchParams.get('thicknessId')
+    const texture = searchParams.get('texture')
+    const color = searchParams.get('color')
 
     if (!companyId) {
       return NextResponse.json(
@@ -26,8 +28,7 @@ export async function GET(request: NextRequest) {
     }
 
     const where: any = {
-      companyId: parseInt(companyId),
-      isActive: true
+      companyId: parseInt(companyId)
     }
 
     // Filtros opcionales
@@ -37,6 +38,8 @@ export async function GET(request: NextRequest) {
     if (thicknessId) {
       where.thicknessId = parseInt(thicknessId)
     }
+    // Nota: texture y color son filtros decorativos, no afectan la consulta de precio
+    // pero los incluimos para consistencia en el frontend
 
     const moldings = await prisma.pricingMolding.findMany({
       where,
@@ -98,8 +101,7 @@ export async function POST(request: NextRequest) {
         thicknessId: validatedData.thicknessId,
         pricePerM: validatedData.pricePerM,
         companyId: validatedData.companyId,
-        validFrom: new Date(),
-        isActive: true
+        validFrom: new Date()
       },
       include: {
         thickness: true

@@ -29,7 +29,6 @@ export async function GET(request: NextRequest) {
         moldings: {
           some: {
             quality: quality as any,
-            isActive: true,
             companyId: parseInt(companyId)
           }
         }

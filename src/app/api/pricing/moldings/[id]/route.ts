@@ -191,13 +191,9 @@ export async function DELETE(
       )
     }
 
-    // Soft delete: marcar como inactivo
-    await prisma.pricingMolding.update({
-      where: { id },
-      data: {
-        isActive: false,
-        validTo: new Date()
-      }
+    // Hard delete: eliminar completamente el registro
+    await prisma.pricingMolding.delete({
+      where: { id }
     })
 
     return NextResponse.json({ message: 'Moldura eliminada correctamente' })

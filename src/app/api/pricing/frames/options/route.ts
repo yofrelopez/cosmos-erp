@@ -18,17 +18,18 @@ export async function GET(req: Request) {
     OR: [{ validTo: null }, { validTo: { gte: now } }],
   }
 
-  const [moldings, matboards, backings, accessories, thicknessMoldura, thicknessBastidor] =
+  const [moldings, matboards, backings, accessories, moldingSimple, moldingBastidor] =
     await Promise.all([
       prisma.pricingMolding.findMany({
-        where: { companyId, ...activeWindow },
+        where: { companyId },
         orderBy: [{ name: 'asc' }],
         select: {
           id: true,
           name: true,
           pricePerM: true,
+          quality: true,
           thicknessId: true,
-          thickness: { select: { name: true, category: true } }, // <- join
+          thickness: { select: { name: true } },
         },
       }),
       prisma.pricingMatboard.findMany({
@@ -46,13 +47,13 @@ export async function GET(req: Request) {
         orderBy: [{ name: 'asc' }],
         select: { id: true, name: true, price: true },
       }),
-      prisma.pricingThickness.findMany({
-        where: { companyId, category: 'MOLDURA', ...activeWindow },
+      prisma.pricingMolding.findMany({
+        where: { companyId, quality: 'SIMPLE', ...activeWindow },
         orderBy: [{ name: 'asc' }],
         select: { id: true, name: true, pricePerM: true },
       }),
-      prisma.pricingThickness.findMany({
-        where: { companyId, category: 'BASTIDOR', ...activeWindow },
+      prisma.pricingMolding.findMany({
+        where: { companyId, quality: 'BASTIDOR', ...activeWindow },
         orderBy: [{ name: 'asc' }],
         select: { id: true, name: true, pricePerM: true },
       }),
@@ -68,7 +69,7 @@ export async function GET(req: Request) {
       name: m.name,
       thicknessId: m.thicknessId,                      // nuevo
       thickness: m.thickness?.name ?? '',              // compat con front actual
-      thicknessCategory: m.thickness?.category ?? null,
+      quality: m.quality,                              // SIMPLE, FINA, BASTIDOR
       pricePerM: toNum(m.pricePerM),                   // number | null
     })),
     // Insumos por ft²
@@ -88,14 +89,14 @@ export async function GET(req: Request) {
       name: a.name,
       price: toNum(a.price),
     })),
-    // NUEVO: listas de espesores por categoría para poblar selects del front
+    // NUEVO: listas de molduras por categoría para poblar selects del front
     thickness: {
-      moldura: thicknessMoldura.map(t => ({
+      moldura: moldingSimple.map((t: { id: number; name: string; pricePerM: any }) => ({
         id: t.id,
         name: t.name,
         pricePerM: toNum(t.pricePerM), // puede ser null si no lo usas aún
       })),
-      bastidor: thicknessBastidor.map(t => ({
+      bastidor: moldingBastidor.map((t: { id: number; name: string; pricePerM: any }) => ({
         id: t.id,
         name: t.name,
         pricePerM: toNum(t.pricePerM),

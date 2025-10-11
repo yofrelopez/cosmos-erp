@@ -16,12 +16,7 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   // SOLUCIÓN DEFINITIVA: Configuración mínima para Vercel + Next.js 15
-  experimental: {
-    serverComponentsExternalPackages: ['@prisma/client'],
-  },
-  outputFileTracing: {
-    ignores: ['**/@prisma/engines/**'],
-  },
+  serverExternalPackages: ['@prisma/client'],
   // Fix específico para el error ENOENT en Vercel
   webpack: (config, { isServer }) => {
     if (!isServer) {

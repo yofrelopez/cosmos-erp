@@ -110,17 +110,29 @@ export async function POST(req: Request) {
 const StatusParam = z.enum(['PENDING', 'ACCEPTED', 'REJECTED'])
 
 const positiveInt = (v: unknown, def = 1) => {
-  const n = Number(v ?? def);
-  return Number.isFinite(n) && n > 0 ? n : def;
+  try {
+    const n = Number(v ?? def);
+    const result = Number.isFinite(n) && n > 0 ? Math.floor(n) : def;
+    console.log(`📊 positiveInt(${v}, ${def}) = ${result}`);
+    return result;
+  } catch (err) {
+    console.log(`❌ Error parsing int ${v}:`, err);
+    return def;
+  }
 };
 
 export async function GET(req: Request) {
   try {
+    console.log('🔍 GET /api/quotes - Start request');
     const { searchParams } = new URL(req.url);
+    console.log('📋 Search params:', Object.fromEntries(searchParams));
 
     /* -----------  companyId obligatorio y numérico  ---------------- */
     const companyId = positiveInt(searchParams.get('companyId'), NaN);
+    console.log('🏢 CompanyId:', companyId);
+    
     if (Number.isNaN(companyId)) {
+      console.log('❌ Invalid companyId');
       return NextResponse.json(
         { error: 'companyId es obligatorio y debe ser numérico' },
         { status: 400 },
@@ -136,6 +148,17 @@ export async function GET(req: Request) {
     const page     = positiveInt(searchParams.get('page'), 1);
     const pageSize = Math.min(100, positiveInt(searchParams.get('pageSize'), 20));
     const skip     = (page - 1) * pageSize;
+    
+    console.log('📊 Pagination params:', { search, page, pageSize, skip });
+    
+    // Validación adicional para evitar skip muy grandes
+    if (skip > 10000) {
+      console.log('❌ Skip too large:', skip);
+      return NextResponse.json(
+        { error: 'Página solicitada demasiado alta' },
+        { status: 400 }
+      );
+    }
 
     /* -----------  cláusula where para Prisma  ---------------------- */
     const where: any = { companyId };
@@ -156,7 +179,10 @@ export async function GET(req: Request) {
       ];
     }
 
+    console.log('🔍 Where clause:', JSON.stringify(where, null, 2));
+
     /* -----------  transacción: count + datos paginados  ------------ */
+    console.log('📦 Starting database transaction...');
     const [total, quotes] = await prisma.$transaction([
       prisma.quote.count({ where }),
       prisma.quote.findMany({
@@ -168,10 +194,15 @@ export async function GET(req: Request) {
       }),
     ]);
 
+    console.log('✅ Transaction completed:', { total, quotesCount: quotes.length });
+
     /* -----------  respuesta  -------------------------------------- */
     return NextResponse.json({ data: quotes, total });
   } catch (err) {
-    console.error('[GET /api/quotes]', err);
+    console.error('[GET /api/quotes] ERROR:', err);
+    if (err && typeof err === 'object' && 'stack' in err) {
+      console.error('Error stack:', (err as { stack?: string }).stack);
+    }
     return NextResponse.json(
       { error: 'Error interno del servidor' },
       { status: 500 },

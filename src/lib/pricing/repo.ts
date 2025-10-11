@@ -11,7 +11,7 @@ const nowFilter = (alias = "") => ({
 });
 
 export const getGlassBase = (companyId: number, family: "PLANO"|"CATEDRAL", thicknessMM: number) =>
-  prisma.pricingGlassBase.findFirst({
+  prisma.pricingGlass.findFirst({
     where: { companyId, family, thicknessMM, ...nowFilter() },
     orderBy: { validFrom: "desc" },
   });
@@ -22,7 +22,7 @@ export const getGlassModifiers = (companyId: number, params: {
   finish?: "INCOLORO"|"MATE"|"POLARIZADO"|"REFLEJANTE",
   color?: "NONE"|"GRIS"|"AMBAR"|"AZUL",
   thicknessMM?: number,
-}) => prisma.pricingGlassModifier.findMany({
+}) => prisma.pricingGlass.findMany({
   where: {
     companyId,
     ...nowFilter(),
@@ -34,7 +34,7 @@ export const getGlassModifiers = (companyId: number, params: {
 });
 
 export const getGlassServices = (companyId: number) =>
-  prisma.pricingGlassService.findMany({ where: { companyId, ...nowFilter() } });
+  prisma.pricingGlass.findMany({ where: { companyId, ...nowFilter() } });
 
 export const getFrameCatalogs = (companyId: number) => Promise.all([
   prisma.pricingMolding.findMany({ where: { companyId, ...nowFilter() } }),

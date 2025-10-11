@@ -99,17 +99,16 @@ export async function calculateFramePrice(
   ] = await Promise.all([
     moldingId
       ? prisma.pricingMolding.findFirst({
-          where: { id: moldingId, companyId, isActive: true },
+          where: { id: moldingId, companyId },
           select: { id: true, name: true, pricePerM: true },
         })
       : Promise.resolve(null),
-    thicknessId && !customMoldingPricePerM
-      ? prisma.pricingThickness.findFirst({
+    moldingId && !customMoldingPricePerM
+      ? prisma.pricingMolding.findFirst({
           where: {
-            id: thicknessId,
+            id: moldingId,
             companyId,
             isActive: true,
-            category: "MOLDURA", // para molduras (no bastidor)
           },
           select: { id: true, name: true, pricePerM: true },
         })
@@ -126,14 +125,14 @@ export async function calculateFramePrice(
           select: { id: true, name: true, pricePerFt2: true },
         })
       : Promise.resolve(null),
-    prisma.pricingGlassBase.findFirst({
+    prisma.pricingGlass.findFirst({
       where: {
         companyId,
         isActive: true,
         family: "PLANO",
         thicknessMM: 2,
       },
-      select: { pricePerFt2: true },
+      select: { price: true },
     }),
     accessories.length
       ? prisma.pricingAccessory.findMany({
@@ -147,9 +146,9 @@ export async function calculateFramePrice(
       : Promise.resolve([] as { id: number; price: number | null }[]),
   ]);
 
-  if (!glassBaseRow || glassBaseRow.pricePerFt2 == null) {
+  if (!glassBaseRow || glassBaseRow.price == null) {
     throw new Error(
-      "No se encontró el precio de vidrio (PLANO 2mm) en PricingGlassBase."
+      "No se encontró el precio de vidrio (PLANO 2mm) en PricingGlass."
     );
   }
 
@@ -195,13 +194,12 @@ export async function calculateFramePrice(
 
   if (kind === PricingFrameKind.CON_FONDO && isMDFBase && innerEnabled) {
     // Buscar thickness "INTERNA" (MOLDURA)
-    const innerThickness =
+    const innerMolding =
       innerMoldingCustomPricePerM == null
-        ? await prisma.pricingThickness.findFirst({
+        ? await prisma.pricingMolding.findFirst({
             where: {
               companyId,
               isActive: true,
-              category: "MOLDURA",
               name: "INTERNA",
             },
             select: { pricePerM: true },
@@ -210,11 +208,11 @@ export async function calculateFramePrice(
 
     const pricePerM_inner =
       innerMoldingCustomPricePerM ??
-      (innerThickness?.pricePerM != null ? Number(innerThickness.pricePerM) : null);
+      (innerMolding?.pricePerM != null ? Number(innerMolding.pricePerM) : null);
 
     if (pricePerM_inner == null) {
       throw new Error(
-        'No existe Thickness "INTERNA" (MOLDURA) ni se ingresó precio manual para la moldura interna.'
+        'No existe Moldura "INTERNA" ni se ingresó precio manual para la moldura interna.'
       );
     }
 
@@ -232,7 +230,7 @@ export async function calculateFramePrice(
 
   // 7) Vidrio
   // precio base por ft² (PLANO 2mm) + 50% (fabricación y accesorios)
-  const pricePerFt2Glass = Number(glassBaseRow.pricePerFt2) * 1.5;
+  const pricePerFt2Glass = Number(glassBaseRow.price) * 1.5;
 
   // Reglas:
   // - SIN_FONDO: 1 vidrio con medidas originales
@@ -286,7 +284,7 @@ export async function calculateFramePrice(
   // 10) Accesorios (por unidad)
   let accessoriesCost = 0;
   if (accessoriesRows?.length) {
-    const priceById = new Map(accessoriesRows.map((a) => [a.id, a.price ?? 0]));
+    const priceById = new Map(accessoriesRows.map(a => [a.id, Number(a.price ?? 0)]));
     accessoriesCost = accessories.reduce((sum, it) => {
       const p = priceById.get(it.id) ?? 0;
       return sum + Number(p) * it.qty;
