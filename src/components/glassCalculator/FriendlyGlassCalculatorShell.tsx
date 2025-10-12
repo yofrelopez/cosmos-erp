@@ -1,7 +1,7 @@
 "use client";
 
 import { useCompanyStore } from "@/lib/store/useCompanyStore";
-import FriendlyGlassCalculator from "./FriendlyGlassCalculator";
+import FriendlyGlassCalculator from "./FriendlyGlassCalculatorNew";
 import PageHeader from "@/components/common/PageHeader";
 import { Calculator, Building2 } from "lucide-react";
 
@@ -54,23 +54,6 @@ export default function FriendlyGlassCalculatorShell({ quoteId, companyId }: Pro
   }
 
   return (
-    <div>
-      <main className="page-container">
-        <div className="max-w-7xl mx-auto">
-          <PageHeader
-            title="Calculadora de Vidrios"
-            subtitle="Cotiza vidrios rápidamente"
-            showBreadcrumb={true}
-            breadcrumbs={[
-              { label: 'Admin', href: '/admin' },
-              { label: 'Cotizaciones', href: '/admin/cotizaciones' },
-              { label: 'Calculadora Vidrios', href: '/admin/cotizaciones/calculadora-vidrios' },
-            ]}
-          />
-        </div>
-      </main>
-      
-      <FriendlyGlassCalculator companyId={resolvedCompanyId} />
-    </div>
+    <FriendlyGlassCalculator companyId={resolvedCompanyId} />
   );
 }
