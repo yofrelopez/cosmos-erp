@@ -1,7 +1,7 @@
 "use client";
 
 import { useCompanyStore } from "@/lib/store/useCompanyStore";
-import FriendlyFrameCalculator from "./FriendlyFrameCalculator";
+import FriendlyFrameCalculatorNew from "./FriendlyFrameCalculatorNew";
 import PageHeader from "@/components/common/PageHeader";
 import { Frame, Building2 } from "lucide-react";
 
@@ -72,7 +72,7 @@ export default function FriendlyFrameCalculatorShell({ quoteId, companyId }: Pro
         </div>
       </main>
       
-      <FriendlyFrameCalculator companyId={resolvedCompanyId} />
+      <FriendlyFrameCalculatorNew companyId={resolvedCompanyId} />
     </div>
   );
 }

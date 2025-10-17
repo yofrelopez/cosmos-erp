@@ -18,8 +18,8 @@ const thicknessSchema = z.object({
     .max(50, 'Máximo 50 caracteres')
     .trim()
     .refine(
-      (val) => /^\d+(\.\d+)?\s*(mm|cm|m)?$/i.test(val.replace(/\s+/g, '')),
-      'Formato inválido. Ej: 2mm, 3.5mm, 10mm'
+      (val) => /^[a-zA-Z0-9\s\.]+$/i.test(val),
+      'Solo se permiten letras, números, espacios y puntos'
     )
 })
 
@@ -122,13 +122,13 @@ export default function EditThicknessModal({ open, thickness, onClose, onSuccess
         <FormField
           label="Nombre del Espesor"
           required
-          description="Especifica el grosor con unidad (ej: 3mm, 6mm, 10mm)"
+          description="Nombre descriptivo del espesor (ej: 3mm, 6mm, Grueso A, Tipo 1)"
           error={errors.name?.message}
         >
           <FormInput
             {...register('name')}
             type="text"
-            placeholder="Ej: 3mm, 6mm, 10mm"
+            placeholder="Ej: 3mm, Grueso A, Tipo 1"
             disabled={loading}
             error={!!errors.name}
           />

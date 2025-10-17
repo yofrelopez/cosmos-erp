@@ -41,3 +41,28 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# Database migration scripts (temporary)
+*migration*.js
+*migrate*.js
+*clone*.js
+*backup*.sql
+*backup*.json
+*dump*.sql
+*test-*.js
+*check-*.js
+*fix-*.js
+*debug-*.js
+*clean-*.js
+*generate-*.js
+*verify-*.sql
+*verificar-*.sql
+*datos-*.sql
+*aplicar-*.sql
+seed-*.sql
+seed-*.mjs
+
+# Backup files
+*.backup.*
+*-backup-*
+INSTRUCCIONES_*.txt
