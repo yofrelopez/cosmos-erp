@@ -43,8 +43,8 @@ async function buildGeneralData(
   validated: any,
   companyId: number,
   opts: { logoFile: File | null; removeLogo: boolean }
-): Promise<Prisma.CompanyUpdateInput> {
-  const data: Prisma.CompanyUpdateInput = {
+): Promise<Prisma.companyUpdateInput> {
+  const data: Prisma.companyUpdateInput = {
     name: validated.name.trim(),
     ruc: validated.ruc,
     address: validated.address?.trim() || null,
@@ -70,7 +70,7 @@ async function buildGeneralData(
   return data;
 }
 
-function buildContactData(validated: any): Prisma.CompanyUpdateInput {
+function buildContactData(validated: any): Prisma.companyUpdateInput {
   return {
     phone: normalizePhone(validated.phone) || null,
     whatsapp: normalizePhone(validated.whatsapp) || null,
@@ -78,7 +78,7 @@ function buildContactData(validated: any): Prisma.CompanyUpdateInput {
   };
 }
 
-function buildSocialData(validated: any): Prisma.CompanyUpdateInput {
+function buildSocialData(validated: any): Prisma.companyUpdateInput {
   return {
     website: normalizeUrl(validated.website) || null,
     facebookUrl: normalizeUrl(validated.facebookUrl) || null,
@@ -162,7 +162,7 @@ export async function PATCH(
     const validated = parsed.data;
 
     // Construir `data` según pestaña
-    let data: Prisma.CompanyUpdateInput = {};
+  let data: Prisma.companyUpdateInput = {};
     if (tab === 'general') {
       data = await buildGeneralData(validated, companyId, { logoFile, removeLogo });
     } else if (tab === 'contact') {
@@ -219,7 +219,7 @@ export async function DELETE(
             contracts: true,
             bankAccounts: true,
             wallets: true,
-            branches: true,
+            // branches: true, // No existe en el modelo actual
           },
         },
       },
@@ -238,11 +238,10 @@ export async function DELETE(
       contracts,
       bankAccounts,
       wallets,
-      branches,
     } = company._count;
 
     const totalRelations =
-      clients + quotes + contracts + bankAccounts + wallets + branches;
+      clients + quotes + contracts + bankAccounts + wallets;
 
     if (totalRelations > 0) {
       return NextResponse.json(

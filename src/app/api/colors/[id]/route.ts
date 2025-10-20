@@ -29,7 +29,7 @@ export async function PUT(
     const validatedData = updateColorSchema.parse(body)
 
     // Verificar que el color existe
-    const existingColor = await prisma.color.findUnique({
+    const existingColor = await prisma.colors.findUnique({
       where: { id: colorId }
     })
 
@@ -41,7 +41,7 @@ export async function PUT(
     }
 
     // Verificar si ya existe otro color con el mismo nombre
-    const duplicateColor = await prisma.color.findFirst({
+    const duplicateColor = await prisma.colors.findFirst({
       where: { 
         name: validatedData.name,
         id: { not: colorId }
@@ -56,7 +56,7 @@ export async function PUT(
     }
 
     // Actualizar el color
-    const updatedColor = await prisma.color.update({
+    const updatedColor = await prisma.colors.update({
       where: { id: colorId },
       data: {
         name: validatedData.name
@@ -97,7 +97,7 @@ export async function DELETE(
     }
 
     // Verificar que el color existe
-    const existingColor = await prisma.color.findUnique({
+    const existingColor = await prisma.colors.findUnique({
       where: { id: colorId }
     })
 
@@ -121,7 +121,7 @@ export async function DELETE(
     }
 
     // Eliminar el color
-    await prisma.color.delete({
+    await prisma.colors.delete({
       where: { id: colorId }
     })
 

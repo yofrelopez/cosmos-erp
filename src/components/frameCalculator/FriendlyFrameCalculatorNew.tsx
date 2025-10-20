@@ -1265,18 +1265,6 @@ export default function FriendlyFrameCalculatorNew({ companyId }: { companyId: n
 
                               {/* Selector de vidrio compacto */}
                               <div className="mb-3">
-                                {/* Debug info */}
-                                {backgroundOption === 'con-fondo' && (
-                                  <div className="text-xs text-center mb-2 p-1 bg-yellow-100 rounded">
-                                    Debug: Fondo="{backgroundType}" | 
-                                    Restricciones={
-                                      backgroundType.toLowerCase() === 'vidrio' ? 'Sin vidrio + Espejo + BASTIDOR' :
-                                      backgroundType.toLowerCase() === 'nordex' ? 'Sin vidrio + BASTIDOR' :
-                                      ['cartón corrugado', 'cartulina'].includes(backgroundType.toLowerCase()) ? 'Sin vidrio + Espejo' :
-                                      'Ninguna'
-                                    }
-                                  </div>
-                                )}
                                 <div className="flex justify-center space-x-3 mb-2">
                                   {option.glassOptions.transparent && (
                                     <label className="flex items-center cursor-pointer">

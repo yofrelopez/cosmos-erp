@@ -32,11 +32,6 @@ export async function GET(request: NextRequest) {
 
     const glasses = await prisma.pricingGlass.findMany({
       where,
-      include: {
-        colorRef: {
-          select: { id: true, name: true }
-        }
-      },
       orderBy: [
         { family: 'asc' },
         { thicknessMM: 'asc' },
@@ -53,7 +48,7 @@ export async function GET(request: NextRequest) {
       thicknessMM: Number(glass.thicknessMM),
       colorType: glass.colorType,
       colorId: glass.colorId,
-      colorName: glass.colorRef?.name || null,
+      colorName: null, // TODO: Obtener nombre del color por colorId si es necesario
       unitPrice: Number(glass.price), // Cambiado de 'price' a 'unitPrice'
       validFrom: glass.validFrom.toISOString(),
       validTo: glass.validTo?.toISOString() || null,

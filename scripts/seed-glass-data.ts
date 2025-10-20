@@ -34,10 +34,18 @@ async function seedGlassData() {
 
   console.log('🎨 Creating colors...')
   for (const colorName of colors) {
-    await prisma.color.upsert({
-      where: { name: colorName },
+    await prisma.colors.upsert({
+      where: { 
+        companyId_name: {
+          companyId: 1,
+          name: colorName
+        }
+      },
       update: {},
-      create: { name: colorName }
+      create: { 
+        name: colorName,
+        companyId: 1
+      }
     })
   }
 
@@ -54,10 +62,18 @@ async function seedGlassData() {
 
   console.log('🌊 Creating textures...')
   for (const textureName of textures) {
-    await prisma.texture.upsert({
-      where: { name: textureName },
+    await prisma.textures.upsert({
+      where: { 
+        companyId_name: {
+          companyId: 1,
+          name: textureName
+        }
+      },
       update: {},
-      create: { name: textureName }
+      create: { 
+        name: textureName,
+        companyId: 1
+      }
     })
   }
 
@@ -92,9 +108,9 @@ async function seedGlassData() {
   ]
 
   // Obtener IDs de colores para mapear
-  const colorMap = await prisma.color.findMany()
+  const colorMap = await prisma.colors.findMany()
   const colorIdMap = Object.fromEntries(
-    colorMap.map(color => [color.name, color.id])
+    colorMap.map((color: any) => [color.name, color.id])
   )
 
   console.log('🪟 Creating glass pricing data...')

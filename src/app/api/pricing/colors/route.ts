@@ -4,7 +4,10 @@ import { prisma } from '@/lib/prisma'
 // GET - Obtener todos los colores
 export async function GET(request: NextRequest) {
   try {
-    const colors = await prisma.color.findMany({
+    const colors = await prisma.colors.findMany({
+      where: {
+        isActive: true
+      },
       orderBy: {
         name: 'asc'
       }

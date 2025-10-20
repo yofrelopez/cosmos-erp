@@ -28,7 +28,7 @@ export async function PUT(
     const validatedData = updateTextureSchema.parse(body)
 
     // Verificar que la textura existe
-    const existingTexture = await prisma.texture.findUnique({
+    const existingTexture = await prisma.textures.findUnique({
       where: { id: textureId }
     })
 
@@ -40,7 +40,7 @@ export async function PUT(
     }
 
     // Verificar si ya existe otra textura con el mismo nombre
-    const duplicateTexture = await prisma.texture.findFirst({
+    const duplicateTexture = await prisma.textures.findFirst({
       where: { 
         name: validatedData.name,
         id: { not: textureId }
@@ -55,7 +55,7 @@ export async function PUT(
     }
 
     // Actualizar la textura
-    const updatedTexture = await prisma.texture.update({
+    const updatedTexture = await prisma.textures.update({
       where: { id: textureId },
       data: {
         name: validatedData.name
@@ -95,7 +95,7 @@ export async function DELETE(
     }
 
     // Verificar que la textura existe
-    const existingTexture = await prisma.texture.findUnique({
+    const existingTexture = await prisma.textures.findUnique({
       where: { id: textureId }
     })
 
@@ -107,7 +107,7 @@ export async function DELETE(
     }
 
     // Eliminar permanentemente (es solo un catálogo)
-    await prisma.texture.delete({
+    await prisma.textures.delete({
       where: { id: textureId }
     })
 

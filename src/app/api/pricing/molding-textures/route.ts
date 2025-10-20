@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const textures = await prisma.moldingTexture.findMany({
+    const textures = await prisma.moldingTextures.findMany({
       where: {
         companyId: parseInt(companyId)
       },
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const validatedData = moldingTextureSchema.parse(body)
 
     // Verificar que no existe ya una textura con el mismo nombre para la empresa
-    const existing = await prisma.moldingTexture.findFirst({
+    const existing = await prisma.moldingTextures.findFirst({
       where: {
         name: validatedData.name,
         companyId: validatedData.companyId
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear textura
-    const texture = await prisma.moldingTexture.create({
+    const texture = await prisma.moldingTextures.create({
       data: {
         name: validatedData.name,
         companyId: validatedData.companyId

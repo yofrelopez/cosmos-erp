@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const colors = await prisma.moldingColor.findMany({
+    const colors = await prisma.moldingColors.findMany({
       where: {
         companyId: parseInt(companyId)
       },
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     const validatedData = moldingColorSchema.parse(body)
 
     // Verificar que no existe ya un color con el mismo nombre para la empresa
-    const existing = await prisma.moldingColor.findFirst({
+    const existing = await prisma.moldingColors.findFirst({
       where: {
         name: validatedData.name,
         companyId: validatedData.companyId
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear color
-    const color = await prisma.moldingColor.create({
+    const color = await prisma.moldingColors.create({
       data: {
         name: validatedData.name,
         companyId: validatedData.companyId

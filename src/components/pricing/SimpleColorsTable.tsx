@@ -27,9 +27,11 @@ export default function SimpleColorsTable({ companyId }: Props) {
 
   // Refresh data
   const refreshColors = async () => {
+    if (!companyId) return
+    
     try {
       setLoading(true)
-      const res = await fetch('/api/colors')
+      const res = await fetch(`/api/pricing/colors?companyId=${companyId}`)
       if (res.ok) {
         const data = await res.json()
         setColors(data)

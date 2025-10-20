@@ -44,9 +44,6 @@ export async function GET(request: NextRequest) {
 
     const glasses = await prisma.pricingGlass.findMany({
       where: whereClause,
-      include: {
-        colorRef: true  // Incluir datos del color
-      },
       orderBy: [
         { commercialName: 'asc' },
         { family: 'asc' },
@@ -63,7 +60,7 @@ export async function GET(request: NextRequest) {
       thicknessMM: Number(glass.thicknessMM),
       colorType: glass.colorType,
       colorId: glass.colorId,
-      colorName: glass.colorRef?.name || null,
+      colorName: null, // TODO: Obtener nombre del color por colorId si es necesario
       price: Number(glass.price),
       companyId: glass.companyId,
       isActive: glass.isActive,
@@ -117,9 +114,6 @@ export async function POST(request: NextRequest) {
         colorId: validatedData.colorId,
         price: validatedData.price,
         companyId: validatedData.companyId
-      },
-      include: {
-        colorRef: true
       }
     })
 
@@ -130,7 +124,7 @@ export async function POST(request: NextRequest) {
       thicknessMM: Number(glass.thicknessMM),
       colorType: glass.colorType,
       colorId: glass.colorId,
-      colorName: glass.colorRef?.name || null,
+      colorName: null, // TODO: Obtener nombre del color por colorId si es necesario
       price: Number(glass.price),
       companyId: glass.companyId,
       isActive: glass.isActive,

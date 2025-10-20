@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
         const colorIds = glassesWithColors.map(g => g.colorId).filter(Boolean) as number[]
         
         if (colorIds.length > 0) {
-          const colors = await prisma.color.findMany({
+          const colors = await prisma.colors.findMany({
             where: {
               id: { in: colorIds }
             },
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
           response.colors = colors
         } else {
           // Si no hay colores específicos en BD, devolver todos los colores disponibles
-          const allColors = await prisma.color.findMany({
+          const allColors = await prisma.colors.findMany({
             select: { id: true, name: true },
             orderBy: { name: 'asc' }
           })
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 
       // Si familia soporta texturas, agregarlas
       if (['CATEDRAL'].includes(family)) {
-        const textures = await prisma.texture.findMany({
+        const textures = await prisma.textures.findMany({
           orderBy: { name: 'asc' }
         })
         response.textures = textures

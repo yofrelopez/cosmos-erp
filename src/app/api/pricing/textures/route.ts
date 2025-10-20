@@ -8,9 +8,12 @@ const createTextureSchema = z.object({
 })
 
 // GET /api/pricing/textures - Obtener todas las texturas
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const textures = await prisma.texture.findMany({
+    const textures = await prisma.textures.findMany({
+      where: {
+        isActive: true
+      },
       orderBy: { name: 'asc' }
     })
 
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createTextureSchema.parse(body)
 
     // Verificar que no exista una textura con el mismo nombre
-    const existingTexture = await prisma.texture.findFirst({
+    const existingTexture = await prisma.textures.findFirst({
       where: {
         name: validatedData.name
       }
@@ -51,9 +54,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const texture = await prisma.texture.create({
+    const texture = await prisma.textures.create({
       data: {
-        name: validatedData.name
+        name: validatedData.name,
+        companyId: 1 // TODO: Obtener de la sesión del usuario
       }
     })
 

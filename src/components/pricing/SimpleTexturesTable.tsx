@@ -27,9 +27,11 @@ export default function SimpleTexturesTable({ companyId }: Props) {
 
   // Refresh data
   const refreshTextures = async () => {
+    if (!companyId) return
+    
     try {
       setLoading(true)
-      const res = await fetch('/api/pricing/textures')
+      const res = await fetch(`/api/pricing/textures?companyId=${companyId}`)
       if (res.ok) {
         const data = await res.json()
         setTextures(data)

@@ -10,7 +10,7 @@ const createColorSchema = z.object({
 // GET /api/colors - Obtener todos los colores
 export async function GET() {
   try {
-    const colors = await prisma.color.findMany({
+    const colors = await prisma.colors.findMany({
       orderBy: { name: 'asc' }
     })
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     const validatedData = createColorSchema.parse(body)
 
     // Verificar que no exista un color con el mismo nombre
-    const existingColor = await prisma.color.findFirst({
+    const existingColor = await prisma.colors.findFirst({
       where: {
         name: validatedData.name
       }
@@ -51,9 +51,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const color = await prisma.color.create({
+    const color = await prisma.colors.create({
       data: {
-        name: validatedData.name
+        name: validatedData.name,
+        companyId: 1 // TODO: Obtener de la sesión del usuario
       }
     })
 
