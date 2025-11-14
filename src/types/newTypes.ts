@@ -1,10 +1,12 @@
-import { Quote, Client, QuoteItem, Observation, User } from "@prisma/client"
+import { Quote, Client, QuoteItem, QuoteItemImage, Observation, user } from "@prisma/client"
 
 export type QuoteWithClientAndItems = Quote & {
   client: Client | null
-  items: QuoteItem[]
+  items: (QuoteItem & {
+    images: QuoteItemImage[]
+  })[]
   observations: Observation[]
-  createdBy: User | null
+  createdBy: user | null
 }
 
 

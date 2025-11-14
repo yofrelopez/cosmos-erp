@@ -31,7 +31,14 @@ type QuoteWithClient = Quote & {
 };
 
 type QuoteWithClientAndItems = Prisma.QuoteGetPayload<{
-  include: { client: true, items: true };
+  include: { 
+    client: true, 
+    items: { 
+      include: { 
+        images: true 
+      } 
+    } 
+  };
 }>;
 
 

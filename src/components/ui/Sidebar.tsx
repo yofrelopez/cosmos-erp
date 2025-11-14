@@ -14,7 +14,7 @@ const getNavigationGroups = (userRole?: string) => [
     label: 'Inicio',
     items: [
       { 
-        href: '/dashboard', 
+        href: '/admin', 
         label: 'Dashboard', 
         icon: Home,
         shortcut: 'Ctrl+H'
@@ -311,7 +311,7 @@ export default function Sidebar() {
               {/* Footer info */}
               <div className="text-center">
                 <p className="text-[10px] text-gray-400">
-                  v2.1.0 • © 2025 Cosmos
+                  Desarrollado por <a href="https://idev.pe/" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-600 font-medium">iDev</a>
                 </p>
               </div>
             </div>

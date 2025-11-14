@@ -5,9 +5,6 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     const colors = await prisma.colors.findMany({
-      where: {
-        isActive: true
-      },
       orderBy: {
         name: 'asc'
       }

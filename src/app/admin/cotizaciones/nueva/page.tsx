@@ -1,7 +1,7 @@
 // app/quotes/nueva/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import ClientAutocomplete from '@/components/quotes/ClientAutocomplete'
 import AddClientModal from '@/components/clients/AddClientModal'
 
@@ -9,6 +9,7 @@ import { useForm, FormProvider } from 'react-hook-form';
 
 import { Client } from '@/types'
 import QuoteItemsWrapper from '@/components/quotes/QuoteItemsWrapper'
+import QuoteItemsForm, { QuoteItemsFormHandle } from '@/components/quotes/QuoteItemsForm'
 import { toast } from 'sonner';
 
 import { QuoteItem, QuoteStatus } from '@prisma/client';
@@ -33,7 +34,7 @@ export interface FormData {
 
 
 export default function NuevaCotizacionPage() {
-
+    const quoteItemsFormRef = useRef<QuoteItemsFormHandle>(null);
     const [client, setClient] = useState<Client | null>(null)
     const [showAddClient, setShowAddClient] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
@@ -81,7 +82,16 @@ export default function NuevaCotizacionPage() {
     useEffect(() => {
       const subscription = methods.watch((value) => {
         if (typeof window !== 'undefined') {
-          localStorage.setItem('quoteItems', JSON.stringify(value.items || []));
+          // Solo guardar items que tengan descripción (no vacíos)
+          const validItems = (value.items || []).filter(item => 
+            item && item.description && item.description.trim() !== ''
+          );
+          
+          if (validItems.length > 0) {
+            localStorage.setItem('quoteItems', JSON.stringify(validItems));
+          } else {
+            localStorage.removeItem('quoteItems');
+          }
         }
       });
       return () => subscription.unsubscribe();
@@ -109,10 +119,21 @@ export default function NuevaCotizacionPage() {
         // Limpiar errores previos
         clearError();
         
-        await saveQuote({
+        const savedQuote = await saveQuote({
           ...data,
           companyId, // ✅ ahora sí cumple con el backend
         });
+
+        // Subir imágenes pendientes si existen
+        if (savedQuote && quoteItemsFormRef.current) {
+          try {
+            await quoteItemsFormRef.current.uploadPendingImages(savedQuote.items || []);
+            toast.success('Cotización e imágenes guardadas correctamente');
+          } catch (imageError) {
+            console.error('Error subiendo imágenes:', imageError);
+            toast.warning('Cotización guardada, pero hubo problemas subiendo las imágenes');
+          }
+        }
 
         // ✅ Marcar como guardado exitosamente
         setIsSaved(true);
@@ -416,7 +437,7 @@ export default function NuevaCotizacionPage() {
               </div>
               
               <div className="p-4 sm:p-6">
-                <QuoteItemsWrapper />
+                <QuoteItemsForm ref={quoteItemsFormRef} />
               </div>
             </div>
 

@@ -44,22 +44,21 @@ export default function EditQuoteForm({
 
   const onSubmit = async (data: any) => {
     try {
-      // Preparar los items con subtotales calculados
-      const itemsToSend = data.items?.map((item: any) => ({
-        description: item.description,
-        unit: item.unit,
-        quantity: item.quantity,
-        unitPrice: item.unitPrice,
-      })) || [];
+      // Solo enviar datos que realmente han cambiado
+      const payload: any = {
+        status: data.status,
+        notes: data.notes,
+      };
+      
+      // 🔍 En modo edición, NO enviar items para preservar imágenes
+      // Solo enviar status y notes para evitar recrear items sin imágenes
+
+      console.log('🔍 EditQuoteForm payload:', JSON.stringify(payload, null, 2));
 
       const response = await fetch(`/api/quotes/${quoteId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          status: data.status,
-          notes: data.notes,
-          items: itemsToSend, // Incluir los items para recalcular el total
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -67,7 +66,18 @@ export default function EditQuoteForm({
         throw new Error(errorData.error || 'Error al guardar los cambios');
       }
 
-      toast.success('Cotización actualizada correctamente');
+      const result = await response.json();
+      
+      // Notificación especial si se creó un contrato
+      if (result.contract) {
+        toast.success(`🎉 ¡Cotización aprobada y contrato ${result.contract.code} creado!`, {
+          duration: 5000,
+          description: 'La cotización ha sido convertida automáticamente en contrato'
+        });
+      } else {
+        toast.success('Cotización actualizada correctamente');
+      }
+      
       router.push('/admin/cotizaciones');
     } catch (error) {
       toast.error('No se pudo actualizar la cotización');

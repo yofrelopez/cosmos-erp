@@ -46,7 +46,10 @@ export async function POST(req: Request) {
 
     /* 3. Calcular subtotal + total */
     const itemsWithSubtotal = parsed.items.map((i) => ({
-      ...i,
+      description: i.description,
+      unit: i.unit,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
       subtotal: i.quantity * i.unitPrice,
     }));
     const total = itemsWithSubtotal.reduce((s, i) => s + i.subtotal, 0);
@@ -187,7 +190,14 @@ export async function GET(req: Request) {
       prisma.quote.count({ where }),
       prisma.quote.findMany({
         where,
-        include: { client: true, items: true },
+        include: { 
+          client: true, 
+          items: { 
+            include: { 
+              images: true 
+            } 
+          } 
+        },
         orderBy: { createdAt: 'desc' },
         skip,
         take: pageSize,

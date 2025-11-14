@@ -128,6 +128,14 @@ export function useSaveQuote() {
 
       const savedQuote = await res.json();
       console.log('✅ Quote saved successfully:', savedQuote);
+      
+      // Limpiar localStorage después de guardar exitosamente
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('quoteItems');
+        localStorage.removeItem('quoteItemImages');
+        localStorage.removeItem('pendingImages');
+      }
+      
       toast.success("Cotización guardada correctamente");
       return savedQuote;
     } catch (error) {

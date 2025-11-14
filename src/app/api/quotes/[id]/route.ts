@@ -2,6 +2,51 @@
 import { prisma } from '@/lib/prisma'
 import { NextResponse, NextRequest } from 'next/server'
 import { z } from 'zod';
+import { generateContractCode } from '@/lib/utils/generateContractCode';
+
+// Función helper para crear contrato automáticamente
+async function createContractFromQuote(quote: any) {
+  // Verificar si ya existe un contrato
+  const existingContract = await prisma.contract.findUnique({
+    where: { quoteId: quote.id }
+  });
+
+  if (existingContract) {
+    return existingContract; // Ya existe, no crear duplicado
+  }
+
+  // Crear contrato con items e imágenes
+  return await prisma.contract.create({
+    data: {
+      quoteId: quote.id,
+      code: await generateContractCode(quote.companyId),
+      clientId: quote.clientId,
+      companyId: quote.companyId,
+      paymentStatus: 'PENDING',
+      amountPaid: 0,
+      amountPending: quote.total,
+      deliveryStatus: 'PENDING',
+      notes: quote.notes,
+      items: {
+        create: quote.items.map((item: any) => ({
+          description: item.description,
+          unit: item.unit,
+          quantity: item.quantity,
+          unitPrice: item.unitPrice,
+          subtotal: item.subtotal,
+          images: {
+            create: item.images?.map((image: any) => ({
+              imageUrl: image.imageUrl,
+              fileName: image.fileName,
+              fileSize: image.fileSize,
+              mimeType: image.mimeType
+            })) || []
+          }
+        }))
+      }
+    }
+  });
+}
 
 // Schema para actualización simple (solo status y notes)
 const UpdateQuoteSchema = z.object({
@@ -31,8 +76,15 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const body = await req.json();
     
+    // DEBUG: Log del body recibido
+    console.log('🔍 PUT /api/quotes/[id] - Body recibido:', JSON.stringify(body, null, 2));
+    
     // Intentar parseo completo primero (con items)
     const fullParsed = FullUpdateQuoteSchema.safeParse(body);
+    
+    console.log('🔍 FullParsed success:', fullParsed.success);
+    console.log('🔍 FullParsed items:', fullParsed.success ? fullParsed.data.items : 'N/A');
+    console.log('🔍 Condition result:', fullParsed.success && fullParsed.data.items);
     
     if (fullParsed.success && fullParsed.data.items) {
       // Actualización completa con items
@@ -67,11 +119,31 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
               create: itemsWithSubtotal
             }
           },
-          include: { items: true, client: true }
+          include: { 
+            items: {
+              include: {
+                images: true
+              }
+            }, 
+            client: true 
+          }
         });
       });
 
-      return NextResponse.json(updated);
+      // Si el status cambió a ACCEPTED, crear contrato automáticamente
+      let contract = null;
+      if (status === 'ACCEPTED') {
+        try {
+          contract = await createContractFromQuote(updated);
+        } catch (error) {
+          console.warn('Error al crear contrato automático:', error);
+        }
+      }
+
+      return NextResponse.json({
+        ...updated,
+        contract: contract ? { id: contract.id, code: contract.code } : null
+      });
     }
     
     // Fallback: actualización simple (solo status y notes)
@@ -89,10 +161,32 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const updated = await prisma.quote.update({
       where: { id },
       data: { status, notes },
-      include: { items: true, client: true }
+      include: { 
+        items: {
+          include: {
+            images: true
+          }
+        }, 
+        client: true 
+      }
     });
 
-    return NextResponse.json(updated);
+    // Si el status cambió a ACCEPTED, crear contrato automáticamente
+    let contract = null;
+    if (status === 'ACCEPTED') {
+      try {
+        contract = await createContractFromQuote(updated);
+        console.log('Contrato creado automáticamente:', contract.id);
+      } catch (error) {
+        console.warn('Error al crear contrato automático:', error);
+        // No fallar la actualización si el contrato no se puede crear
+      }
+    }
+
+    return NextResponse.json({
+      ...updated,
+      contract: contract ? { id: contract.id, code: contract.code } : null
+    });
   } catch (err) {
     console.error('[API] PUT /api/quotes/[id] >', err);
     return NextResponse.json({ error: 'Error interno al actualizar' }, { status: 500 });

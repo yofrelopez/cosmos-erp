@@ -4,7 +4,7 @@ import Link from "next/link";
 import QuoteTable from "@/components/quotes/QuoteTable";
 import PageHeader from "@/components/common/PageHeader";
 import { useCompanyStore } from "@/lib/store/useCompanyStore";
-import { FileText, Plus, Calculator, Frame } from "lucide-react";
+import { FileText, Plus, Calculator, Frame, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function QuotesPage() {
@@ -38,6 +38,16 @@ export default function QuotesPage() {
       }
     }
   }, []);
+
+  // Función para limpiar datos temporales
+  const clearTempData = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('quoteItems');
+      localStorage.removeItem('quoteItemImages'); // Si existe
+      localStorage.removeItem('pendingImages'); // Si existe
+      setTempItems([]);
+    }
+  };
 
   if (!companyId) {
     return (
@@ -114,13 +124,23 @@ export default function QuotesPage() {
                 </div>
               </div>
               
-              <Link 
-                href="/admin/cotizaciones/nueva"
-                className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
-              >
-                <Plus size={16} />
-                Continuar Cotización
-              </Link>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Link 
+                  href="/admin/cotizaciones/nueva"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                >
+                  <Plus size={16} />
+                  Continuar Cotización
+                </Link>
+                <button
+                  onClick={clearTempData}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center gap-2"
+                  title="Limpiar datos temporales"
+                >
+                  <X size={16} />
+                  Limpiar
+                </button>
+              </div>
             </div>
           </div>
         )}

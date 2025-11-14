@@ -1,8 +1,8 @@
-// app/api/quotes/[id]/pdf/route.tsx - VERSIÓN PROFESIONAL MEJORADA
-import { NextResponse } from 'next/server';
-import path from 'path';
-import fs from 'fs';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '../../../../../../lib/prisma'
+import { renderToStream } from '@react-pdf/renderer'
+import path from 'path'
+import fs from 'fs'
 import {
   Document,
   Page,
@@ -11,13 +11,9 @@ import {
   Image as PdfImage,
   StyleSheet,
   Font,
-  renderToStream,
-} from '@react-pdf/renderer';
-import { QuoteItem } from '@prisma/client';
+} from '@react-pdf/renderer'
 
-/* -------------------------------------------------------------------
-   1) FUENTE CORPORATIVA
-------------------------------------------------------------------- */
+// Registrar fuentes
 Font.register({
   family: 'Inter',
   fonts: [
@@ -29,48 +25,15 @@ Font.register({
       src: path.resolve(process.cwd(), 'public/fonts/Inter-Bold.ttf'),
       fontWeight: 'bold',
     },
-    {
-      src: path.resolve(process.cwd(), 'public/fonts/Inter-Italic.ttf'),
-      fontStyle: 'italic',
-      fontWeight: 'normal',
-    },
-    {
-      src: path.resolve(process.cwd(), 'public/fonts/Inter-BoldItalic.ttf'),
-      fontWeight: 'bold',
-      fontStyle: 'italic',
-    },
   ],
 });
 
+// Usar el mismo logo
 const logoBuf = fs.readFileSync(
   path.resolve(process.cwd(), 'public/logo_2.png')
 );
 
-/* -------------------------------------------------------------------
-   1.5) HELPER PARA LOGO DINÁMICO
-------------------------------------------------------------------- */
-async function getCompanyLogo(company: any) {
-  // Si la empresa tiene logoUrl y es una URL de Cloudinary/web, usarla
-  if (company?.logoUrl && company.logoUrl.startsWith('http')) {
-    try {
-      // Para usar URLs remotas en react-pdf necesitamos fetch y convertir a buffer
-      const response = await fetch(company.logoUrl);
-      if (response.ok) {
-        const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
-      }
-    } catch (error) {
-      console.warn('Error fetching company logo:', error);
-    }
-  }
-  
-  // Fallback al logo por defecto
-  return logoBuf;
-}
-
-/* -------------------------------------------------------------------
-   2) PALETA DE COLORES PROFESIONAL
-------------------------------------------------------------------- */
+// Colores institucionales sobrios y profesionales
 const COLORS = {
   primary: '#1e40af',
   primaryLight: '#3b82f6',
@@ -85,15 +48,18 @@ const COLORS = {
   gray900: '#111827',
   success: '#10b981',
   warning: '#f59e0b',
+  // Color naranja institucional (solo para elementos clave)
+  orange: '#ff4500',
+  // Azul gris sobrio para elementos institucionales
+  blueGray: '#475569',
+  blueGrayLight: '#64748b',
+  blueGrayDark: '#334155',
 };
 
-/* -------------------------------------------------------------------
-   3) ESTILOS PROFESIONALES MEJORADOS
-------------------------------------------------------------------- */
 const styles = StyleSheet.create({
   page: {
     padding: 32,
-    paddingBottom: 80, // Espacio reservado para el footer
+    paddingBottom: 80,
     fontFamily: 'Inter',
     fontSize: 10,
     color: COLORS.gray900,
@@ -105,7 +71,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 12,
-    color: COLORS.primary,
+    color: COLORS.success,
   },
   subheading: {
     fontSize: 14,
@@ -118,7 +84,7 @@ const styles = StyleSheet.create({
   headerContainer: {
     backgroundColor: '#ffffff',
     borderBottomWidth: 3,
-    borderBottomColor: COLORS.primary,
+    borderBottomColor: COLORS.blueGray,
     paddingVertical: 20,
     paddingHorizontal: 0,
     marginBottom: 16,
@@ -129,7 +95,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start' 
   },
   
-  /* Sección de Marca/Logo - Lado Izquierdo - Diseño Vertical */
+  /* Sección de Marca/Logo - Lado Izquierdo */
   brandSection: { 
     flexDirection: 'column',
     alignItems: 'flex-start',
@@ -168,20 +134,20 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
 
-  /* Sección de Cotización - Lado Derecho */
+  /* Sección de Contrato - Lado Derecho */
   quoteBadgeContainer: { 
     alignItems: 'flex-end',
     minWidth: 200,
     paddingLeft: 20,
   },
-  quoteTitle: {
+  contractTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.orange,
     marginBottom: 6,
     letterSpacing: 1,
   },
-  quoteNumber: {
+  contractNumber: {
     fontSize: 16,
     color: COLORS.gray700,
     marginBottom: 12,
@@ -196,12 +162,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginTop: 8,
+    backgroundColor: COLORS.blueGray,
   },
 
   /* SECCIONES DE INFORMACIÓN */
   section: { 
-    marginTop: 12, 
-    marginBottom: 8,
+    marginTop: 10, 
+    marginBottom: 6,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -214,7 +181,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.blueGray,
     marginLeft: 6,
   },
   
@@ -256,11 +223,11 @@ const styles = StyleSheet.create({
     border: `1px solid ${COLORS.gray300}`,
     borderRadius: 8,
     overflow: 'hidden',
-    marginTop: 8,
+    marginTop: 6,
   },
   tableHeader: {
     flexDirection: 'row',
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.blueGray,
     paddingVertical: 10,
     paddingHorizontal: 4,
   },
@@ -309,11 +276,11 @@ const styles = StyleSheet.create({
     lineHeight: 1.1,
   },
 
-  /* TOTALES PROFESIONALES */
+  /* TOTALES PROFESIONALES - COMPACTOS */
   totalsContainer: {
-    marginTop: 16,
+    marginTop: 12,
     backgroundColor: COLORS.gray50,
-    padding: 12,
+    padding: 8,
     borderRadius: 6,
     border: `1px solid ${COLORS.gray200}`,
   },
@@ -323,28 +290,28 @@ const styles = StyleSheet.create({
   },
   totalsCol: { 
     width: '50%', 
-    gap: 6,
+    gap: 4,
   },
   totalRow: { 
     flexDirection: 'row', 
     justifyContent: 'space-between',
-    paddingVertical: 3,
+    paddingVertical: 2,
   },
   totalFinalRow: {
     borderTopWidth: 2,
-    borderTopColor: COLORS.primary,
-    paddingTop: 6,
-    marginTop: 6,
+    borderTopColor: COLORS.blueGray,
+    paddingTop: 4,
+    marginTop: 4,
   },
   totalLabel: { 
     fontWeight: 'bold',
     fontSize: 12,
-    color: COLORS.primary,
+    color: COLORS.blueGray,
   },
   totalAmount: {
     fontWeight: 'bold',
     fontSize: 14,
-    color: COLORS.primary,
+    color: COLORS.blueGray,
   },
 
   /* MODALIDADES DE PAGO PROFESIONALES */
@@ -361,7 +328,7 @@ const styles = StyleSheet.create({
   paymentTitle: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.blueGray,
     marginBottom: 8,
     paddingBottom: 4,
     borderBottomWidth: 1,
@@ -385,7 +352,7 @@ const styles = StyleSheet.create({
   bankName: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: COLORS.primary,
+    color: COLORS.blueGray,
     marginBottom: 2,
   },
   accountInfo: {
@@ -398,19 +365,19 @@ const styles = StyleSheet.create({
   notesCard: {
     marginTop: 10,
     padding: 12,
-    backgroundColor: '#fef3c7',
-    border: `1px solid #fbbf24`,
+    backgroundColor: '#f8fafc',
+    border: `1px solid ${COLORS.blueGray}`,
     borderRadius: 6,
   },
   notesTitle: {
     fontSize: 10,
     fontWeight: 'bold',
-    color: '#92400e',
+    color: COLORS.blueGrayDark,
     marginBottom: 6,
   },
   notesText: {
     fontSize: 9,
-    color: '#92400e',
+    color: COLORS.blueGrayDark,
     lineHeight: 1.4,
   },
 
@@ -476,9 +443,6 @@ const styles = StyleSheet.create({
   },
 });
 
-/* -------------------------------------------------------------------
-   4) FUNCIÓN HELPER PARA FORMATEAR MONEDA
-------------------------------------------------------------------- */
 function formatCurrency(amount: number): string {
   return `S/ ${amount.toLocaleString('es-PE', { 
     minimumFractionDigits: 2, 
@@ -486,49 +450,40 @@ function formatCurrency(amount: number): string {
   })}`;
 }
 
-/* -------------------------------------------------------------------
-   6) CONSULTA A BD CON INFORMACIÓN COMPLETA
-------------------------------------------------------------------- */
-async function getQuote(id: number) {
-  return prisma.quote.findUniqueOrThrow({
-    where: { id },
-    include: { 
-      client: true, 
-      items: {
-        include: {
-          images: true
-        }
-      },
-      company: {
-        include: {
-          bankAccounts: true,
-          wallets: true,
-        }
+// Función para obtener logo de empresa (helper del PDF original)
+async function getCompanyLogo(company: any) {
+  if (company?.logoUrl && company.logoUrl.startsWith('http')) {
+    try {
+      const response = await fetch(company.logoUrl);
+      if (response.ok) {
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
       }
-    },
-  });
+    } catch (error) {
+      console.warn('Error fetching company logo:', error);
+    }
+  }
+  return logoBuf;
 }
 
-/* -------------------------------------------------------------------
-   7) COMPONENTE PRINCIPAL PDF MEJORADO
-------------------------------------------------------------------- */
-function QuotePdf({ quote, logoBuffer }: { 
-  quote: Awaited<ReturnType<typeof getQuote>>, 
+// Componente PDF completo para contrato (igual que cotización)
+function ContractPdf({ contract, logoBuffer }: { 
+  contract: any,
   logoBuffer: Buffer 
 }) {
-  const date = new Date(quote.createdAt).toLocaleDateString('es-PE');
-  const validUntil = new Date(quote.createdAt);
-  validUntil.setDate(validUntil.getDate() + 15);
+  const date = new Date(contract.date).toLocaleDateString('es-PE');
+  const validUntil = new Date(contract.date);
+  validUntil.setDate(validUntil.getDate() + 30); // Contratos válidos por 30 días
 
-  const company = quote.company;
+  const company = contract.company;
+  const total = contract.amountPaid + contract.amountPending;
 
-  /* Componente Header Profesional Mejorado */
+  /* Componente Header Profesional para Contrato */
   const Header = () => (
     <View style={styles.headerContainer}>
       <View style={styles.headerRow}>
-        {/* Sección de Marca - Lado Izquierdo - Diseño Vertical */}
+        {/* Sección de Marca - Lado Izquierdo */}
         <View style={styles.brandSection}>
-          {/* Logo de la empresa (rectangular, arriba) */}
           <View style={styles.logoContainer}>
             <PdfImage 
               src={logoBuffer} 
@@ -536,45 +491,35 @@ function QuotePdf({ quote, logoBuffer }: {
             />
           </View>
           
-          {/* Información de la empresa */}
-          <View style={styles.brandInfo}>
-            {/* Detalles de contacto dinámicos */}
-            <View style={styles.companyDetailRow}>
-              <Text style={styles.companyDetails}>
-                RUC: {company?.ruc || '20609799090'}    {company?.address || 'Jr. Arequipa Nro. 230 - Barranca'}
-              </Text>
-            </View>
-            
-            <View style={styles.companyDetailRow}>
-              <Text style={styles.companyDetails}>
-                {company?.email || 'vidrieriacosmos@gmail.com'} | {company?.phone || '994 260 216'}
-              </Text>
-            </View>
+          <View style={styles.companyDetailRow}>
+            <Text style={styles.companyDetails}>
+              RUC: {company?.ruc || '20609799090'}    {company?.address || 'Jr. Arequipa Nro. 230 - Barranca'}
+            </Text>
+          </View>
+          
+          <View style={styles.companyDetailRow}>
+            <Text style={styles.companyDetails}>
+              {company?.email || 'vidrieriacosmos@gmail.com'} | {company?.phone || '994 260 216'}
+            </Text>
           </View>
         </View>
 
-        {/* Sección de Cotización - Lado Derecho */}
+        {/* Sección de Contrato - Lado Derecho */}
         <View style={styles.quoteBadgeContainer}>
-          <Text style={styles.quoteTitle}>COTIZACIÓN</Text>
-          <Text style={styles.quoteNumber}>
-            N.º {quote.code || `COT-${new Date().getFullYear()}-${String(quote.id).padStart(3, '0')}`}
+          <Text style={styles.contractTitle}>CONTRATO</Text>
+          <Text style={styles.contractNumber}>
+            N.º {contract.code}
           </Text>
           
-          {/* Badge de estado */}
-          <Text style={[styles.statusBadge, { 
-            backgroundColor: quote.status === 'ACCEPTED' ? COLORS.success : 
-                           quote.status === 'REJECTED' ? '#ef4444' : COLORS.warning 
-          }]}>
-            {quote.status === 'PENDING' ? 'PENDIENTE' : 
-             quote.status === 'ACCEPTED' ? 'ACEPTADA' :
-             quote.status === 'REJECTED' ? 'RECHAZADA' : quote.status}
+          <Text style={styles.statusBadge}>
+            ACEPTADO
           </Text>
         </View>
       </View>
     </View>
   );
 
-  /* Información del Cliente y Cotización */
+  /* Información del Cliente y Contrato */
   const InfoSection = () => (
     <View style={styles.section}>
       <View style={styles.twoCol}>
@@ -583,47 +528,48 @@ function QuotePdf({ quote, logoBuffer }: {
           <View style={styles.infoCard}>
             <Text style={styles.label}>Información del Cliente</Text>
             <Text style={styles.value}>
-              {quote.client.fullName || quote.client.businessName}
+              {contract.client.fullName || contract.client.businessName}
             </Text>
-            {quote.client.documentNumber && (
+            {contract.client.documentNumber && (
               <Text style={styles.muted}>
-                {quote.client.documentType}: {quote.client.documentNumber}
+                {contract.client.documentType}: {contract.client.documentNumber}
               </Text>
             )}
-            {quote.client.phone && (
-              <Text style={styles.muted}>Teléfono: {quote.client.phone}</Text>
+            {contract.client.phone && (
+              <Text style={styles.muted}>Teléfono: {contract.client.phone}</Text>
             )}
-            {quote.client.address && (
-              <Text style={styles.muted}>Dirección: {quote.client.address}</Text>
+            {contract.client.address && (
+              <Text style={styles.muted}>Dirección: {contract.client.address}</Text>
             )}
           </View>
         </View>
 
-        {/* Detalles de Cotización */}
+        {/* Detalles de Contrato */}
         <View style={styles.col}>
           <View style={styles.infoCard}>
-            <Text style={styles.label}>Detalles de la Cotización</Text>
-            <Text style={styles.value}>Fecha de Emisión: {date}</Text>
+            <Text style={styles.label}>Detalles del Contrato</Text>
+            <Text style={styles.value}>Fecha de Contrato: {date}</Text>
             <Text style={styles.value}>
-              Válida hasta: {validUntil.toLocaleDateString('es-PE')}
+              Válido hasta: {validUntil.toLocaleDateString('es-PE')}
             </Text>
             <Text style={styles.muted}>Moneda: Soles Peruanos (PEN)</Text>
+            <Text style={styles.muted}>Estado: Aceptado</Text>
           </View>
         </View>
       </View>
     </View>
   );
 
-  /* Tabla de Items Profesional */
+  /* Tabla de Items igual que en cotización */
   const ItemsTable = () => (
     <View style={styles.section}>
       <View style={styles.sectionHeader}>
-        <View style={{ width: 4, height: 4, backgroundColor: COLORS.primary, borderRadius: 2 }} />
-        <Text style={styles.sectionTitle}>Detalle de Items</Text>
+        <View style={{ width: 4, height: 4, backgroundColor: COLORS.blueGray, borderRadius: 2 }} />
+        <Text style={[styles.sectionTitle, { color: COLORS.blueGray }]}>Detalle de Items Contratados</Text>
       </View>
       
       <View style={styles.tableContainer}>
-        <View style={styles.tableHeader}>
+        <View style={[styles.tableHeader, { backgroundColor: COLORS.blueGray }]}>
           <Text style={[styles.colDesc, styles.th]}>Descripción</Text>
           <Text style={[styles.colUnit, styles.th]}>Unidad</Text>
           <Text style={[styles.colQty, styles.th]}>Cant.</Text>
@@ -631,11 +577,12 @@ function QuotePdf({ quote, logoBuffer }: {
           <Text style={[styles.colSub, styles.th]}>Subtotal</Text>
         </View>
         
-        {quote.items.map((item: any, index: number) => {
+        {contract.items.map((item: any, index: number) => {
           const hasImages = item.images && item.images.length > 0;
           const imageIndicator = hasImages 
             ? `(ver imagen${item.images.length > 1 ? 's' : ''} ${item.images.map((_: any, i: number) => i + 1).join(', ')})` 
             : '';
+          
           
           return (
             <View 
@@ -666,39 +613,47 @@ function QuotePdf({ quote, logoBuffer }: {
     </View>
   );
 
-  /* Totales Profesionales */
+  /* Totales del Contrato */
   const Totals = () => (
-    <View style={styles.totalsContainer}>
+    <View style={styles.totalsContainer} break={false}>
       <View style={styles.totalsBox}>
         <View style={styles.totalsCol}>
+          <View style={styles.totalRow}>
+            <Text style={styles.label}>Monto Pagado:</Text>
+            <Text style={styles.value}>{formatCurrency(contract.amountPaid)}</Text>
+          </View>
+          <View style={styles.totalRow}>
+            <Text style={styles.label}>Monto Pendiente:</Text>
+            <Text style={styles.value}>{formatCurrency(contract.amountPending)}</Text>
+          </View>
           <View style={[styles.totalRow, styles.totalFinalRow]}>
-            <Text style={styles.totalLabel}>TOTAL GENERAL</Text>
-            <Text style={styles.totalAmount}>{formatCurrency(quote.total)}</Text>
+            <Text style={[styles.totalLabel, { color: COLORS.orange }]}>TOTAL CONTRATO</Text>
+            <Text style={[styles.totalAmount, { color: COLORS.orange }]}>{formatCurrency(total)}</Text>
           </View>
         </View>
       </View>
     </View>
   );
 
-  /* Modalidades de Pago Profesionales */
+  /* Modalidades de Pago */
   const PaymentMethods = () => (
     <View style={styles.paymentSection}>
       <View style={styles.sectionHeader}>
-        <View style={{ width: 4, height: 4, backgroundColor: COLORS.primary, borderRadius: 2 }} />
-        <Text style={styles.sectionTitle}>Modalidades de Pago</Text>
+        <View style={{ width: 4, height: 4, backgroundColor: COLORS.blueGray, borderRadius: 2 }} />
+        <Text style={[styles.sectionTitle, { color: COLORS.blueGray }]}>Modalidades de Pago</Text>
       </View>
       
       <View style={styles.paymentCard}>
         {company?.bankAccounts && company.bankAccounts.length > 0 && (
           <>
-            <Text style={styles.paymentTitle}>
+            <Text style={[styles.paymentTitle, { color: COLORS.blueGray }]}>
               Cuentas Bancarias Autorizadas
             </Text>
             <View style={styles.paymentGrid}>
-              {company.bankAccounts.slice(0, 2).map((account, index) => (
+              {company.bankAccounts.slice(0, 2).map((account: any) => (
                 <View key={account.id} style={styles.paymentCol}>
                   <View style={styles.bankAccount}>
-                    <Text style={styles.bankName}>{account.bank}</Text>
+                    <Text style={[styles.bankName, { color: COLORS.blueGray }]}>{account.bank}</Text>
                     <Text style={styles.accountInfo}>
                       {account.accountType}: {account.number}
                     </Text>
@@ -717,14 +672,14 @@ function QuotePdf({ quote, logoBuffer }: {
 
         {company?.wallets && company.wallets.length > 0 && (
           <>
-            <Text style={[styles.paymentTitle, { marginTop: 12 }]}>
+            <Text style={[styles.paymentTitle, { marginTop: 12, color: COLORS.blueGray }]}>
               Billeteras Digitales
             </Text>
             <View style={styles.paymentGrid}>
-              {company.wallets.map((wallet) => (
+              {company.wallets.map((wallet: any) => (
                 <View key={wallet.id} style={styles.paymentCol}>
                   <View style={styles.bankAccount}>
-                    <Text style={styles.bankName}>{wallet.type}</Text>
+                    <Text style={[styles.bankName, { color: COLORS.blueGray }]}>{wallet.type}</Text>
                     <Text style={styles.accountInfo}>{wallet.phone}</Text>
                   </View>
                 </View>
@@ -732,47 +687,20 @@ function QuotePdf({ quote, logoBuffer }: {
             </View>
           </>
         )}
-
-        {(!company?.bankAccounts?.length && !company?.wallets?.length) && (
-          <>
-            <Text style={[styles.paymentTitle, { marginTop: 12 }]}>
-              Cuentas Bancarias
-            </Text>
-            <View style={styles.paymentGrid}>
-              <View style={styles.paymentCol}>
-                <View style={styles.bankAccount}>
-                  <Text style={styles.bankName}>Banco de Crédito del Perú</Text>
-                  <Text style={styles.accountInfo}>Cuenta Corriente: 191-2345678-0-12</Text>
-                  <Text style={styles.accountInfo}>CCI: 00219100234567801234</Text>
-                  <Text style={styles.accountInfo}>Moneda: PEN</Text>
-                </View>
-              </View>
-              <View style={styles.paymentCol}>
-                <View style={styles.bankAccount}>
-                  <Text style={styles.bankName}>Interbank</Text>
-                  <Text style={styles.accountInfo}>Cuenta Corriente: 003-3012345678</Text>
-                  <Text style={styles.accountInfo}>CCI: 00300000301234567890</Text>
-                  <Text style={styles.accountInfo}>Moneda: PEN</Text>
-                </View>
-              </View>
-            </View>
-          </>
-        )}
       </View>
     </View>
   );
 
-  /* Observaciones */
-  const Notes = () => quote.notes ? (
-    <View style={styles.notesCard}>
-      <Text style={styles.notesTitle}>OBSERVACIONES IMPORTANTES</Text>
-      <Text style={styles.notesText}>{quote.notes}</Text>
+  /* Observaciones del Contrato */
+  const Notes = () => contract.notes ? (
+    <View style={[styles.notesCard, { backgroundColor: '#f8fafc', borderColor: COLORS.blueGray }]}>
+      <Text style={[styles.notesTitle, { color: COLORS.blueGrayDark }]}>TÉRMINOS DEL CONTRATO</Text>
+      <Text style={[styles.notesText, { color: COLORS.blueGrayDark }]}>{contract.notes}</Text>
     </View>
   ) : null;
 
   /* Footer Profesional */
   const Footer = () => {
-    // Preparar descripción con límite de 100 caracteres
     const description = company?.description || 'Gracias por confiar en nosotros. Su satisfacción es nuestro compromiso.';
     const truncatedDescription = description.length > 100 
       ? description.substring(0, 97) + '...' 
@@ -782,23 +710,19 @@ function QuotePdf({ quote, logoBuffer }: {
       <View style={styles.footerFixed} fixed>
         <View style={styles.footerDivider} />
         
-        {/* Primera línea: Empresa + Eslogan */}
         <Text style={styles.footerText}>
           {company?.name || 'V&D COSMOS S.R.L'}
           {company?.slogan && ` - ${company.slogan}`}
         </Text>
         
-        {/* Segunda línea: Contacto (sin símbolos duplicados) */}
         <Text style={styles.footerText}>
           Email: {company?.email || 'vidrieriacosmos@gmail.com'} | Tel: {company?.phone || '994 260 216'}
         </Text>
         
-        {/* Tercera línea: Descripción de la empresa */}
         <Text style={styles.footerText}>
           {truncatedDescription}
         </Text>
         
-        {/* Numeración de página */}
         <Text
           style={styles.footerText}
           render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`}
@@ -818,7 +742,7 @@ function QuotePdf({ quote, logoBuffer }: {
       {/* Header sutil */}
       <View style={styles.imagePageHeader}>
         <Text style={styles.imagePageTitle}>
-          Imagen {imageIndex + 1} de {totalImages}
+          Imagen {imageIndex + 1} de {totalImages} - CONTRATO {contract.code}
         </Text>
       </View>
 
@@ -830,7 +754,7 @@ function QuotePdf({ quote, logoBuffer }: {
         />
       </View>
 
-      {/* Información del item (sin nombre de archivo) */}
+      {/* Información del item */}
       <View style={styles.imageInfo}>
         <Text style={styles.imageInfoText}>
           {item.description.substring(0, 80)}{item.description.length > 80 ? '...' : ''}
@@ -847,7 +771,7 @@ function QuotePdf({ quote, logoBuffer }: {
   /* Render Principal */
   return (
     <Document>
-      {/* PÁGINA 1: Contenido principal (sin cambios) */}
+      {/* PÁGINA 1: Contenido principal */}
       <Page size="A4" style={styles.page}>
         <Header />
         <InfoSection />
@@ -857,7 +781,7 @@ function QuotePdf({ quote, logoBuffer }: {
       </Page>
 
       {/* PÁGINAS DE IMÁGENES: Una página por imagen */}
-      {quote.items.map((item: any) =>
+      {contract.items.map((item: any) =>
         item.images?.map((image: any, imageIndex: number) => (
           <ImagePage
             key={`${item.id}-${image.id}`}
@@ -869,7 +793,7 @@ function QuotePdf({ quote, logoBuffer }: {
         ))
       )}
 
-      {/* PÁGINA FINAL: Datos bancarios (sin cambios) */}
+      {/* PÁGINA FINAL: Datos bancarios y términos */}
       <Page size="A4" style={styles.page}>
         <PaymentMethods />
         <Notes />
@@ -879,26 +803,62 @@ function QuotePdf({ quote, logoBuffer }: {
   );
 }
 
-/* -------------------------------------------------------------------
-   6) ENDPOINT GET
-------------------------------------------------------------------- */
-export async function GET(req: Request) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ quoteId: string }> }
+) {
   try {
-    const id = Number(new URL(req.url).pathname.split('/').at(-2));
-    if (!id) return new NextResponse('Bad Request', { status: 400 });
+    const { quoteId } = await params;
+    const quoteIdNum = parseInt(quoteId);
+    
+    // 1. Buscar el contrato asociado a esta cotización
+    const contract = await prisma.contract.findUnique({
+      where: { quoteId: quoteIdNum },
+      include: {
+        client: true,
+        items: {
+          include: {
+            images: true
+          }
+        },
+        company: {
+          include: {
+            bankAccounts: true,
+            wallets: true,
+          }
+        },
+        quote: true
+      }
+    });
 
-    const quote = await getQuote(id);
-    const logoBuffer = await getCompanyLogo(quote.company);
-    const stream = await renderToStream(<QuotePdf quote={quote} logoBuffer={logoBuffer} />);
+    if (!contract) {
+      return NextResponse.json(
+        { error: 'No existe un contrato para esta cotización' },
+        { status: 404 }
+      );
+    }
 
+    // 2. Obtener logo de la empresa
+    const logoBuffer = await getCompanyLogo(contract.company);
+
+    // 3. Generar PDF del contrato
+    const stream = await renderToStream(
+      <ContractPdf contract={contract} logoBuffer={logoBuffer} />
+    );
+
+    // 4. Devolver el PDF
     return new NextResponse(stream as unknown as ReadableStream, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `inline; filename="cotizacion-${quote.code || quote.id}.pdf"`,
+        'Content-Disposition': `inline; filename="contrato-${contract.code}.pdf"`,
       },
     });
-  } catch (err) {
-    console.error('[PDF Generator Error]', err);
-    return new NextResponse('Internal Server Error', { status: 500 });
+
+  } catch (error) {
+    console.error('[GET /api/contracts/by-quote/[quoteId]/pdf]', error);
+    return NextResponse.json(
+      { error: 'Error interno del servidor' },
+      { status: 500 }
+    );
   }
 }

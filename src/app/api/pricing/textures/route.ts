@@ -11,9 +11,6 @@ const createTextureSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const textures = await prisma.textures.findMany({
-      where: {
-        isActive: true
-      },
       orderBy: { name: 'asc' }
     })
 
@@ -56,8 +53,7 @@ export async function POST(request: NextRequest) {
 
     const texture = await prisma.textures.create({
       data: {
-        name: validatedData.name,
-        companyId: 1 // TODO: Obtener de la sesión del usuario
+        name: validatedData.name
       }
     })
 
