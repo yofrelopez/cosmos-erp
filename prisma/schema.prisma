@@ -248,7 +248,7 @@ model MoldingColors {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   companyId Int
   Company   company  @relation(fields: [companyId], references: [id])
 
@@ -260,7 +260,7 @@ model MoldingTextures {
   id        Int      @id @default(autoincrement())
   name      String   @unique
   createdAt DateTime @default(now())
-  updatedAt DateTime
+  updatedAt DateTime @updatedAt
   companyId Int
   Company   company  @relation(fields: [companyId], references: [id])
 
@@ -277,7 +277,7 @@ model PricingAccessory {
   validTo   DateTime?
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
-  updatedAt DateTime
+  updatedAt DateTime  @updatedAt
   Company   company   @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name, validFrom])
@@ -297,7 +297,7 @@ model PricingBacking {
   validTo     DateTime?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime  @updatedAt
   Company     company   @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name, validFrom])
@@ -318,7 +318,7 @@ model pricing_frame_preset {
   validFrom DateTime         @default(now())
   validTo   DateTime?
   createdAt DateTime         @default(now())
-  updatedAt DateTime
+  updatedAt DateTime         @updatedAt
   Company   company          @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name, validFrom])
@@ -338,7 +338,7 @@ model PricingGlass {
   validTo        DateTime?
   isActive       Boolean        @default(true)
   createdAt      DateTime       @default(now())
-  updatedAt      DateTime
+  updatedAt      DateTime       @updatedAt
   colorId        Int?
   colorType      GlassColorType @default(INCOLORO)
   oldColor       String?
@@ -364,7 +364,7 @@ model PricingMatboard {
   validTo     DateTime?
   isActive    Boolean   @default(true)
   createdAt   DateTime  @default(now())
-  updatedAt   DateTime
+  updatedAt   DateTime  @updatedAt
   Company     company   @relation(fields: [companyId], references: [id])
 
   @@unique([companyId, name, validFrom])
@@ -385,7 +385,7 @@ model PricingMolding {
   validTo           DateTime?
   isActive          Boolean               @default(true)
   createdAt         DateTime              @default(now())
-  updatedAt         DateTime
+  updatedAt         DateTime              @updatedAt
   thicknessId       Int
   Company           company          @relation(fields: [companyId], references: [id])
   thickness         PricingThickness @relation(fields: [thicknessId], references: [id])
