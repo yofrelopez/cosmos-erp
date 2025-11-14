@@ -67,12 +67,9 @@ const FullUpdateQuoteSchema = z.object({
   })).optional(),
 });
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const id = Number(params.id);
-    if (isNaN(id)) {
-      return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-    }
+    const id = await parseRouteId(params);
 
     const body = await req.json();
     

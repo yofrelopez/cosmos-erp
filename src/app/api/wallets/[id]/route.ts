@@ -1,21 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { WalletType } from '@prisma/client';
+import { parseRouteId } from '@/lib/api-helpers';
 
 // GET - Obtener billetera específica
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID inválido' },
-        { status: 400 }
-      );
-    }
+    const id = await parseRouteId(params);
 
     const wallet = await prisma.wallet.findUnique({
       where: { id },
@@ -41,17 +35,10 @@ export async function GET(
 // PATCH - Actualizar billetera
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID inválido' },
-        { status: 400 }
-      );
-    }
+    const id = await parseRouteId(params);
 
     const body = await request.json();
     const { type, phone, qrUrl } = body;
@@ -116,17 +103,10 @@ export async function PATCH(
 // DELETE - Eliminar billetera
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID inválido' },
-        { status: 400 }
-      );
-    }
+    const id = await parseRouteId(params);
 
     // Verificar que la billetera existe
     const existingWallet = await prisma.wallet.findUnique({

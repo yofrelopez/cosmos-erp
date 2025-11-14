@@ -18,7 +18,7 @@ export async function POST(
       );
     }
 
-    const quoteId = parseInt(params.id);
+    const quoteId = await parseRouteId(params);
     
     // 1. Obtener cotización completa con items e imágenes
     const quote = await prisma.quote.findUnique({

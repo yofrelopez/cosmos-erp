@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server'
 import { PrismaClient, GlassFamily } from '@prisma/client'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const prisma = new PrismaClient()
 
@@ -30,11 +31,10 @@ const updateSchema = z.object({
 /* GET: detalle */
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id)
-    if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
+    const id = await parseRouteId(params)
 
     const item = await prisma.pricingGlass.findUnique({ where: { id } })
     if (!item) return NextResponse.json({ message: 'No encontrado' }, { status: 404 })
@@ -49,11 +49,10 @@ export async function GET(
 /* PATCH: actualizar con validación de duplicado (companyId,family,thicknessMM,validFrom) */
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id)
-    if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
+    const id = await parseRouteId(params)
 
     const current = await prisma.pricingGlass.findUnique({ where: { id } })
     if (!current) return NextResponse.json({ message: 'No encontrado' }, { status: 404 })
@@ -120,11 +119,10 @@ export async function PATCH(
 /* DELETE: eliminar */
 export async function DELETE(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = Number(params.id)
-    if (!Number.isFinite(id)) return NextResponse.json({ message: 'ID inválido' }, { status: 400 })
+    const id = await parseRouteId(params)
 
     await prisma.pricingGlass.delete({ where: { id } })
     return NextResponse.json({ ok: true })

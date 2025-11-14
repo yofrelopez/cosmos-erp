@@ -1,6 +1,7 @@
 // src/app/api/empresas/[id]/deactivate/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { parseRouteId } from '@/lib/api-helpers';
 
 /**
  * PATCH: Desactiva una empresa (cambio de status a INACTIVE)
@@ -8,13 +9,9 @@ import { prisma } from '@/lib/prisma';
  */
 export async function PATCH(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const companyId = Number(params.id);
-
-  if (isNaN(companyId)) {
-    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-  }
+  const companyId = await parseRouteId(params);
 
   try {
     // Verificar que la empresa existe

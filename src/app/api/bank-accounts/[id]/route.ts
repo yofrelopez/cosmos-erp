@@ -2,17 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { bankAccountSchema } from '@/forms/company/bankSchema';
 import { Prisma } from '@prisma/client';
+import { parseRouteId } from '@/lib/api-helpers';
 
 /**
  * PATCH /api/bank-accounts/[id]
  * Actualiza una cuenta bancaria existente.
  */
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bankAccountId = Number(params.id);
-    if (!bankAccountId || isNaN(bankAccountId)) {
-      return NextResponse.json({ error: 'ID de cuenta inválido' }, { status: 400 });
-    }
+    const bankAccountId = await parseRouteId(params);
 
     const body = await req.json();
 
@@ -54,12 +52,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
  * DELETE /api/bank-accounts/[id]
  * Elimina una cuenta bancaria por su ID.
  */
-export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const bankAccountId = Number(params.id);
-    if (!bankAccountId || isNaN(bankAccountId)) {
-      return NextResponse.json({ error: 'ID de cuenta inválido' }, { status: 400 });
-    }
+    const bankAccountId = await parseRouteId(params);
 
     await prisma.bankAccount.delete({
       where: { id: bankAccountId },

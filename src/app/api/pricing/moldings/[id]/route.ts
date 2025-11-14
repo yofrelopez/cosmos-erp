@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const updateMoldingSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
@@ -13,17 +14,10 @@ const updateMoldingSchema = z.object({
 // GET - Obtener moldura específica
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de moldura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const molding = await prisma.pricingMolding.findUnique({
       where: { id },
@@ -61,17 +55,10 @@ export async function GET(
 // PUT - Actualizar moldura
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de moldura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     
@@ -154,17 +141,10 @@ export async function PUT(
 // DELETE - Eliminar moldura (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de moldura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     const { companyId } = body

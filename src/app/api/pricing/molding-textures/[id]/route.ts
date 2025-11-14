@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const updateTextureSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
@@ -10,19 +11,12 @@ const updateTextureSchema = z.object({
 // GET - Obtener textura específica
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de textura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
-    const texture = await prisma.moldingTexture.findUnique({
+    const texture = await prisma.moldingTextures.findUnique({
       where: { id }
     })
 
@@ -46,17 +40,10 @@ export async function GET(
 // PUT - Actualizar textura
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de textura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     
@@ -64,7 +51,7 @@ export async function PUT(
     const validatedData = updateTextureSchema.parse(body)
 
     // Verificar que la textura existe y pertenece a la empresa
-    const existingTexture = await prisma.moldingTexture.findFirst({
+    const existingTexture = await prisma.moldingTextures.findFirst({
       where: {
         id,
         companyId: validatedData.companyId
@@ -79,7 +66,7 @@ export async function PUT(
     }
 
     // Verificar duplicado de nombre (excluyendo la textura actual)
-    const duplicate = await prisma.moldingTexture.findFirst({
+    const duplicate = await prisma.moldingTextures.findFirst({
       where: {
         name: validatedData.name,
         companyId: validatedData.companyId,
@@ -95,7 +82,7 @@ export async function PUT(
     }
 
     // Actualizar textura
-    const updatedTexture = await prisma.moldingTexture.update({
+    const updatedTexture = await prisma.moldingTextures.update({
       where: { id },
       data: {
         name: validatedData.name
@@ -125,17 +112,10 @@ export async function PUT(
 // DELETE - Eliminar textura
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de textura inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     const { companyId } = body
@@ -163,7 +143,7 @@ export async function DELETE(
     }
 
     // Eliminar textura
-    await prisma.moldingTexture.delete({
+    await prisma.moldingTextures.delete({
       where: { id }
     })
 

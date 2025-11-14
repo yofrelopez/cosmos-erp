@@ -1,26 +1,17 @@
 // Debug endpoint para detectar problemas en PDF
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { parseRouteId } from '@/lib/api-helpers'
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     console.log('🔍 PDF DEBUG: Starting debug session...')
     
     // 1. Extraer ID como lo hace el PDF real
-    const id = Number(params.id)
-    console.log('🔍 PDF DEBUG: ID from params:', id)
-    console.log('🔍 PDF DEBUG: ID is valid number?', !isNaN(id))
-    
-    if (isNaN(id)) {
-      console.log('❌ PDF DEBUG: Invalid ID')
-      return NextResponse.json({ 
-        error: 'Invalid ID', 
-        debug: { id: params.id, parsed: id }
-      }, { status: 400 })
-    }
+    const id = await parseRouteId(params)
 
     // 2. Verificar qué métodos de prisma están disponibles
     console.log('🔍 PDF DEBUG: Available prisma keys:', Object.keys(prisma))

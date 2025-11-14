@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
+import { parseRouteId } from '@/lib/api-helpers'
 
 // GET /api/cash-sessions/[id] - Obtener sesión específica
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticación
@@ -31,14 +32,7 @@ export async function GET(
       )
     }
 
-    const sessionId = parseInt(params.id)
-
-    if (isNaN(sessionId)) {
-      return NextResponse.json(
-        { error: 'Invalid session ID' },
-        { status: 400 }
-      )
-    }
+    const sessionId = await parseRouteId(params)
 
     // Buscar sesión que pertenezca a la empresa del usuario
     const cashSession = await prisma.cashSession.findFirst({
@@ -109,7 +103,7 @@ export async function GET(
 // PUT /api/cash-sessions/[id] - Actualizar sesión (cerrar caja)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Verificar autenticación
@@ -134,14 +128,7 @@ export async function PUT(
       )
     }
 
-    const sessionId = parseInt(params.id)
-
-    if (isNaN(sessionId)) {
-      return NextResponse.json(
-        { error: 'Invalid session ID' },
-        { status: 400 }
-      )
-    }
+    const sessionId = await parseRouteId(params)
 
     const body = await request.json()
     const { finalAmount, notes, action } = body

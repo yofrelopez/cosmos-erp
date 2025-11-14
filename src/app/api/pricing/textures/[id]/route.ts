@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const updateTextureSchema = z.object({
   name: z.string()
@@ -12,17 +13,10 @@ const updateTextureSchema = z.object({
 // PUT /api/pricing/textures/[id] - Actualizar textura
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const textureId = parseInt(params.id)
-
-    if (isNaN(textureId)) {
-      return NextResponse.json(
-        { error: 'ID de textura inválido' },
-        { status: 400 }
-      )
-    }
+    const textureId = await parseRouteId(params)
 
     const body = await request.json()
     const validatedData = updateTextureSchema.parse(body)
@@ -82,17 +76,10 @@ export async function PUT(
 // DELETE /api/pricing/textures/[id] - Eliminar textura
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const textureId = parseInt(params.id)
-
-    if (isNaN(textureId)) {
-      return NextResponse.json(
-        { error: 'ID de textura inválido' },
-        { status: 400 }
-      )
-    }
+    const textureId = await parseRouteId(params)
 
     // Verificar que la textura existe
     const existingTexture = await prisma.textures.findUnique({

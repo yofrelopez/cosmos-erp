@@ -199,13 +199,9 @@ export async function PATCH(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const companyId = Number(params.id);
-
-  if (isNaN(companyId)) {
-    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-  }
+  const companyId = await parseRouteId(params);
 
   try {
     // 1 · Verificar existencia + contar relaciones

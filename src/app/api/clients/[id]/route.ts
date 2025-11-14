@@ -1,6 +1,7 @@
 // src/app/api/clients/[id]/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { parseRouteId } from '@/lib/api-helpers'
 import { z } from 'zod';
 import { DocumentType } from '@prisma/client';
 
@@ -81,12 +82,9 @@ export async function PATCH(
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const clientId = parseInt(params.id, 10);
-  if (isNaN(clientId)) {
-    return NextResponse.json({ error: 'ID inválido' }, { status: 400 });
-  }
+  const clientId = await parseRouteId(params);
 
   const client = await prisma.client.findUnique({
     where: { id: clientId },
@@ -100,9 +98,9 @@ export async function GET(
 }
 
 // PUT: Actualizar cliente por ID
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const clienteId = parseInt(params.id)
+    const clienteId = await parseRouteId(params)
     const data = await req.json()
 
     const clienteActualizado = await prisma.client.update({

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const glassSchema = z.object({
   commercialName: z.string()
@@ -18,10 +19,10 @@ const glassSchema = z.object({
 // GET - Obtener vidrio por ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const id = await parseRouteId(params)
 
     const glass = await prisma.pricingGlass.findUnique({
       where: { id },
@@ -56,10 +57,10 @@ export async function GET(
 // PUT - Actualizar vidrio
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const id = await parseRouteId(params)
     const body = await request.json()
     const validatedData = glassSchema.parse(body)
 
@@ -107,10 +108,10 @@ export async function PUT(
 // DELETE - Eliminar vidrio (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
+    const id = await parseRouteId(params)
 
     await prisma.pricingGlass.update({
       where: { id },

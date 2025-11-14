@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
+import { parseRouteId } from '@/lib/api-helpers'
 
 const updateColorSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
@@ -10,19 +11,12 @@ const updateColorSchema = z.object({
 // GET - Obtener color específico
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de color inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
-    const color = await prisma.moldingColor.findUnique({
+    const color = await prisma.moldingColors.findUnique({
       where: { id }
     })
 
@@ -46,17 +40,10 @@ export async function GET(
 // PUT - Actualizar color
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de color inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     
@@ -64,7 +51,7 @@ export async function PUT(
     const validatedData = updateColorSchema.parse(body)
 
     // Verificar que el color existe y pertenece a la empresa
-    const existingColor = await prisma.moldingColor.findFirst({
+    const existingColor = await prisma.moldingColors.findFirst({
       where: {
         id,
         companyId: validatedData.companyId
@@ -79,7 +66,7 @@ export async function PUT(
     }
 
     // Verificar duplicado de nombre (excluyendo el color actual)
-    const duplicate = await prisma.moldingColor.findFirst({
+    const duplicate = await prisma.moldingColors.findFirst({
       where: {
         name: validatedData.name,
         companyId: validatedData.companyId,
@@ -95,7 +82,7 @@ export async function PUT(
     }
 
     // Actualizar color
-    const updatedColor = await prisma.moldingColor.update({
+    const updatedColor = await prisma.moldingColors.update({
       where: { id },
       data: {
         name: validatedData.name
@@ -125,17 +112,10 @@ export async function PUT(
 // DELETE - Eliminar color
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id)
-    
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: 'ID de color inválido' },
-        { status: 400 }
-      )
-    }
+    const id = await parseRouteId(params)
 
     const body = await request.json()
     const { companyId } = body
@@ -163,7 +143,7 @@ export async function DELETE(
     }
 
     // Eliminar color
-    await prisma.moldingColor.delete({
+    await prisma.moldingColors.delete({
       where: { id }
     })
 
